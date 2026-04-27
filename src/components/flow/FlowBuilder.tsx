@@ -291,6 +291,15 @@ function FlowInner({
           )}
         </ScrollArea>
       </aside>
+
+      {assistantOpen && (
+        <AIAssistantPanel
+          mode={assistantMode}
+          catalog={catalog}
+          onApply={handleAssistantApply}
+          onClose={() => setAssistantOpen(false)}
+        />
+      )}
     </div>
   );
 }
