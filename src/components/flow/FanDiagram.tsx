@@ -1,9 +1,10 @@
 import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { resolveIcon } from "@/lib/icons";
 import type { FanItem } from "@/data/flows";
 
 function Pill({ item }: { item: FanItem }) {
-  const Icon = item.icon;
+  const Icon = resolveIcon(item.icon);
   return (
     <div
       className="flex items-center gap-2.5 rounded-lg border bg-card/80 px-3 py-2 backdrop-blur-md"

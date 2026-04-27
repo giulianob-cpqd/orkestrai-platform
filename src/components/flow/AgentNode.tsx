@@ -1,6 +1,6 @@
 import { Handle, Position, NodeProps } from "@xyflow/react";
-import { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { resolveIcon, type IconName } from "@/lib/icons";
 
 export type NodeVariant =
   | "llm"
@@ -21,7 +21,7 @@ export type NodeVariant =
 export interface AgentNodeData {
   label: string;
   description?: string;
-  icon: LucideIcon;
+  icon: IconName;
   variant: NodeVariant;
   meta?: string;
   [key: string]: unknown;
@@ -29,7 +29,7 @@ export interface AgentNodeData {
 
 export function AgentNode({ data, selected }: NodeProps) {
   const d = data as AgentNodeData;
-  const Icon = d.icon;
+  const Icon = resolveIcon(d.icon);
   const v = d.variant;
   return (
     <div

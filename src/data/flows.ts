@@ -1,24 +1,9 @@
-import {
-  Bot,
-  Brain,
-  Database,
-  Webhook,
-  Radio,
-  Cloud,
-  Send,
-  Globe,
-  Server,
-  MemoryStick,
-  Wrench,
-  type LucideIcon,
-} from "lucide-react";
-
-export type FanIcon = LucideIcon;
+import type { IconName } from "@/lib/icons";
 
 export interface FanItem {
   label: string;
   meta: string;
-  icon: FanIcon;
+  icon: IconName;
   variant:
     | "endpoint"
     | "queue"
@@ -44,11 +29,8 @@ export interface OrchestrationFlow {
   version: string;
   status: "active" | "draft" | "error";
   tags: string[];
-  /** ingress: who triggers this flow */
   fanIn: FanItem[];
-  /** egress: what this flow calls / writes to */
   fanOut: FanItem[];
-  /** agents referenced inside the orchestration */
   agents: { id: string; name: string; role: string }[];
 }
 
@@ -80,15 +62,15 @@ export const orchestrations: OrchestrationFlow[] = [
     status: "active",
     tags: ["multi-agent", "router", "streaming"],
     fanIn: [
-      { label: "POST /v1/research", meta: "REST · bearer", icon: Webhook, variant: "endpoint" },
-      { label: "events.user.asked", meta: "Kafka · 6 partitions", icon: Radio, variant: "queue" },
+      { label: "POST /v1/research", meta: "REST · bearer", icon: "Webhook", variant: "endpoint" },
+      { label: "events.user.asked", meta: "Kafka · 6 partitions", icon: "Radio", variant: "queue" },
     ],
     fanOut: [
-      { label: "Tavily Web API", meta: "GET /search", icon: Globe, variant: "tool" },
-      { label: "Warehouse", meta: "Postgres · analytics", icon: Database, variant: "db" },
-      { label: "S3 Reports", meta: "aws · us-east-1", icon: Cloud, variant: "cloud" },
-      { label: "events.research.done", meta: "Kafka · 3 partitions", icon: Radio, variant: "queue" },
-      { label: "SSE Stream", meta: "text/event-stream", icon: Send, variant: "output" },
+      { label: "Tavily Web API", meta: "GET /search", icon: "Globe", variant: "tool" },
+      { label: "Warehouse", meta: "Postgres · analytics", icon: "Database", variant: "db" },
+      { label: "S3 Reports", meta: "aws · us-east-1", icon: "Cloud", variant: "cloud" },
+      { label: "events.research.done", meta: "Kafka · 3 partitions", icon: "Radio", variant: "queue" },
+      { label: "SSE Stream", meta: "text/event-stream", icon: "Send", variant: "output" },
     ],
     agents: [
       { id: "agent_router_v1", name: "Intent Router", role: "Classifier" },
@@ -109,14 +91,14 @@ export const orchestrations: OrchestrationFlow[] = [
     status: "active",
     tags: ["triage", "crm", "rabbitmq"],
     fanIn: [
-      { label: "POST /v1/tickets", meta: "REST · hmac", icon: Webhook, variant: "endpoint" },
-      { label: "support.inbound", meta: "RabbitMQ · topic", icon: Radio, variant: "queue" },
+      { label: "POST /v1/tickets", meta: "REST · hmac", icon: "Webhook", variant: "endpoint" },
+      { label: "support.inbound", meta: "RabbitMQ · topic", icon: "Radio", variant: "queue" },
     ],
     fanOut: [
-      { label: "Salesforce API", meta: "REST · oauth2", icon: Globe, variant: "tool" },
-      { label: "Tickets DB", meta: "Postgres · primary", icon: Database, variant: "db" },
-      { label: "Slack MCP", meta: "stdio", icon: Server, variant: "mcp" },
-      { label: "support.resolved", meta: "RabbitMQ", icon: Radio, variant: "queue" },
+      { label: "Salesforce API", meta: "REST · oauth2", icon: "Globe", variant: "tool" },
+      { label: "Tickets DB", meta: "Postgres · primary", icon: "Database", variant: "db" },
+      { label: "Slack MCP", meta: "stdio", icon: "Server", variant: "mcp" },
+      { label: "support.resolved", meta: "RabbitMQ", icon: "Radio", variant: "queue" },
     ],
     agents: [
       { id: "agent_router_v1", name: "Intent Router", role: "Classifier" },
@@ -136,13 +118,13 @@ export const orchestrations: OrchestrationFlow[] = [
     status: "draft",
     tags: ["batch", "graphql", "report"],
     fanIn: [
-      { label: "Cron 02:00 UTC", meta: "scheduler", icon: Webhook, variant: "endpoint" },
-      { label: "billing.invoice.new", meta: "Kafka", icon: Radio, variant: "queue" },
+      { label: "Cron 02:00 UTC", meta: "scheduler", icon: "Webhook", variant: "endpoint" },
+      { label: "billing.invoice.new", meta: "Kafka", icon: "Radio", variant: "queue" },
     ],
     fanOut: [
-      { label: "ERP GraphQL", meta: "POST /graphql", icon: Globe, variant: "tool" },
-      { label: "Finance DW", meta: "BigQuery", icon: Cloud, variant: "cloud" },
-      { label: "Reports bucket", meta: "GCS", icon: Cloud, variant: "cloud" },
+      { label: "ERP GraphQL", meta: "POST /graphql", icon: "Globe", variant: "tool" },
+      { label: "Finance DW", meta: "BigQuery", icon: "Cloud", variant: "cloud" },
+      { label: "Reports bucket", meta: "GCS", icon: "Cloud", variant: "cloud" },
     ],
     agents: [
       { id: "agent_sql_v2", name: "SQL Analyst", role: "Extractor" },
@@ -163,14 +145,14 @@ export const agentFlows: AgentFlow[] = [
     status: "active",
     tags: ["ReAct", "multi-tool", "stream"],
     fanIn: [
-      { label: "Prompt Input", meta: "text · multimodal", icon: Send, variant: "input" },
-      { label: "Conversation Memory", meta: "buffer + summary", icon: MemoryStick, variant: "memory" },
+      { label: "Prompt Input", meta: "text · multimodal", icon: "Send", variant: "input" },
+      { label: "Conversation Memory", meta: "buffer + summary", icon: "MemoryStick", variant: "memory" },
     ],
     fanOut: [
-      { label: "Gemini 2.5 Pro", meta: "temp 0.4 · 8k ctx", icon: Brain, variant: "llm" },
-      { label: "Tavily Web Search", meta: "GET /search", icon: Wrench, variant: "tool" },
-      { label: "Filesystem MCP", meta: "stdio", icon: Server, variant: "mcp" },
-      { label: "Streamed Response", meta: "SSE", icon: Send, variant: "output" },
+      { label: "Gemini 2.5 Pro", meta: "temp 0.4 · 8k ctx", icon: "Brain", variant: "llm" },
+      { label: "Tavily Web Search", meta: "GET /search", icon: "Wrench", variant: "tool" },
+      { label: "Filesystem MCP", meta: "stdio", icon: "Server", variant: "mcp" },
+      { label: "Streamed Response", meta: "SSE", icon: "Send", variant: "output" },
     ],
     rags: [
       { id: "rag_internal_docs", name: "Internal Docs", meta: "pgvector · 12k docs" },
@@ -187,10 +169,10 @@ export const agentFlows: AgentFlow[] = [
     version: "v1.4.0",
     status: "active",
     tags: ["CoT", "markdown", "long-context"],
-    fanIn: [{ label: "Notes Payload", meta: "json", icon: Send, variant: "input" }],
+    fanIn: [{ label: "Notes Payload", meta: "json", icon: "Send", variant: "input" }],
     fanOut: [
-      { label: "GPT-5", meta: "temp 0.2", icon: Brain, variant: "llm" },
-      { label: "Markdown Out", meta: "stream", icon: Send, variant: "output" },
+      { label: "GPT-5", meta: "temp 0.2", icon: "Brain", variant: "llm" },
+      { label: "Markdown Out", meta: "stream", icon: "Send", variant: "output" },
     ],
     rags: [{ id: "rag_style_guide", name: "Editorial Style Guide", meta: "pgvector · 320 docs" }],
   },
@@ -204,10 +186,10 @@ export const agentFlows: AgentFlow[] = [
     version: "v1.2.0",
     status: "active",
     tags: ["classifier", "fast"],
-    fanIn: [{ label: "Prompt Input", meta: "text", icon: Send, variant: "input" }],
+    fanIn: [{ label: "Prompt Input", meta: "text", icon: "Send", variant: "input" }],
     fanOut: [
-      { label: "Gemini 2.5 Flash Lite", meta: "temp 0.0", icon: Brain, variant: "llm" },
-      { label: "Route Decision", meta: "json", icon: Send, variant: "output" },
+      { label: "Gemini 2.5 Flash Lite", meta: "temp 0.0", icon: "Brain", variant: "llm" },
+      { label: "Route Decision", meta: "json", icon: "Send", variant: "output" },
     ],
     rags: [],
   },
@@ -221,11 +203,11 @@ export const agentFlows: AgentFlow[] = [
     version: "v2.1.0",
     status: "error",
     tags: ["function-calling", "guardrails"],
-    fanIn: [{ label: "Question", meta: "natural language", icon: Send, variant: "input" }],
+    fanIn: [{ label: "Question", meta: "natural language", icon: "Send", variant: "input" }],
     fanOut: [
-      { label: "GPT-5 mini", meta: "temp 0.1", icon: Brain, variant: "llm" },
-      { label: "Warehouse", meta: "Postgres", icon: Database, variant: "db" },
-      { label: "Result Set", meta: "json", icon: Send, variant: "output" },
+      { label: "GPT-5 mini", meta: "temp 0.1", icon: "Brain", variant: "llm" },
+      { label: "Warehouse", meta: "Postgres", icon: "Database", variant: "db" },
+      { label: "Result Set", meta: "json", icon: "Send", variant: "output" },
     ],
     rags: [{ id: "rag_schema_catalog", name: "Schema Catalog", meta: "pgvector · 12 schemas" }],
   },
@@ -239,10 +221,10 @@ export const agentFlows: AgentFlow[] = [
     version: "v2.0.0",
     status: "draft",
     tags: ["self-reflect", "evaluator"],
-    fanIn: [{ label: "Draft Payload", meta: "json", icon: Send, variant: "input" }],
+    fanIn: [{ label: "Draft Payload", meta: "json", icon: "Send", variant: "input" }],
     fanOut: [
-      { label: "Gemini 2.5 Flash", meta: "temp 0.3", icon: Brain, variant: "llm" },
-      { label: "Verdict", meta: "json", icon: Send, variant: "output" },
+      { label: "Gemini 2.5 Flash", meta: "temp 0.3", icon: "Brain", variant: "llm" },
+      { label: "Verdict", meta: "json", icon: "Send", variant: "output" },
     ],
     rags: [{ id: "rag_rubrics", name: "Quality Rubrics", meta: "pgvector · 80 docs" }],
   },
@@ -256,10 +238,10 @@ export const agentFlows: AgentFlow[] = [
     version: "v1.1.0",
     status: "active",
     tags: ["map-reduce", "citations"],
-    fanIn: [{ label: "Documents", meta: "text[]", icon: Send, variant: "input" }],
+    fanIn: [{ label: "Documents", meta: "text[]", icon: "Send", variant: "input" }],
     fanOut: [
-      { label: "Gemini 2.5 Flash", meta: "temp 0.2", icon: Brain, variant: "llm" },
-      { label: "Summary", meta: "markdown", icon: Send, variant: "output" },
+      { label: "Gemini 2.5 Flash", meta: "temp 0.2", icon: "Brain", variant: "llm" },
+      { label: "Summary", meta: "markdown", icon: "Send", variant: "output" },
     ],
     rags: [],
   },

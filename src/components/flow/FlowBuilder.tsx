@@ -21,6 +21,7 @@ import { AgentNode } from "./AgentNode";
 import type { NodeTemplate } from "./nodeCatalog";
 import { AIAssistantPanel, type AssistantMode } from "./AIAssistantPanel";
 import { Settings2, Trash2, Sparkles } from "lucide-react";
+import { resolveIcon } from "@/lib/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -160,7 +161,7 @@ function FlowInner({
                       color: `var(--node-${tpl.variant})`,
                     }}
                   >
-                    <tpl.icon className="h-4 w-4" />
+                    {(() => { const Icon = resolveIcon(tpl.icon); return <Icon className="h-4 w-4" />; })()}
                   </div>
                   <div className="flex flex-col leading-tight">
                     <span className="text-sm font-semibold">{tpl.label}</span>
