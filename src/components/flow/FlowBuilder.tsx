@@ -18,8 +18,8 @@ import {
 import "@xyflow/react/dist/style.css";
 
 import { AgentNode } from "./AgentNode";
-import { nodeCatalog } from "./nodeCatalog";
-import { Brain, Bot, Database, Send, Wrench, Settings2, Trash2, Sparkles } from "lucide-react";
+import type { NodeTemplate } from "./nodeCatalog";
+import { Settings2, Trash2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,98 +30,30 @@ import { cn } from "@/lib/utils";
 
 const nodeTypes = { agent: AgentNode };
 
-const initialNodes: Node[] = [
-  {
-    id: "n1",
-    type: "agent",
-    position: { x: 60, y: 140 },
-    data: {
-      label: "User Input",
-      description: "Trigger from chat",
-      icon: Send,
-      variant: "output",
-      meta: "stream",
-    },
-  },
-  {
-    id: "n2",
-    type: "agent",
-    position: { x: 340, y: 60 },
-    data: {
-      label: "Researcher Agent",
-      description: "Plans and delegates",
-      icon: Bot,
-      variant: "agent",
-      meta: "ReAct · 4 tools",
-    },
-  },
-  {
-    id: "n3",
-    type: "agent",
-    position: { x: 340, y: 240 },
-    data: {
-      label: "Knowledge Base",
-      description: "Internal docs RAG",
-      icon: Database,
-      variant: "rag",
-      meta: "pgvector · 12k docs",
-    },
-  },
-  {
-    id: "n4",
-    type: "agent",
-    position: { x: 640, y: 140 },
-    data: {
-      label: "Gemini 2.5 Pro",
-      description: "Main reasoner",
-      icon: Brain,
-      variant: "llm",
-      meta: "temp 0.4 · 8k ctx",
-    },
-  },
-  {
-    id: "n5",
-    type: "agent",
-    position: { x: 640, y: 320 },
-    data: {
-      label: "Web Search",
-      description: "Tavily API",
-      icon: Wrench,
-      variant: "tool",
-      meta: "GET /search",
-    },
-  },
-  {
-    id: "n6",
-    type: "agent",
-    position: { x: 940, y: 200 },
-    data: {
-      label: "Stream Response",
-      description: "SSE to client",
-      icon: Send,
-      variant: "output",
-      meta: "text/event-stream",
-    },
-  },
-];
+export interface FlowBuilderProps {
+  catalog: NodeTemplate[];
+  initialNodes: Node[];
+  initialEdges: Edge[];
+  paletteTitle?: string;
+  paletteSubtitle?: string;
+  runLabel?: string;
+}
 
-const initialEdges: Edge[] = [
-  { id: "e1-2", source: "n1", target: "n2", animated: true, markerEnd: { type: MarkerType.ArrowClosed } },
-  { id: "e2-3", source: "n2", target: "n3", animated: true, markerEnd: { type: MarkerType.ArrowClosed } },
-  { id: "e3-4", source: "n3", target: "n4", animated: true, markerEnd: { type: MarkerType.ArrowClosed } },
-  { id: "e2-5", source: "n2", target: "n5", animated: true, markerEnd: { type: MarkerType.ArrowClosed } },
-  { id: "e4-6", source: "n4", target: "n6", animated: true, markerEnd: { type: MarkerType.ArrowClosed } },
-  { id: "e5-6", source: "n5", target: "n6", animated: true, markerEnd: { type: MarkerType.ArrowClosed } },
-];
+let idCounter = 1000;
 
-let idCounter = 100;
-
-function FlowInner() {
+function FlowInner({
+  catalog,
+  initialNodes,
+  initialEdges,
+  paletteTitle = "Components",
+  paletteSubtitle = "Drag to canvas",
+  runLabel = "Run flow",
+}: FlowBuilderProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-  const [selectedId, setSelectedId] = useState<string | null>("n2");
+  const [selectedId, setSelectedId] = useState<string | null>(initialNodes[0]?.id ?? null);
 
   const onConnect = useCallback(
     (params: Connection) =>
@@ -145,7 +77,7 @@ function FlowInner() {
     (event: DragEvent) => {
       event.preventDefault();
       const type = event.dataTransfer.getData("application/synapse-node");
-      const template = nodeCatalog.find((n) => n.type === type);
+      const template = catalog.find((n) => n.type === type);
       if (!template || !rfInstance) return;
       const position = rfInstance.screenToFlowPosition({
         x: event.clientX,
@@ -165,7 +97,7 @@ function FlowInner() {
       };
       setNodes((nds) => nds.concat(newNode));
     },
-    [rfInstance, setNodes],
+    [rfInstance, setNodes, catalog],
   );
 
   const selectedNode = useMemo(
@@ -191,17 +123,16 @@ function FlowInner() {
 
   return (
     <div className="flex h-[calc(100vh-3.5rem)] w-full">
-      {/* Node Palette */}
       <aside className="flex w-64 shrink-0 flex-col border-r border-border bg-sidebar/60 backdrop-blur-md">
         <div className="border-b border-border px-4 py-3">
           <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
-            Components
+            {paletteTitle}
           </p>
-          <p className="text-sm font-semibold">Drag to canvas</p>
+          <p className="text-sm font-semibold">{paletteSubtitle}</p>
         </div>
         <ScrollArea className="flex-1">
           <div className="space-y-2 p-3">
-            {nodeCatalog.map((tpl) => (
+            {catalog.map((tpl) => (
               <div
                 key={tpl.type}
                 draggable
@@ -210,10 +141,11 @@ function FlowInner() {
               >
                 <div className="flex items-center gap-2">
                   <div
-                    className={cn(
-                      "flex h-8 w-8 items-center justify-center rounded-md",
-                      `bg-[var(--node-${tpl.variant})]/15 text-[var(--node-${tpl.variant})]`,
-                    )}
+                    className={cn("flex h-8 w-8 items-center justify-center rounded-md")}
+                    style={{
+                      background: `color-mix(in oklch, var(--node-${tpl.variant}) 18%, transparent)`,
+                      color: `var(--node-${tpl.variant})`,
+                    }}
                   >
                     <tpl.icon className="h-4 w-4" />
                   </div>
@@ -230,7 +162,6 @@ function FlowInner() {
         </ScrollArea>
       </aside>
 
-      {/* Canvas */}
       <div ref={wrapperRef} className="relative flex-1">
         <ReactFlow
           nodes={nodes}
@@ -262,7 +193,6 @@ function FlowInner() {
           />
         </ReactFlow>
 
-        {/* Floating run bar */}
         <div className="pointer-events-none absolute left-1/2 top-4 -translate-x-1/2">
           <div className="pointer-events-auto flex items-center gap-2 rounded-full border border-border bg-card/80 px-2 py-1 backdrop-blur-xl shadow-[var(--shadow-card)]">
             <Badge variant="outline" className="gap-1 border-success/40 text-success">
@@ -272,13 +202,12 @@ function FlowInner() {
               Validate
             </Button>
             <Button size="sm" className="h-7 gap-1 bg-[image:var(--gradient-primary)] text-primary-foreground hover:opacity-90">
-              <Sparkles className="h-3 w-3" /> Run flow
+              <Sparkles className="h-3 w-3" /> {runLabel}
             </Button>
           </div>
         </div>
       </div>
 
-      {/* Properties */}
       <aside className="flex w-80 shrink-0 flex-col border-l border-border bg-sidebar/60 backdrop-blur-md">
         <div className="flex items-center justify-between border-b border-border px-4 py-3">
           <div>
@@ -345,10 +274,10 @@ function FlowInner() {
   );
 }
 
-export function FlowBuilder() {
+export function FlowBuilder(props: FlowBuilderProps) {
   return (
     <ReactFlowProvider>
-      <FlowInner />
+      <FlowInner {...props} />
     </ReactFlowProvider>
   );
 }

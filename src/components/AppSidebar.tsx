@@ -24,7 +24,8 @@ import {
 } from "@/components/ui/sidebar";
 
 const buildItems = [
-  { title: "Flow Builder", url: "/", icon: Workflow },
+  { title: "Flow Orchestration", url: "/", icon: Workflow },
+  { title: "Agent Builder", url: "/agent-builder", icon: Sparkles },
   { title: "Agents", url: "/agents", icon: Bot },
 ];
 

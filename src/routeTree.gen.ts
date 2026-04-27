@@ -16,6 +16,7 @@ import { Route as LlmsRouteImport } from './routes/llms'
 import { Route as DeployRouteImport } from './routes/deploy'
 import { Route as ApisRouteImport } from './routes/apis'
 import { Route as AgentsRouteImport } from './routes/agents'
+import { Route as AgentBuilderRouteImport } from './routes/agent-builder'
 import { Route as IndexRouteImport } from './routes/index'
 
 const RagsRoute = RagsRouteImport.update({
@@ -53,6 +54,11 @@ const AgentsRoute = AgentsRouteImport.update({
   path: '/agents',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AgentBuilderRoute = AgentBuilderRouteImport.update({
+  id: '/agent-builder',
+  path: '/agent-builder',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -61,6 +67,7 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/agent-builder': typeof AgentBuilderRoute
   '/agents': typeof AgentsRoute
   '/apis': typeof ApisRoute
   '/deploy': typeof DeployRoute
@@ -71,6 +78,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/agent-builder': typeof AgentBuilderRoute
   '/agents': typeof AgentsRoute
   '/apis': typeof ApisRoute
   '/deploy': typeof DeployRoute
@@ -82,6 +90,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/agent-builder': typeof AgentBuilderRoute
   '/agents': typeof AgentsRoute
   '/apis': typeof ApisRoute
   '/deploy': typeof DeployRoute
@@ -94,6 +103,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/agent-builder'
     | '/agents'
     | '/apis'
     | '/deploy'
@@ -104,6 +114,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/agent-builder'
     | '/agents'
     | '/apis'
     | '/deploy'
@@ -114,6 +125,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/agent-builder'
     | '/agents'
     | '/apis'
     | '/deploy'
@@ -125,6 +137,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AgentBuilderRoute: typeof AgentBuilderRoute
   AgentsRoute: typeof AgentsRoute
   ApisRoute: typeof ApisRoute
   DeployRoute: typeof DeployRoute
@@ -185,6 +198,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AgentsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/agent-builder': {
+      id: '/agent-builder'
+      path: '/agent-builder'
+      fullPath: '/agent-builder'
+      preLoaderRoute: typeof AgentBuilderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -197,6 +217,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AgentBuilderRoute: AgentBuilderRoute,
   AgentsRoute: AgentsRoute,
   ApisRoute: ApisRoute,
   DeployRoute: DeployRoute,
