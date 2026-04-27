@@ -29,9 +29,9 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Synapse — AI Agent Orchestration" },
+      { title: "Inspire — AI Low Code Platform" },
       { name: "description", content: "Low-code platform to design, deploy and observe collaborative AI agents on Kubernetes." },
-      { property: "og:title", content: "Synapse — AI Agent Orchestration" },
+      { property: "og:title", content: "Inspire — AI Low Code Platform" },
       { property: "og:description", content: "Low-code platform to design, deploy and observe collaborative AI agents." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

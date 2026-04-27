@@ -39,9 +39,9 @@ export function AppSidebar() {
           </div>
           {!collapsed && (
             <div className="flex flex-col leading-tight">
-              <span className="font-display text-sm font-bold tracking-tight">Synapse</span>
+              <span className="font-display text-sm font-bold tracking-tight">Inspire</span>
               <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                AI Orchestration
+                AI Low Code Platform
               </span>
             </div>
           )}
