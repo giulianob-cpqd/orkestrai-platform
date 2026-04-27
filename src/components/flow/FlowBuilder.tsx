@@ -19,6 +19,7 @@ import "@xyflow/react/dist/style.css";
 
 import { AgentNode } from "./AgentNode";
 import type { NodeTemplate } from "./nodeCatalog";
+import { AIAssistantPanel, type AssistantMode } from "./AIAssistantPanel";
 import { Settings2, Trash2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,6 +38,7 @@ export interface FlowBuilderProps {
   paletteTitle?: string;
   paletteSubtitle?: string;
   runLabel?: string;
+  assistantMode?: AssistantMode;
 }
 
 let idCounter = 1000;
@@ -48,12 +50,23 @@ function FlowInner({
   paletteTitle = "Components",
   paletteSubtitle = "Drag to canvas",
   runLabel = "Run flow",
+  assistantMode = "orchestration",
 }: FlowBuilderProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [selectedId, setSelectedId] = useState<string | null>(initialNodes[0]?.id ?? null);
+  const [assistantOpen, setAssistantOpen] = useState(false);
+
+  const handleAssistantApply = useCallback(
+    (newNodes: Node[], newEdges: Edge[]) => {
+      setNodes((nds) => nds.concat(newNodes));
+      setEdges((eds) => eds.concat(newEdges));
+      setTimeout(() => rfInstance?.fitView({ padding: 0.2, duration: 600 }), 50);
+    },
+    [setNodes, setEdges, rfInstance],
+  );
 
   const onConnect = useCallback(
     (params: Connection) =>
