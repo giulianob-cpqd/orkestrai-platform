@@ -8,7 +8,7 @@ import { Plus, Bot, Users, ArrowRight, Database } from "lucide-react";
 import { agentFlows } from "@/data/flows";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/agents")({
+export const Route = createFileRoute("/agents/")({
   head: () => ({
     meta: [
       { title: "Agents · Synapse" },

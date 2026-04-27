@@ -8,7 +8,7 @@ import { getAgentFlow, type AgentFlow } from "@/data/flows";
 import { FanDiagram } from "@/components/flow/FanDiagram";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/agents/$id")({
+export const Route = createFileRoute("/agents/$id/")({
   loader: ({ params }) => {
     const flow = getAgentFlow(params.id);
     if (!flow) throw notFound();
