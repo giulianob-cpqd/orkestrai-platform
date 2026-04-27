@@ -9,8 +9,50 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as RagsRouteImport } from './routes/rags'
+import { Route as ObservabilityRouteImport } from './routes/observability'
+import { Route as McpRouteImport } from './routes/mcp'
+import { Route as LlmsRouteImport } from './routes/llms'
+import { Route as DeployRouteImport } from './routes/deploy'
+import { Route as ApisRouteImport } from './routes/apis'
+import { Route as AgentsRouteImport } from './routes/agents'
 import { Route as IndexRouteImport } from './routes/index'
 
+const RagsRoute = RagsRouteImport.update({
+  id: '/rags',
+  path: '/rags',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ObservabilityRoute = ObservabilityRouteImport.update({
+  id: '/observability',
+  path: '/observability',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LlmsRoute = LlmsRouteImport.update({
+  id: '/llms',
+  path: '/llms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DeployRoute = DeployRouteImport.update({
+  id: '/deploy',
+  path: '/deploy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApisRoute = ApisRouteImport.update({
+  id: '/apis',
+  path: '/apis',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AgentsRoute = AgentsRouteImport.update({
+  id: '/agents',
+  path: '/agents',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -19,28 +61,130 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/agents': typeof AgentsRoute
+  '/apis': typeof ApisRoute
+  '/deploy': typeof DeployRoute
+  '/llms': typeof LlmsRoute
+  '/mcp': typeof McpRoute
+  '/observability': typeof ObservabilityRoute
+  '/rags': typeof RagsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/agents': typeof AgentsRoute
+  '/apis': typeof ApisRoute
+  '/deploy': typeof DeployRoute
+  '/llms': typeof LlmsRoute
+  '/mcp': typeof McpRoute
+  '/observability': typeof ObservabilityRoute
+  '/rags': typeof RagsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/agents': typeof AgentsRoute
+  '/apis': typeof ApisRoute
+  '/deploy': typeof DeployRoute
+  '/llms': typeof LlmsRoute
+  '/mcp': typeof McpRoute
+  '/observability': typeof ObservabilityRoute
+  '/rags': typeof RagsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/agents'
+    | '/apis'
+    | '/deploy'
+    | '/llms'
+    | '/mcp'
+    | '/observability'
+    | '/rags'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/agents'
+    | '/apis'
+    | '/deploy'
+    | '/llms'
+    | '/mcp'
+    | '/observability'
+    | '/rags'
+  id:
+    | '__root__'
+    | '/'
+    | '/agents'
+    | '/apis'
+    | '/deploy'
+    | '/llms'
+    | '/mcp'
+    | '/observability'
+    | '/rags'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AgentsRoute: typeof AgentsRoute
+  ApisRoute: typeof ApisRoute
+  DeployRoute: typeof DeployRoute
+  LlmsRoute: typeof LlmsRoute
+  McpRoute: typeof McpRoute
+  ObservabilityRoute: typeof ObservabilityRoute
+  RagsRoute: typeof RagsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/rags': {
+      id: '/rags'
+      path: '/rags'
+      fullPath: '/rags'
+      preLoaderRoute: typeof RagsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/observability': {
+      id: '/observability'
+      path: '/observability'
+      fullPath: '/observability'
+      preLoaderRoute: typeof ObservabilityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/llms': {
+      id: '/llms'
+      path: '/llms'
+      fullPath: '/llms'
+      preLoaderRoute: typeof LlmsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/deploy': {
+      id: '/deploy'
+      path: '/deploy'
+      fullPath: '/deploy'
+      preLoaderRoute: typeof DeployRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/apis': {
+      id: '/apis'
+      path: '/apis'
+      fullPath: '/apis'
+      preLoaderRoute: typeof ApisRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/agents': {
+      id: '/agents'
+      path: '/agents'
+      fullPath: '/agents'
+      preLoaderRoute: typeof AgentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -53,16 +197,14 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AgentsRoute: AgentsRoute,
+  ApisRoute: ApisRoute,
+  DeployRoute: DeployRoute,
+  LlmsRoute: LlmsRoute,
+  McpRoute: McpRoute,
+  ObservabilityRoute: ObservabilityRoute,
+  RagsRoute: RagsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
