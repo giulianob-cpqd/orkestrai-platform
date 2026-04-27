@@ -10,16 +10,13 @@ import { getAgentFlow } from "@/data/flows";
 
 export const Route = createFileRoute("/agents/$id/edit")({
   loader: ({ params }) => {
-    if (params.id === "new") return { flow: null };
     const flow = getAgentFlow(params.id);
     if (!flow) throw notFound();
     return { flow };
   },
   head: ({ loaderData }) => ({
     meta: [
-      {
-        title: `${loaderData?.flow ? `Edit ${loaderData.flow.name}` : "New agent"} · Synapse`,
-      },
+      { title: `Edit ${loaderData?.flow?.name ?? "agent"} · Synapse` },
     ],
   }),
   notFoundComponent: () => (
@@ -64,16 +61,15 @@ const initialEdges: Edge[] = [
 function EditAgent() {
   const { flow } = Route.useLoaderData();
   const params = Route.useParams();
-  const isNew = params.id === "new";
 
   return (
     <AppLayout
-      title={isNew ? "new-agent.agent" : `${flow?.slug}.agent`}
-      subtitle={isNew ? "Untitled agent" : `${flow?.name} · ${flow?.version}`}
+      title={`${flow.slug}.agent`}
+      subtitle={`${flow.name} · ${flow.version}`}
       actions={
         <>
           <Button asChild size="sm" variant="ghost" className="h-8 gap-1.5">
-            <Link to={isNew ? "/agents" : "/agents/$id"} params={isNew ? undefined : { id: params.id }}>
+            <Link to="/agents/$id" params={{ id: params.id }}>
               <ArrowLeft className="h-3.5 w-3.5" /> Back
             </Link>
           </Button>
@@ -88,8 +84,8 @@ function EditAgent() {
     >
       <FlowBuilder
         catalog={agentNodeCatalog}
-        initialNodes={isNew ? [] : initialNodes}
-        initialEdges={isNew ? [] : initialEdges}
+        initialNodes={initialNodes}
+        initialEdges={initialEdges}
         paletteTitle="Agent Parts"
         paletteSubtitle="LLM · RAG · Memory · Tools"
         runLabel="Test agent"

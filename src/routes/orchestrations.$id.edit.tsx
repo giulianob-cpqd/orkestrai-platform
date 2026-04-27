@@ -10,16 +10,13 @@ import { getOrchestration } from "@/data/flows";
 
 export const Route = createFileRoute("/orchestrations/$id/edit")({
   loader: ({ params }) => {
-    if (params.id === "new") return { flow: null };
     const flow = getOrchestration(params.id);
     if (!flow) throw notFound();
     return { flow };
   },
   head: ({ loaderData }) => ({
     meta: [
-      {
-        title: `${loaderData?.flow ? `Edit ${loaderData.flow.name}` : "New orchestration"} · Synapse`,
-      },
+      { title: `Edit ${loaderData?.flow?.name ?? "orchestration"} · Synapse` },
     ],
   }),
   notFoundComponent: () => (
@@ -99,16 +96,15 @@ const initialEdges: Edge[] = [
 function EditOrchestration() {
   const { flow } = Route.useLoaderData();
   const params = Route.useParams();
-  const isNew = params.id === "new";
 
   return (
     <AppLayout
-      title={isNew ? "new-orchestration.flow" : `${flow?.slug}.flow`}
-      subtitle={isNew ? "Untitled orchestration" : `${flow?.name} · ${flow?.version}`}
+      title={`${flow.slug}.flow`}
+      subtitle={`${flow.name} · ${flow.version}`}
       actions={
         <>
           <Button asChild size="sm" variant="ghost" className="h-8 gap-1.5">
-            <Link to={isNew ? "/" : "/orchestrations/$id"} params={isNew ? undefined : { id: params.id }}>
+            <Link to="/orchestrations/$id" params={{ id: params.id }}>
               <ArrowLeft className="h-3.5 w-3.5" /> Back
             </Link>
           </Button>
@@ -123,8 +119,8 @@ function EditOrchestration() {
     >
       <FlowBuilder
         catalog={orchestrationNodeCatalog}
-        initialNodes={isNew ? [] : initialNodes}
-        initialEdges={isNew ? [] : initialEdges}
+        initialNodes={initialNodes}
+        initialEdges={initialEdges}
         paletteTitle="Orchestration"
         paletteSubtitle="Agents, endpoints, queues"
         runLabel="Deploy flow"

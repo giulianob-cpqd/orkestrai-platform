@@ -33,7 +33,7 @@ function AgentsList() {
           description="Single agents composed of an LLM, memory, RAG and tools — referenced inside orchestrations."
         >
           <Button asChild size="sm" className="gap-1.5 bg-[image:var(--gradient-primary)] text-primary-foreground">
-            <Link to="/agents/$id/edit" params={{ id: "new" }}>
+            <Link to="/agents/new">
               <Plus className="h-3.5 w-3.5" /> New agent
             </Link>
           </Button>

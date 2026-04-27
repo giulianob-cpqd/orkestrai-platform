@@ -33,7 +33,7 @@ function OrchestrationsList() {
           description="Flows that coordinate multiple agents through endpoints, queues and services."
         >
           <Button asChild size="sm" className="gap-1.5 bg-[image:var(--gradient-primary)] text-primary-foreground">
-            <Link to="/orchestrations/$id/edit" params={{ id: "new" }}>
+            <Link to="/orchestrations/new">
               <Plus className="h-3.5 w-3.5" /> New orchestration
             </Link>
           </Button>
