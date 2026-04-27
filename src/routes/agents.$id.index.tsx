@@ -3,9 +3,12 @@ import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Pencil, Users, User, GitBranch, Database } from "lucide-react";
 import { getAgentFlow, type AgentFlow } from "@/data/flows";
 import { FanDiagram } from "@/components/flow/FanDiagram";
+import { PipelineSection } from "@/components/sections/PipelineSection";
+import { ObservabilitySection } from "@/components/sections/ObservabilitySection";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/agents/$id/")({
@@ -128,6 +131,19 @@ function AgentDetail() {
             </div>
           )}
         </Card>
+
+        <Tabs defaultValue="pipeline" className="w-full">
+          <TabsList>
+            <TabsTrigger value="pipeline">Pipeline & Deploy</TabsTrigger>
+            <TabsTrigger value="observability">Observability</TabsTrigger>
+          </TabsList>
+          <TabsContent value="pipeline" className="mt-4">
+            <PipelineSection flowName={flow.slug} />
+          </TabsContent>
+          <TabsContent value="observability" className="mt-4">
+            <ObservabilitySection />
+          </TabsContent>
+        </Tabs>
       </div>
     </AppLayout>
   );
