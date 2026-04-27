@@ -38,6 +38,7 @@ function NewOrchestrationPage() {
         paletteTitle="Orchestration"
         paletteSubtitle="Agents, endpoints, queues"
         runLabel="Deploy flow"
+        assistantMode="orchestration"
       />
     </AppLayout>
   );

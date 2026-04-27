@@ -89,6 +89,7 @@ function EditAgent() {
         paletteTitle="Agent Parts"
         paletteSubtitle="LLM · RAG · Memory · Tools"
         runLabel="Test agent"
+        assistantMode="agent"
       />
     </AppLayout>
   );
