@@ -47,6 +47,14 @@
   --color-node-rag: var(--node-rag);
   --color-node-mcp: var(--node-mcp);
   --color-node-output: var(--node-output);
+  --color-node-memory: var(--node-memory);
+  --color-node-db: var(--node-db);
+  --color-node-cloud: var(--node-cloud);
+  --color-node-endpoint: var(--node-endpoint);
+  --color-node-queue: var(--node-queue);
+  --color-node-agentref: var(--node-agentref);
+  --color-node-coord: var(--node-coord);
+  --color-node-input: var(--node-input);
 
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
@@ -99,12 +107,20 @@
   --ring: oklch(0.82 0.17 180);
 
   /* Node colors per type */
-  --node-llm: oklch(0.7 0.18 235);     /* blue */
-  --node-agent: oklch(0.82 0.17 180);  /* cyan */
-  --node-tool: oklch(0.78 0.16 75);    /* amber */
-  --node-rag: oklch(0.7 0.18 300);     /* violet */
-  --node-mcp: oklch(0.75 0.18 155);    /* green */
-  --node-output: oklch(0.7 0.2 25);    /* coral */
+  --node-llm: oklch(0.7 0.18 235);      /* blue */
+  --node-agent: oklch(0.82 0.17 180);   /* cyan */
+  --node-tool: oklch(0.78 0.16 75);     /* amber */
+  --node-rag: oklch(0.7 0.18 300);      /* violet */
+  --node-mcp: oklch(0.75 0.18 155);     /* green */
+  --node-output: oklch(0.7 0.2 25);     /* coral */
+  --node-memory: oklch(0.74 0.16 330);  /* pink */
+  --node-db: oklch(0.7 0.15 210);       /* steel blue */
+  --node-cloud: oklch(0.78 0.13 250);   /* periwinkle */
+  --node-endpoint: oklch(0.78 0.18 50); /* orange */
+  --node-queue: oklch(0.76 0.16 110);   /* lime */
+  --node-agentref: oklch(0.82 0.17 180);/* cyan (alias) */
+  --node-coord: oklch(0.72 0.18 320);   /* magenta */
+  --node-input: oklch(0.7 0.2 25);      /* coral (alias) */
 
   --sidebar: oklch(0.16 0.02 260);
   --sidebar-foreground: oklch(0.92 0.01 240);
