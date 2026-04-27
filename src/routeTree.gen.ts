@@ -15,8 +15,8 @@ import { Route as LlmsRouteImport } from './routes/llms'
 import { Route as ApisRouteImport } from './routes/apis'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AgentsIndexRouteImport } from './routes/agents.index'
-import { Route as OrchestrationsIdRouteImport } from './routes/orchestrations.$id'
-import { Route as AgentsIdRouteImport } from './routes/agents.$id'
+import { Route as OrchestrationsIdIndexRouteImport } from './routes/orchestrations.$id.index'
+import { Route as AgentsIdIndexRouteImport } from './routes/agents.$id.index'
 import { Route as OrchestrationsIdEditRouteImport } from './routes/orchestrations.$id.edit'
 import { Route as AgentsIdEditRouteImport } from './routes/agents.$id.edit'
 
@@ -50,14 +50,14 @@ const AgentsIndexRoute = AgentsIndexRouteImport.update({
   path: '/agents/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const OrchestrationsIdRoute = OrchestrationsIdRouteImport.update({
-  id: '/orchestrations/$id',
-  path: '/orchestrations/$id',
+const OrchestrationsIdIndexRoute = OrchestrationsIdIndexRouteImport.update({
+  id: '/orchestrations/$id/',
+  path: '/orchestrations/$id/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AgentsIdRoute = AgentsIdRouteImport.update({
-  id: '/agents/$id',
-  path: '/agents/$id',
+const AgentsIdIndexRoute = AgentsIdIndexRouteImport.update({
+  id: '/agents/$id/',
+  path: '/agents/$id/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OrchestrationsIdEditRoute = OrchestrationsIdEditRouteImport.update({
@@ -77,11 +77,11 @@ export interface FileRoutesByFullPath {
   '/llms': typeof LlmsRoute
   '/mcp': typeof McpRoute
   '/rags': typeof RagsRoute
-  '/agents/$id': typeof AgentsIdRouteWithChildren
-  '/orchestrations/$id': typeof OrchestrationsIdRouteWithChildren
   '/agents/': typeof AgentsIndexRoute
   '/agents/$id/edit': typeof AgentsIdEditRoute
   '/orchestrations/$id/edit': typeof OrchestrationsIdEditRoute
+  '/agents/$id/': typeof AgentsIdIndexRoute
+  '/orchestrations/$id/': typeof OrchestrationsIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -89,11 +89,11 @@ export interface FileRoutesByTo {
   '/llms': typeof LlmsRoute
   '/mcp': typeof McpRoute
   '/rags': typeof RagsRoute
-  '/agents/$id': typeof AgentsIdRouteWithChildren
-  '/orchestrations/$id': typeof OrchestrationsIdRouteWithChildren
   '/agents': typeof AgentsIndexRoute
   '/agents/$id/edit': typeof AgentsIdEditRoute
   '/orchestrations/$id/edit': typeof OrchestrationsIdEditRoute
+  '/agents/$id': typeof AgentsIdIndexRoute
+  '/orchestrations/$id': typeof OrchestrationsIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -102,11 +102,11 @@ export interface FileRoutesById {
   '/llms': typeof LlmsRoute
   '/mcp': typeof McpRoute
   '/rags': typeof RagsRoute
-  '/agents/$id': typeof AgentsIdRouteWithChildren
-  '/orchestrations/$id': typeof OrchestrationsIdRouteWithChildren
   '/agents/': typeof AgentsIndexRoute
   '/agents/$id/edit': typeof AgentsIdEditRoute
   '/orchestrations/$id/edit': typeof OrchestrationsIdEditRoute
+  '/agents/$id/': typeof AgentsIdIndexRoute
+  '/orchestrations/$id/': typeof OrchestrationsIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -116,11 +116,11 @@ export interface FileRouteTypes {
     | '/llms'
     | '/mcp'
     | '/rags'
-    | '/agents/$id'
-    | '/orchestrations/$id'
     | '/agents/'
     | '/agents/$id/edit'
     | '/orchestrations/$id/edit'
+    | '/agents/$id/'
+    | '/orchestrations/$id/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -128,11 +128,11 @@ export interface FileRouteTypes {
     | '/llms'
     | '/mcp'
     | '/rags'
-    | '/agents/$id'
-    | '/orchestrations/$id'
     | '/agents'
     | '/agents/$id/edit'
     | '/orchestrations/$id/edit'
+    | '/agents/$id'
+    | '/orchestrations/$id'
   id:
     | '__root__'
     | '/'
@@ -140,11 +140,11 @@ export interface FileRouteTypes {
     | '/llms'
     | '/mcp'
     | '/rags'
-    | '/agents/$id'
-    | '/orchestrations/$id'
     | '/agents/'
     | '/agents/$id/edit'
     | '/orchestrations/$id/edit'
+    | '/agents/$id/'
+    | '/orchestrations/$id/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -153,9 +153,9 @@ export interface RootRouteChildren {
   LlmsRoute: typeof LlmsRoute
   McpRoute: typeof McpRoute
   RagsRoute: typeof RagsRoute
-  AgentsIdRoute: typeof AgentsIdRouteWithChildren
-  OrchestrationsIdRoute: typeof OrchestrationsIdRouteWithChildren
   AgentsIndexRoute: typeof AgentsIndexRoute
+  AgentsIdIndexRoute: typeof AgentsIdIndexRoute
+  OrchestrationsIdIndexRoute: typeof OrchestrationsIdIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -202,18 +202,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AgentsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/orchestrations/$id': {
-      id: '/orchestrations/$id'
+    '/orchestrations/$id/': {
+      id: '/orchestrations/$id/'
       path: '/orchestrations/$id'
-      fullPath: '/orchestrations/$id'
-      preLoaderRoute: typeof OrchestrationsIdRouteImport
+      fullPath: '/orchestrations/$id/'
+      preLoaderRoute: typeof OrchestrationsIdIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/agents/$id': {
-      id: '/agents/$id'
+    '/agents/$id/': {
+      id: '/agents/$id/'
       path: '/agents/$id'
-      fullPath: '/agents/$id'
-      preLoaderRoute: typeof AgentsIdRouteImport
+      fullPath: '/agents/$id/'
+      preLoaderRoute: typeof AgentsIdIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/orchestrations/$id/edit': {
@@ -233,38 +233,15 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface AgentsIdRouteChildren {
-  AgentsIdEditRoute: typeof AgentsIdEditRoute
-}
-
-const AgentsIdRouteChildren: AgentsIdRouteChildren = {
-  AgentsIdEditRoute: AgentsIdEditRoute,
-}
-
-const AgentsIdRouteWithChildren = AgentsIdRoute._addFileChildren(
-  AgentsIdRouteChildren,
-)
-
-interface OrchestrationsIdRouteChildren {
-  OrchestrationsIdEditRoute: typeof OrchestrationsIdEditRoute
-}
-
-const OrchestrationsIdRouteChildren: OrchestrationsIdRouteChildren = {
-  OrchestrationsIdEditRoute: OrchestrationsIdEditRoute,
-}
-
-const OrchestrationsIdRouteWithChildren =
-  OrchestrationsIdRoute._addFileChildren(OrchestrationsIdRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ApisRoute: ApisRoute,
   LlmsRoute: LlmsRoute,
   McpRoute: McpRoute,
   RagsRoute: RagsRoute,
-  AgentsIdRoute: AgentsIdRouteWithChildren,
-  OrchestrationsIdRoute: OrchestrationsIdRouteWithChildren,
   AgentsIndexRoute: AgentsIndexRoute,
+  AgentsIdIndexRoute: AgentsIdIndexRoute,
+  OrchestrationsIdIndexRoute: OrchestrationsIdIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
