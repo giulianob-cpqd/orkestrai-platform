@@ -214,6 +214,14 @@ function FlowInner({
             <Button size="sm" variant="ghost" className="h-7">
               Validate
             </Button>
+            <Button
+              size="sm"
+              variant={assistantOpen ? "default" : "ghost"}
+              className="h-7 gap-1"
+              onClick={() => setAssistantOpen((v) => !v)}
+            >
+              <Sparkles className="h-3 w-3" /> AI Assistant
+            </Button>
             <Button size="sm" className="h-7 gap-1 bg-[image:var(--gradient-primary)] text-primary-foreground hover:opacity-90">
               <Sparkles className="h-3 w-3" /> {runLabel}
             </Button>
