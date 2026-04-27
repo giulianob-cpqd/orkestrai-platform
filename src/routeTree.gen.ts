@@ -10,23 +10,19 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as RagsRouteImport } from './routes/rags'
-import { Route as ObservabilityRouteImport } from './routes/observability'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as LlmsRouteImport } from './routes/llms'
-import { Route as DeployRouteImport } from './routes/deploy'
 import { Route as ApisRouteImport } from './routes/apis'
 import { Route as AgentsRouteImport } from './routes/agents'
-import { Route as AgentBuilderRouteImport } from './routes/agent-builder'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as OrchestrationsIdRouteImport } from './routes/orchestrations.$id'
+import { Route as AgentsIdRouteImport } from './routes/agents.$id'
+import { Route as OrchestrationsIdEditRouteImport } from './routes/orchestrations.$id.edit'
+import { Route as AgentsIdEditRouteImport } from './routes/agents.$id.edit'
 
 const RagsRoute = RagsRouteImport.update({
   id: '/rags',
   path: '/rags',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ObservabilityRoute = ObservabilityRouteImport.update({
-  id: '/observability',
-  path: '/observability',
   getParentRoute: () => rootRouteImport,
 } as any)
 const McpRoute = McpRouteImport.update({
@@ -39,11 +35,6 @@ const LlmsRoute = LlmsRouteImport.update({
   path: '/llms',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DeployRoute = DeployRouteImport.update({
-  id: '/deploy',
-  path: '/deploy',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApisRoute = ApisRouteImport.update({
   id: '/apis',
   path: '/apis',
@@ -54,97 +45,116 @@ const AgentsRoute = AgentsRouteImport.update({
   path: '/agents',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AgentBuilderRoute = AgentBuilderRouteImport.update({
-  id: '/agent-builder',
-  path: '/agent-builder',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OrchestrationsIdRoute = OrchestrationsIdRouteImport.update({
+  id: '/orchestrations/$id',
+  path: '/orchestrations/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AgentsIdRoute = AgentsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AgentsRoute,
+} as any)
+const OrchestrationsIdEditRoute = OrchestrationsIdEditRouteImport.update({
+  id: '/edit',
+  path: '/edit',
+  getParentRoute: () => OrchestrationsIdRoute,
+} as any)
+const AgentsIdEditRoute = AgentsIdEditRouteImport.update({
+  id: '/edit',
+  path: '/edit',
+  getParentRoute: () => AgentsIdRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/agent-builder': typeof AgentBuilderRoute
-  '/agents': typeof AgentsRoute
+  '/agents': typeof AgentsRouteWithChildren
   '/apis': typeof ApisRoute
-  '/deploy': typeof DeployRoute
   '/llms': typeof LlmsRoute
   '/mcp': typeof McpRoute
-  '/observability': typeof ObservabilityRoute
   '/rags': typeof RagsRoute
+  '/agents/$id': typeof AgentsIdRouteWithChildren
+  '/orchestrations/$id': typeof OrchestrationsIdRouteWithChildren
+  '/agents/$id/edit': typeof AgentsIdEditRoute
+  '/orchestrations/$id/edit': typeof OrchestrationsIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/agent-builder': typeof AgentBuilderRoute
-  '/agents': typeof AgentsRoute
+  '/agents': typeof AgentsRouteWithChildren
   '/apis': typeof ApisRoute
-  '/deploy': typeof DeployRoute
   '/llms': typeof LlmsRoute
   '/mcp': typeof McpRoute
-  '/observability': typeof ObservabilityRoute
   '/rags': typeof RagsRoute
+  '/agents/$id': typeof AgentsIdRouteWithChildren
+  '/orchestrations/$id': typeof OrchestrationsIdRouteWithChildren
+  '/agents/$id/edit': typeof AgentsIdEditRoute
+  '/orchestrations/$id/edit': typeof OrchestrationsIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/agent-builder': typeof AgentBuilderRoute
-  '/agents': typeof AgentsRoute
+  '/agents': typeof AgentsRouteWithChildren
   '/apis': typeof ApisRoute
-  '/deploy': typeof DeployRoute
   '/llms': typeof LlmsRoute
   '/mcp': typeof McpRoute
-  '/observability': typeof ObservabilityRoute
   '/rags': typeof RagsRoute
+  '/agents/$id': typeof AgentsIdRouteWithChildren
+  '/orchestrations/$id': typeof OrchestrationsIdRouteWithChildren
+  '/agents/$id/edit': typeof AgentsIdEditRoute
+  '/orchestrations/$id/edit': typeof OrchestrationsIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/agent-builder'
     | '/agents'
     | '/apis'
-    | '/deploy'
     | '/llms'
     | '/mcp'
-    | '/observability'
     | '/rags'
+    | '/agents/$id'
+    | '/orchestrations/$id'
+    | '/agents/$id/edit'
+    | '/orchestrations/$id/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/agent-builder'
     | '/agents'
     | '/apis'
-    | '/deploy'
     | '/llms'
     | '/mcp'
-    | '/observability'
     | '/rags'
+    | '/agents/$id'
+    | '/orchestrations/$id'
+    | '/agents/$id/edit'
+    | '/orchestrations/$id/edit'
   id:
     | '__root__'
     | '/'
-    | '/agent-builder'
     | '/agents'
     | '/apis'
-    | '/deploy'
     | '/llms'
     | '/mcp'
-    | '/observability'
     | '/rags'
+    | '/agents/$id'
+    | '/orchestrations/$id'
+    | '/agents/$id/edit'
+    | '/orchestrations/$id/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AgentBuilderRoute: typeof AgentBuilderRoute
-  AgentsRoute: typeof AgentsRoute
+  AgentsRoute: typeof AgentsRouteWithChildren
   ApisRoute: typeof ApisRoute
-  DeployRoute: typeof DeployRoute
   LlmsRoute: typeof LlmsRoute
   McpRoute: typeof McpRoute
-  ObservabilityRoute: typeof ObservabilityRoute
   RagsRoute: typeof RagsRoute
+  OrchestrationsIdRoute: typeof OrchestrationsIdRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -154,13 +164,6 @@ declare module '@tanstack/react-router' {
       path: '/rags'
       fullPath: '/rags'
       preLoaderRoute: typeof RagsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/observability': {
-      id: '/observability'
-      path: '/observability'
-      fullPath: '/observability'
-      preLoaderRoute: typeof ObservabilityRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mcp': {
@@ -177,13 +180,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LlmsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/deploy': {
-      id: '/deploy'
-      path: '/deploy'
-      fullPath: '/deploy'
-      preLoaderRoute: typeof DeployRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/apis': {
       id: '/apis'
       path: '/apis'
@@ -198,13 +194,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AgentsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/agent-builder': {
-      id: '/agent-builder'
-      path: '/agent-builder'
-      fullPath: '/agent-builder'
-      preLoaderRoute: typeof AgentBuilderRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/': {
       id: '/'
       path: '/'
@@ -212,19 +201,79 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/orchestrations/$id': {
+      id: '/orchestrations/$id'
+      path: '/orchestrations/$id'
+      fullPath: '/orchestrations/$id'
+      preLoaderRoute: typeof OrchestrationsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/agents/$id': {
+      id: '/agents/$id'
+      path: '/$id'
+      fullPath: '/agents/$id'
+      preLoaderRoute: typeof AgentsIdRouteImport
+      parentRoute: typeof AgentsRoute
+    }
+    '/orchestrations/$id/edit': {
+      id: '/orchestrations/$id/edit'
+      path: '/edit'
+      fullPath: '/orchestrations/$id/edit'
+      preLoaderRoute: typeof OrchestrationsIdEditRouteImport
+      parentRoute: typeof OrchestrationsIdRoute
+    }
+    '/agents/$id/edit': {
+      id: '/agents/$id/edit'
+      path: '/edit'
+      fullPath: '/agents/$id/edit'
+      preLoaderRoute: typeof AgentsIdEditRouteImport
+      parentRoute: typeof AgentsIdRoute
+    }
   }
 }
 
+interface AgentsIdRouteChildren {
+  AgentsIdEditRoute: typeof AgentsIdEditRoute
+}
+
+const AgentsIdRouteChildren: AgentsIdRouteChildren = {
+  AgentsIdEditRoute: AgentsIdEditRoute,
+}
+
+const AgentsIdRouteWithChildren = AgentsIdRoute._addFileChildren(
+  AgentsIdRouteChildren,
+)
+
+interface AgentsRouteChildren {
+  AgentsIdRoute: typeof AgentsIdRouteWithChildren
+}
+
+const AgentsRouteChildren: AgentsRouteChildren = {
+  AgentsIdRoute: AgentsIdRouteWithChildren,
+}
+
+const AgentsRouteWithChildren =
+  AgentsRoute._addFileChildren(AgentsRouteChildren)
+
+interface OrchestrationsIdRouteChildren {
+  OrchestrationsIdEditRoute: typeof OrchestrationsIdEditRoute
+}
+
+const OrchestrationsIdRouteChildren: OrchestrationsIdRouteChildren = {
+  OrchestrationsIdEditRoute: OrchestrationsIdEditRoute,
+}
+
+const OrchestrationsIdRouteWithChildren =
+  OrchestrationsIdRoute._addFileChildren(OrchestrationsIdRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AgentBuilderRoute: AgentBuilderRoute,
-  AgentsRoute: AgentsRoute,
+  AgentsRoute: AgentsRouteWithChildren,
   ApisRoute: ApisRoute,
-  DeployRoute: DeployRoute,
   LlmsRoute: LlmsRoute,
   McpRoute: McpRoute,
-  ObservabilityRoute: ObservabilityRoute,
   RagsRoute: RagsRoute,
+  OrchestrationsIdRoute: OrchestrationsIdRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
