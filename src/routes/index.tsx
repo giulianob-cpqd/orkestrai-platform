@@ -1,116 +1,110 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { type Node, type Edge, MarkerType } from "@xyflow/react";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppLayout } from "@/components/AppLayout";
-import { FlowBuilder } from "@/components/flow/FlowBuilder";
-import { orchestrationNodeCatalog } from "@/components/flow/nodeCatalog";
+import { PageHeader } from "@/components/CatalogGrid";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Save, Share2 } from "lucide-react";
-import { Webhook, Bot, GitBranch, Database, Cloud, Radio, Send } from "lucide-react";
-
-const initialNodes: Node[] = [
-  {
-    id: "f1",
-    type: "agent",
-    position: { x: 40, y: 200 },
-    data: { label: "POST /v1/research", description: "REST endpoint", icon: Webhook, variant: "endpoint", meta: "auth: bearer" },
-  },
-  {
-    id: "f2",
-    type: "agent",
-    position: { x: 320, y: 60 },
-    data: { label: "Intent Router", description: "Classifies user intent", icon: GitBranch, variant: "coord", meta: "router · 3 paths" },
-  },
-  {
-    id: "f3",
-    type: "agent",
-    position: { x: 620, y: 0 },
-    data: { label: "Researcher", description: "agent_research_v3", icon: Bot, variant: "agentref", meta: "v3 · published" },
-  },
-  {
-    id: "f4",
-    type: "agent",
-    position: { x: 620, y: 140 },
-    data: { label: "SQL Analyst", description: "agent_sql_v2", icon: Bot, variant: "agentref", meta: "v2 · published" },
-  },
-  {
-    id: "f5",
-    type: "agent",
-    position: { x: 320, y: 320 },
-    data: { label: "events.research", description: "Kafka topic emission", icon: Radio, variant: "queue", meta: "kafka · partitions 6" },
-  },
-  {
-    id: "f6",
-    type: "agent",
-    position: { x: 620, y: 320 },
-    data: { label: "Warehouse", description: "Postgres analytics DB", icon: Database, variant: "db", meta: "select · upsert" },
-  },
-  {
-    id: "f7",
-    type: "agent",
-    position: { x: 620, y: 460 },
-    data: { label: "S3 Reports", description: "Persist artifacts", icon: Cloud, variant: "cloud", meta: "aws · us-east-1" },
-  },
-  {
-    id: "f8",
-    type: "agent",
-    position: { x: 940, y: 200 },
-    data: { label: "Stream Response", description: "SSE back to client", icon: Send, variant: "output", meta: "text/event-stream" },
-  },
-];
-
-const e = (id: string, source: string, target: string): Edge => ({
-  id,
-  source,
-  target,
-  animated: true,
-  markerEnd: { type: MarkerType.ArrowClosed },
-});
-
-const initialEdges: Edge[] = [
-  e("fe1", "f1", "f2"),
-  e("fe2", "f2", "f3"),
-  e("fe3", "f2", "f4"),
-  e("fe4", "f1", "f5"),
-  e("fe5", "f4", "f6"),
-  e("fe6", "f3", "f7"),
-  e("fe7", "f3", "f8"),
-  e("fe8", "f4", "f8"),
-];
+import { Plus, Workflow, Users, ArrowRight, Bot } from "lucide-react";
+import { orchestrations } from "@/data/flows";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Flow Orchestration · Synapse" },
-      { name: "description", content: "Orchestrate multi-agent flows with endpoints, queues, databases and cloud services." },
+      { title: "Orchestrations · Synapse" },
+      { name: "description", content: "Catalog of multi-agent orchestration flows." },
     ],
   }),
-  component: Index,
+  component: OrchestrationsList,
 });
 
-function Index() {
+const statusMap = {
+  active: "border-success/40 text-success",
+  draft: "border-warning/40 text-warning",
+  error: "border-destructive/40 text-destructive",
+};
+
+function OrchestrationsList() {
   return (
-    <AppLayout
-      title="research-orchestration.flow"
-      subtitle="Multi-agent orchestration · v0.4.0"
-      actions={
-        <>
-          <Button size="sm" variant="ghost" className="h-8 gap-1.5">
-            <Share2 className="h-3.5 w-3.5" /> Share
+    <AppLayout title="Orchestrations" subtitle="Multi-agent flows">
+      <div className="p-6">
+        <PageHeader
+          title="Orchestrations"
+          description="Flows that coordinate multiple agents through endpoints, queues and services."
+        >
+          <Button asChild size="sm" className="gap-1.5 bg-[image:var(--gradient-primary)] text-primary-foreground">
+            <Link to="/orchestrations/$id/edit" params={{ id: "new" }}>
+              <Plus className="h-3.5 w-3.5" /> New orchestration
+            </Link>
           </Button>
-          <Button size="sm" variant="outline" className="h-8 gap-1.5">
-            <Save className="h-3.5 w-3.5" /> Save
-          </Button>
-        </>
-      }
-    >
-      <FlowBuilder
-        catalog={orchestrationNodeCatalog}
-        initialNodes={initialNodes}
-        initialEdges={initialEdges}
-        paletteTitle="Orchestration"
-        paletteSubtitle="Agents, endpoints, queues"
-        runLabel="Deploy flow"
-      />
+        </PageHeader>
+
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          {orchestrations.map((o) => (
+            <Link
+              key={o.id}
+              to="/orchestrations/$id"
+              params={{ id: o.id }}
+              className="group block"
+            >
+              <Card className="h-full border-border bg-card/80 p-5 backdrop-blur-md transition-all hover:border-primary/40 hover:shadow-[var(--shadow-glow)]">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/15 text-primary">
+                      <Workflow className="h-5 w-5" />
+                    </div>
+                    <div className="leading-tight">
+                      <p className="font-display text-base font-semibold">{o.name}</p>
+                      <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                        {o.id} · {o.version}
+                      </p>
+                    </div>
+                  </div>
+                  <Badge variant="outline" className={cn("gap-1.5", statusMap[o.status])}>
+                    <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                    {o.status}
+                  </Badge>
+                </div>
+
+                <p className="mt-3 text-sm text-muted-foreground">{o.description}</p>
+
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {o.tags.map((t) => (
+                    <Badge key={t} variant="secondary" className="text-[10px] font-normal">
+                      {t}
+                    </Badge>
+                  ))}
+                </div>
+
+                <div className="mt-4 grid grid-cols-2 gap-3 border-t border-border pt-3">
+                  <div className="flex items-center gap-2">
+                    <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                    <div className="leading-tight">
+                      <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+                        Team
+                      </p>
+                      <p className="text-xs font-semibold">{o.team}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Bot className="h-3.5 w-3.5 text-muted-foreground" />
+                    <div className="leading-tight">
+                      <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+                        Agents
+                      </p>
+                      <p className="text-xs font-semibold">{o.agents.length} referenced</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex items-center justify-end text-xs font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
+                  Open detail <ArrowRight className="ml-1 h-3 w-3" />
+                </div>
+              </Card>
+            </Link>
+          ))}
+        </div>
+      </div>
     </AppLayout>
   );
 }
