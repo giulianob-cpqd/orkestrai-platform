@@ -11,7 +11,7 @@ import { PipelineSection } from "@/components/sections/PipelineSection";
 import { ObservabilitySection } from "@/components/sections/ObservabilitySection";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/orchestrations/$id")({
+export const Route = createFileRoute("/orchestrations/$id/")({
   loader: ({ params }) => {
     const flow = getOrchestration(params.id);
     if (!flow) throw notFound();
