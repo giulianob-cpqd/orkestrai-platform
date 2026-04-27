@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Pencil, Users, User, GitBranch, Bot } from "lucide-react";
-import { getOrchestration } from "@/data/flows";
+import { getOrchestration, type OrchestrationFlow } from "@/data/flows";
 import { FanDiagram } from "@/components/flow/FanDiagram";
 import { PipelineSection } from "@/components/sections/PipelineSection";
 import { ObservabilitySection } from "@/components/sections/ObservabilitySection";
@@ -43,7 +43,7 @@ const statusMap = {
 };
 
 function OrchestrationDetail() {
-  const { flow } = Route.useLoaderData();
+  const { flow } = Route.useLoaderData() as { flow: OrchestrationFlow };
 
   return (
     <AppLayout title={flow.name} subtitle={`Orchestration · ${flow.version}`}>

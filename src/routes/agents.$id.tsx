@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Pencil, Users, User, GitBranch, Database } from "lucide-react";
-import { getAgentFlow } from "@/data/flows";
+import { getAgentFlow, type AgentFlow } from "@/data/flows";
 import { FanDiagram } from "@/components/flow/FanDiagram";
 import { cn } from "@/lib/utils";
 
@@ -40,7 +40,7 @@ const statusMap = {
 };
 
 function AgentDetail() {
-  const { flow } = Route.useLoaderData();
+  const { flow } = Route.useLoaderData() as { flow: AgentFlow };
 
   return (
     <AppLayout title={flow.name} subtitle={`Agent · ${flow.version}`}>

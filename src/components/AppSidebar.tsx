@@ -1,15 +1,5 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import {
-  Workflow,
-  Bot,
-  Brain,
-  Plug,
-  Server,
-  Database,
-  Rocket,
-  Activity,
-  Sparkles,
-} from "lucide-react";
+import { Workflow, Bot, Brain, Plug, Server, Database, Sparkles } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -24,9 +14,8 @@ import {
 } from "@/components/ui/sidebar";
 
 const buildItems = [
-  { title: "Flow Orchestration", url: "/", icon: Workflow },
-  { title: "Agent Builder", url: "/agent-builder", icon: Sparkles },
-  { title: "Agents", url: "/agents", icon: Bot },
+  { title: "Orchestrations", url: "/", icon: Workflow, match: (p: string) => p === "/" || p.startsWith("/orchestrations") },
+  { title: "Agents", url: "/agents", icon: Bot, match: (p: string) => p === "/agents" || p.startsWith("/agents/") },
 ];
 
 const catalogItems = [
@@ -36,30 +25,10 @@ const catalogItems = [
   { title: "RAGs", url: "/rags", icon: Database },
 ];
 
-const opsItems = [
-  { title: "Deploy", url: "/deploy", icon: Rocket },
-  { title: "Observability", url: "/observability", icon: Activity },
-];
-
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const { pathname } = useLocation();
-
-  const renderItems = (items: typeof buildItems) =>
-    items.map((item) => {
-      const active = pathname === item.url;
-      return (
-        <SidebarMenuItem key={item.url}>
-          <SidebarMenuButton asChild isActive={active}>
-            <Link to={item.url} className="group">
-              <item.icon className="h-4 w-4 shrink-0" />
-              {!collapsed && <span className="font-medium">{item.title}</span>}
-            </Link>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      );
-    });
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
@@ -83,21 +52,42 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupLabel>Build</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>{renderItems(buildItems)}</SidebarMenu>
+            <SidebarMenu>
+              {buildItems.map((item) => {
+                const active = item.match(pathname);
+                return (
+                  <SidebarMenuItem key={item.url}>
+                    <SidebarMenuButton asChild isActive={active}>
+                      <Link to={item.url}>
+                        <item.icon className="h-4 w-4 shrink-0" />
+                        {!collapsed && <span className="font-medium">{item.title}</span>}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
         <SidebarGroup>
           <SidebarGroupLabel>Catalog</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>{renderItems(catalogItems)}</SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel>Operate</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>{renderItems(opsItems)}</SidebarMenu>
+            <SidebarMenu>
+              {catalogItems.map((item) => {
+                const active = pathname === item.url;
+                return (
+                  <SidebarMenuItem key={item.url}>
+                    <SidebarMenuButton asChild isActive={active}>
+                      <Link to={item.url}>
+                        <item.icon className="h-4 w-4 shrink-0" />
+                        {!collapsed && <span className="font-medium">{item.title}</span>}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
