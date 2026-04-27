@@ -164,7 +164,7 @@ export function AIAssistantPanel({ mode, catalog, onApply, onClose }: Props) {
         </Button>
       </div>
 
-      <ScrollArea className="flex-1" viewportRef={scrollRef as never}>
+      <ScrollArea className="flex-1">
         <div ref={scrollRef} className="space-y-3 p-4">
           {messages.map((m) => (
             <div
