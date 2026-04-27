@@ -61,14 +61,14 @@ const AgentsIdIndexRoute = AgentsIdIndexRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const OrchestrationsIdEditRoute = OrchestrationsIdEditRouteImport.update({
-  id: '/edit',
-  path: '/edit',
-  getParentRoute: () => OrchestrationsIdRoute,
+  id: '/orchestrations/$id/edit',
+  path: '/orchestrations/$id/edit',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AgentsIdEditRoute = AgentsIdEditRouteImport.update({
-  id: '/edit',
-  path: '/edit',
-  getParentRoute: () => AgentsIdRoute,
+  id: '/agents/$id/edit',
+  path: '/agents/$id/edit',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -154,6 +154,8 @@ export interface RootRouteChildren {
   McpRoute: typeof McpRoute
   RagsRoute: typeof RagsRoute
   AgentsIndexRoute: typeof AgentsIndexRoute
+  AgentsIdEditRoute: typeof AgentsIdEditRoute
+  OrchestrationsIdEditRoute: typeof OrchestrationsIdEditRoute
   AgentsIdIndexRoute: typeof AgentsIdIndexRoute
   OrchestrationsIdIndexRoute: typeof OrchestrationsIdIndexRoute
 }
@@ -218,17 +220,17 @@ declare module '@tanstack/react-router' {
     }
     '/orchestrations/$id/edit': {
       id: '/orchestrations/$id/edit'
-      path: '/edit'
+      path: '/orchestrations/$id/edit'
       fullPath: '/orchestrations/$id/edit'
       preLoaderRoute: typeof OrchestrationsIdEditRouteImport
-      parentRoute: typeof OrchestrationsIdRoute
+      parentRoute: typeof rootRouteImport
     }
     '/agents/$id/edit': {
       id: '/agents/$id/edit'
-      path: '/edit'
+      path: '/agents/$id/edit'
       fullPath: '/agents/$id/edit'
       preLoaderRoute: typeof AgentsIdEditRouteImport
-      parentRoute: typeof AgentsIdRoute
+      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -240,18 +242,11 @@ const rootRouteChildren: RootRouteChildren = {
   McpRoute: McpRoute,
   RagsRoute: RagsRoute,
   AgentsIndexRoute: AgentsIndexRoute,
+  AgentsIdEditRoute: AgentsIdEditRoute,
+  OrchestrationsIdEditRoute: OrchestrationsIdEditRoute,
   AgentsIdIndexRoute: AgentsIdIndexRoute,
   OrchestrationsIdIndexRoute: OrchestrationsIdIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
