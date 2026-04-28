@@ -20,14 +20,13 @@ import "@xyflow/react/dist/style.css";
 import { AgentNode } from "./AgentNode";
 import type { NodeTemplate } from "./nodeCatalog";
 import { AIAssistantPanel, type AssistantMode } from "./AIAssistantPanel";
-import { Settings2, Trash2, Sparkles } from "lucide-react";
+import { PropertiesPanel } from "./PropertiesPanel";
+import { Sparkles, Settings2 } from "lucide-react";
 import { resolveIcon } from "@/lib/icons";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 
 const nodeTypes = { agent: AgentNode };
@@ -57,8 +56,8 @@ function FlowInner({
   const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-  const [selectedId, setSelectedId] = useState<string | null>(initialNodes[0]?.id ?? null);
-  const [assistantOpen, setAssistantOpen] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [tab, setTab] = useState<"properties" | "assistant">("properties");
 
   const handleAssistantApply = useCallback(
     (newNodes: Node[], newEdges: Edge[]) => {
@@ -107,6 +106,7 @@ function FlowInner({
           icon: template.icon,
           variant: template.variant,
           meta: template.meta,
+          nodeType: template.type,
         },
       };
       setNodes((nds) => nds.concat(newNode));
@@ -186,7 +186,10 @@ function FlowInner({
           onInit={setRfInstance}
           onDrop={onDrop}
           onDragOver={onDragOver}
-          onNodeClick={(_, node) => setSelectedId(node.id)}
+          onNodeClick={(_, node) => {
+            setSelectedId(node.id);
+            setTab("properties");
+          }}
           onPaneClick={() => setSelectedId(null)}
           nodeTypes={nodeTypes}
           fitView
@@ -217,9 +220,9 @@ function FlowInner({
             </Button>
             <Button
               size="sm"
-              variant={assistantOpen ? "default" : "ghost"}
+              variant="ghost"
               className="h-7 gap-1"
-              onClick={() => setAssistantOpen((v) => !v)}
+              onClick={() => setTab("assistant")}
             >
               <Sparkles className="h-3 w-3" /> AI Assistant
             </Button>
@@ -230,77 +233,47 @@ function FlowInner({
         </div>
       </div>
 
-      <aside className="flex w-80 shrink-0 flex-col border-l border-border bg-sidebar/60 backdrop-blur-md">
-        <div className="flex items-center justify-between border-b border-border px-4 py-3">
-          <div>
-            <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
-              Properties
-            </p>
-            <p className="text-sm font-semibold">
-              {selectedNode ? (selectedNode.data as { label: string }).label : "No selection"}
-            </p>
+      <aside className="flex w-96 shrink-0 flex-col border-l border-border bg-sidebar/60 backdrop-blur-md">
+        <Tabs value={tab} onValueChange={(v) => setTab(v as "properties" | "assistant")} className="flex h-full flex-col">
+          <div className="border-b border-border px-3 pt-3">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="properties" className="gap-1.5">
+                <Settings2 className="h-3.5 w-3.5" /> Properties
+              </TabsTrigger>
+              <TabsTrigger value="assistant" className="gap-1.5">
+                <Sparkles className="h-3.5 w-3.5" /> AI Assistant
+              </TabsTrigger>
+            </TabsList>
+            <div className="px-1 pb-2 pt-2 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+              {tab === "properties"
+                ? selectedNode
+                  ? (selectedNode.data as { label: string }).label
+                  : "Nenhum nó selecionado"
+                : assistantMode === "agent"
+                  ? "Agent Composer"
+                  : "Orchestration Composer"}
+            </div>
           </div>
-          <Settings2 className="h-4 w-4 text-muted-foreground" />
-        </div>
-        <ScrollArea className="flex-1">
-          {selectedNode ? (
-            <div className="space-y-4 p-4">
-              <div className="space-y-2">
-                <Label className="text-xs">Name</Label>
-                <Input
-                  value={(selectedNode.data as { label: string }).label}
-                  onChange={(e) => updateSelected({ label: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-xs">Description</Label>
-                <Textarea
-                  rows={3}
-                  value={(selectedNode.data as { description?: string }).description ?? ""}
-                  onChange={(e) => updateSelected({ description: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-xs">Configuration</Label>
-                <Input
-                  className="font-mono text-xs"
-                  value={(selectedNode.data as { meta?: string }).meta ?? ""}
-                  onChange={(e) => updateSelected({ meta: e.target.value })}
-                />
-              </div>
-              <div className="rounded-lg border border-border bg-muted/40 p-3">
-                <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
-                  Variant
-                </p>
-                <p className="mt-1 text-sm font-semibold capitalize">
-                  {(selectedNode.data as { variant: string }).variant}
-                </p>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={deleteSelected}
-                className="w-full gap-2 border-destructive/40 text-destructive hover:bg-destructive/10"
-              >
-                <Trash2 className="h-3 w-3" /> Delete node
-              </Button>
-            </div>
-          ) : (
-            <div className="p-6 text-center text-xs text-muted-foreground">
-              Select a node to edit its properties.
-            </div>
-          )}
-        </ScrollArea>
-      </aside>
 
-      {assistantOpen && (
-        <AIAssistantPanel
-          mode={assistantMode}
-          catalog={catalog}
-          onApply={handleAssistantApply}
-          onClose={() => setAssistantOpen(false)}
-        />
-      )}
+          <TabsContent value="properties" className="flex-1 overflow-hidden m-0">
+            <ScrollArea className="h-full">
+              <PropertiesPanel
+                node={selectedNode}
+                onChange={updateSelected}
+                onDelete={deleteSelected}
+              />
+            </ScrollArea>
+          </TabsContent>
+
+          <TabsContent value="assistant" className="flex-1 overflow-hidden m-0">
+            <AIAssistantPanel
+              mode={assistantMode}
+              catalog={catalog}
+              onApply={handleAssistantApply}
+            />
+          </TabsContent>
+        </Tabs>
+      </aside>
     </div>
   );
 }
