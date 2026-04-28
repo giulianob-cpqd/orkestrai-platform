@@ -16,14 +16,17 @@ import {
   registeredApis,
   registeredMcpServers,
   registeredAgents,
+  registeredLlms,
   databaseTypes,
   requestProtocols,
   cronPresets,
+  coordinationStrategies,
   type RegistryItem,
 } from "@/data/registry";
 
 interface Props {
   node: Node | null;
+  mode?: "agent" | "orchestration";
   onChange: (patch: Record<string, unknown>) => void;
   onDelete: () => void;
 }
