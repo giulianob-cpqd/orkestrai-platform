@@ -11,6 +11,8 @@ import {
   MemoryStick,
   Wrench,
   GitBranch,
+  Wand2,
+  Clock,
   type LucideIcon,
 } from "lucide-react";
 
@@ -26,7 +28,9 @@ export type IconName =
   | "Server"
   | "MemoryStick"
   | "Wrench"
-  | "GitBranch";
+  | "GitBranch"
+  | "Wand2"
+  | "Clock";
 
 const iconMap: Record<IconName, LucideIcon> = {
   Bot,
@@ -41,6 +45,8 @@ const iconMap: Record<IconName, LucideIcon> = {
   MemoryStick,
   Wrench,
   GitBranch,
+  Wand2,
+  Clock,
 };
 
 export function resolveIcon(name: IconName): LucideIcon {
