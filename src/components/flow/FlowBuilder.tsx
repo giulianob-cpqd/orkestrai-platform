@@ -259,6 +259,7 @@ function FlowInner({
             <ScrollArea className="h-full">
               <PropertiesPanel
                 node={selectedNode}
+                mode={assistantMode}
                 onChange={updateSelected}
                 onDelete={deleteSelected}
               />
