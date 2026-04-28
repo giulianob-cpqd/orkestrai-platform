@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Sparkles, Send, X, Wand2, Bot, User } from "lucide-react";
+import { Sparkles, Send, Wand2, Bot, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -22,7 +22,6 @@ interface Props {
   mode: AssistantMode;
   catalog: NodeTemplate[];
   onApply: (nodes: Node[], edges: Edge[]) => void;
-  onClose: () => void;
 }
 
 const SUGGESTIONS_AGENT = [
@@ -32,15 +31,14 @@ const SUGGESTIONS_AGENT = [
 ];
 
 const SUGGESTIONS_ORCH = [
+  "Cron diário que roda um agente de relatório e grava no Postgres",
   "Endpoint REST que dispara agente de triagem e publica em Kafka",
   "Webhook → agente classificador → roteia para 2 agentes em paralelo → Postgres",
-  "Fila RabbitMQ → agente de enriquecimento → S3 + resposta SSE",
 ];
 
 let gid = 5000;
 const nid = () => `ai-${++gid}`;
 
-/** Mock NL → flow generator. Heuristic: scan keywords, emit linear chain. */
 function generateFlow(
   prompt: string,
   mode: AssistantMode,
@@ -52,6 +50,7 @@ function generateFlow(
 
   if (mode === "agent") {
     sequence.push(pick("input")!);
+    sequence.push(pick("prompt")!);
     if (/rag|knowledge|documento|pdf|base de conhecimento|vetor/.test(p)) sequence.push(pick("rag")!);
     if (/mem[óo]ria|memory|hist[óo]rico|conversa/.test(p)) sequence.push(pick("memory")!);
     if (/api|rest|http|servi[çc]o|tool|ferramenta|clima|weather/.test(p)) sequence.push(pick("tool")!);
@@ -59,14 +58,16 @@ function generateFlow(
     sequence.push(pick("llm")!);
     sequence.push(pick("output")!);
   } else {
-    if (/webhook|endpoint|rest|http|grpc|graphql|websocket/.test(p)) sequence.push(pick("endpoint")!);
+    if (/cron|agendado|schedule|di[áa]rio|hor[áa]rio/.test(p)) sequence.push(pick("cron")!);
+    else if (/webhook|endpoint|rest|http|grpc|graphql|websocket|sse/.test(p)) sequence.push(pick("endpoint")!);
+    else sequence.push(pick("endpoint")!);
     if (/fila|queue|kafka|rabbit|nats|t[óo]pico|topic/.test(p)) sequence.push(pick("queue")!);
     sequence.push(pick("agentref")!);
     if (/paralelo|parallel|roteia|router|coordena|supervisor|debate|sequencial/.test(p)) {
       sequence.push(pick("coord")!);
       sequence.push({ ...pick("agentref")!, label: "Agent B" } as NodeTemplate);
     }
-    if (/postgres|mongo|redis|banco|database|db/.test(p)) sequence.push(pick("db")!);
+    if (/postgres|mysql|sqlite|mongo|redis|banco|database|db/.test(p)) sequence.push(pick("db")!);
     if (/s3|lambda|bigquery|cloud|aws|gcp|azure/.test(p)) sequence.push(pick("cloud")!);
     if (/api externa|third-party|terceiro/.test(p)) sequence.push(pick("tool")!);
     if (/kafka|rabbit|publica|publish/.test(p) && !sequence.find((s) => s.type === "queue"))
@@ -84,6 +85,7 @@ function generateFlow(
       icon: tpl.icon,
       variant: tpl.variant,
       meta: tpl.meta,
+      nodeType: tpl.type,
     },
   }));
 
@@ -98,7 +100,7 @@ function generateFlow(
   return { nodes, edges };
 }
 
-export function AIAssistantPanel({ mode, catalog, onApply, onClose }: Props) {
+export function AIAssistantPanel({ mode, catalog, onApply }: Props) {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -106,8 +108,8 @@ export function AIAssistantPanel({ mode, catalog, onApply, onClose }: Props) {
       role: "assistant",
       content:
         mode === "agent"
-          ? "Olá! Descreva o agente que você quer criar. Eu monto LLMs, RAGs, memória, ferramentas e MCPs no canvas."
-          : "Olá! Descreva a orquestração desejada. Eu monto endpoints, agentes, filas, bancos e coordenação no canvas.",
+          ? "Olá! Descreva o agente que você quer criar. Eu monto Prompt, LLMs, RAGs, memória, ferramentas e MCPs no canvas."
+          : "Olá! Descreva a orquestração desejada. Eu monto requests, cron jobs, agentes, filas, bancos e coordenação no canvas.",
     },
   ]);
   const [busy, setBusy] = useState(false);
@@ -124,7 +126,6 @@ export function AIAssistantPanel({ mode, catalog, onApply, onClose }: Props) {
     const userMsg: ChatMessage = { id: nid(), role: "user", content: text };
     setMessages((m) => [...m, userMsg]);
 
-    // Simulated thinking delay
     await new Promise((r) => setTimeout(r, 600));
     const { nodes, edges } = generateFlow(text, mode, catalog);
     onApply(nodes, edges);
@@ -134,7 +135,7 @@ export function AIAssistantPanel({ mode, catalog, onApply, onClose }: Props) {
       {
         id: nid(),
         role: "assistant",
-        content: `Pronto! Gerei um esboço com ${nodes.length} nós e ${edges.length} conexões no canvas. Diga o que ajustar (adicionar memória, trocar LLM, paralelizar, etc.).`,
+        content: `Pronto! Gerei um esboço com ${nodes.length} nós e ${edges.length} conexões. Diga o que ajustar.`,
         generated: { nodes: nodes.length, edges: edges.length },
       },
     ]);
@@ -144,26 +145,7 @@ export function AIAssistantPanel({ mode, catalog, onApply, onClose }: Props) {
   const suggestions = mode === "agent" ? SUGGESTIONS_AGENT : SUGGESTIONS_ORCH;
 
   return (
-    <aside className="flex w-96 shrink-0 flex-col border-l border-border bg-sidebar/80 backdrop-blur-md">
-      <div className="flex items-center justify-between border-b border-border px-4 py-3">
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-[image:var(--gradient-primary)] text-primary-foreground shadow-[var(--shadow-glow)]">
-            <Sparkles className="h-4 w-4" />
-          </div>
-          <div>
-            <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
-              AI Assistant
-            </p>
-            <p className="text-sm font-semibold">
-              {mode === "agent" ? "Agent Composer" : "Orchestration Composer"}
-            </p>
-          </div>
-        </div>
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onClose}>
-          <X className="h-4 w-4" />
-        </Button>
-      </div>
-
+    <div className="flex h-full flex-col">
       <ScrollArea className="flex-1">
         <div ref={scrollRef} className="space-y-3 p-4">
           {messages.map((m) => (
@@ -246,8 +228,8 @@ export function AIAssistantPanel({ mode, catalog, onApply, onClose }: Props) {
             rows={2}
             placeholder={
               mode === "agent"
-                ? "Descreva o agente… (ex.: agente de suporte com RAG)"
-                : "Descreva a orquestração… (ex.: webhook → agente → Kafka)"
+                ? "Descreva o agente…"
+                : "Descreva a orquestração…"
             }
             className="min-h-[60px] resize-none text-sm"
           />
@@ -264,6 +246,6 @@ export function AIAssistantPanel({ mode, catalog, onApply, onClose }: Props) {
           Mock local — gera nodes/edges no canvas a partir da descrição.
         </p>
       </div>
-    </aside>
+    </div>
   );
 }

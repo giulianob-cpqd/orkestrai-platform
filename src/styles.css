@@ -55,6 +55,8 @@
   --color-node-agentref: var(--node-agentref);
   --color-node-coord: var(--node-coord);
   --color-node-input: var(--node-input);
+  --color-node-prompt: var(--node-prompt);
+  --color-node-cron: var(--node-cron);
 
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
@@ -121,6 +123,8 @@
   --node-agentref: oklch(0.82 0.17 180);/* cyan (alias) */
   --node-coord: oklch(0.72 0.18 320);   /* magenta */
   --node-input: oklch(0.7 0.2 25);      /* coral (alias) */
+  --node-prompt: oklch(0.78 0.18 280);  /* purple */
+  --node-cron: oklch(0.78 0.16 130);    /* spring green */
 
   --sidebar: oklch(0.16 0.02 260);
   --sidebar-foreground: oklch(0.92 0.01 240);
