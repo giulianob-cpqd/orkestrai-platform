@@ -68,7 +68,7 @@ function SelectField({
   );
 }
 
-export function PropertiesPanel({ node, onChange, onDelete }: Props) {
+export function PropertiesPanel({ node, mode = "orchestration", onChange, onDelete }: Props) {
   if (!node) {
     return (
       <div className="p-6 text-center text-xs text-muted-foreground">
