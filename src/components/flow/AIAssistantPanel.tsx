@@ -46,39 +46,11 @@ function generateFlow(
 ): { nodes: Node[]; edges: Edge[] } {
   const p = prompt.toLowerCase();
   const pick = (type: string) => catalog.find((c) => c.type === type);
-  const sequence: NodeTemplate[] = [];
 
-  if (mode === "agent") {
-    sequence.push(pick("input")!);
-    sequence.push(pick("prompt")!);
-    if (/rag|knowledge|documento|pdf|base de conhecimento|vetor/.test(p)) sequence.push(pick("rag")!);
-    if (/mem[óo]ria|memory|hist[óo]rico|conversa/.test(p)) sequence.push(pick("memory")!);
-    if (/api|rest|http|servi[çc]o|tool|ferramenta|clima|weather/.test(p)) sequence.push(pick("tool")!);
-    if (/mcp|filesystem|protocol/.test(p)) sequence.push(pick("mcp")!);
-    sequence.push(pick("llm")!);
-    sequence.push(pick("output")!);
-  } else {
-    if (/cron|agendado|schedule|di[áa]rio|hor[áa]rio/.test(p)) sequence.push(pick("cron")!);
-    else if (/webhook|endpoint|rest|http|grpc|graphql|websocket|sse/.test(p)) sequence.push(pick("endpoint")!);
-    else sequence.push(pick("endpoint")!);
-    if (/fila|queue|kafka|rabbit|nats|t[óo]pico|topic/.test(p)) sequence.push(pick("queue")!);
-    sequence.push(pick("agentref")!);
-    if (/paralelo|parallel|roteia|router|coordena|supervisor|debate|sequencial/.test(p)) {
-      sequence.push(pick("coord")!);
-      sequence.push({ ...pick("agentref")!, label: "Agent B" } as NodeTemplate);
-    }
-    if (/postgres|mysql|sqlite|mongo|redis|banco|database|db/.test(p)) sequence.push(pick("db")!);
-    if (/s3|lambda|bigquery|cloud|aws|gcp|azure/.test(p)) sequence.push(pick("cloud")!);
-    if (/api externa|third-party|terceiro/.test(p)) sequence.push(pick("tool")!);
-    if (/kafka|rabbit|publica|publish/.test(p) && !sequence.find((s) => s.type === "queue"))
-      sequence.push(pick("queue")!);
-    sequence.push(pick("output")!);
-  }
-
-  const nodes: Node[] = sequence.filter(Boolean).map((tpl, i) => ({
+  const mkNode = (tpl: NodeTemplate, x: number, y: number): Node => ({
     id: nid(),
     type: "agent",
-    position: { x: 80 + i * 220, y: 160 + (i % 2) * 80 },
+    position: { x, y },
     data: {
       label: tpl.label,
       description: tpl.description,
@@ -87,16 +59,71 @@ function generateFlow(
       meta: tpl.meta,
       nodeType: tpl.type,
     },
-  }));
+  });
 
-  const edges: Edge[] = nodes.slice(0, -1).map((n, i) => ({
-    id: `e-${n.id}-${nodes[i + 1].id}`,
-    source: n.id,
-    target: nodes[i + 1].id,
+  const mkEdge = (source: string, target: string, targetHandle?: string): Edge => ({
+    id: `e-${source}-${target}-${targetHandle ?? "in"}`,
+    source,
+    target,
+    targetHandle,
     animated: true,
     markerEnd: { type: MarkerType.ArrowClosed },
-  }));
+  });
 
+  if (mode === "agent") {
+    /* Hub-and-spoke topology: inputs/memory/rag/tools → Prompt → LLM → Response */
+    const wantsRag = /rag|knowledge|documento|pdf|base de conhecimento|vetor/.test(p);
+    const wantsMem = /mem[óo]ria|memory|hist[óo]rico|conversa|chat/.test(p);
+    const wantsTool = /api|rest|http|servi[çc]o|tool|ferramenta|clima|weather/.test(p);
+    const wantsMcp = /mcp|filesystem|protocol/.test(p);
+
+    const inputN = mkNode(pick("input")!, 40, 240);
+    const memN = wantsMem ? mkNode(pick("memory")!, 320, 60) : null;
+    const ragN = wantsRag ? mkNode(pick("rag")!, 320, 200) : null;
+    const toolN = wantsTool ? mkNode(pick("tool")!, 320, 360) : null;
+    const mcpN = wantsMcp ? mkNode(pick("mcp")!, 320, 500) : null;
+    const promptN = mkNode(pick("prompt")!, 660, 260);
+    const llmN = mkNode(pick("llm")!, 980, 260);
+    const outN = mkNode(pick("output")!, 1280, 260);
+
+    const nodes = [inputN, memN, ragN, toolN, mcpN, promptN, llmN, outN].filter(
+      Boolean,
+    ) as Node[];
+
+    const edges: Edge[] = [
+      mkEdge(inputN.id, promptN.id, "input"),
+      ...(memN ? [mkEdge(memN.id, promptN.id, "memory")] : []),
+      ...(ragN ? [mkEdge(ragN.id, promptN.id, "rag")] : []),
+      ...(toolN ? [mkEdge(toolN.id, promptN.id, "tools")] : []),
+      ...(mcpN ? [mkEdge(mcpN.id, promptN.id, "tools")] : []),
+      mkEdge(promptN.id, llmN.id),
+      mkEdge(llmN.id, outN.id),
+    ];
+
+    return { nodes, edges };
+  }
+
+  /* Orchestration: linear chain (unchanged behaviour) */
+  const sequence: NodeTemplate[] = [];
+  if (/cron|agendado|schedule|di[áa]rio|hor[áa]rio/.test(p)) sequence.push(pick("cron")!);
+  else sequence.push(pick("endpoint")!);
+  if (/fila|queue|kafka|rabbit|nats|t[óo]pico|topic/.test(p)) sequence.push(pick("queue")!);
+  sequence.push(pick("agentref")!);
+  if (/paralelo|parallel|roteia|router|coordena|supervisor|debate|sequencial/.test(p)) {
+    sequence.push(pick("coord")!);
+    sequence.push({ ...pick("agentref")!, label: "Agent B" } as NodeTemplate);
+  }
+  if (/postgres|mysql|sqlite|mongo|redis|banco|database|db/.test(p)) sequence.push(pick("db")!);
+  if (/s3|lambda|bigquery|cloud|aws|gcp|azure/.test(p)) sequence.push(pick("cloud")!);
+  if (/api externa|third-party|terceiro/.test(p)) sequence.push(pick("tool")!);
+  if (/kafka|rabbit|publica|publish/.test(p) && !sequence.find((s) => s.type === "queue"))
+    sequence.push(pick("queue")!);
+  sequence.push(pick("output")!);
+
+  const nodes: Node[] = sequence
+    .filter(Boolean)
+    .map((tpl, i) => mkNode(tpl, 80 + i * 220, 200 + (i % 2) * 80));
+  const edges: Edge[] = nodes.slice(0, -1).map((n, i) => mkEdge(n.id, nodes[i + 1].id));
   return { nodes, edges };
 }
 
