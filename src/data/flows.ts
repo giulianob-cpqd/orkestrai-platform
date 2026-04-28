@@ -145,7 +145,7 @@ export const agentFlows: AgentFlow[] = [
     status: "active",
     tags: ["ReAct", "multi-tool", "stream"],
     fanIn: [
-      { label: "Prompt Input", meta: "text · multimodal", icon: "Send", variant: "input" },
+      { label: "Input", meta: "text · multimodal", icon: "Send", variant: "input" },
       { label: "Conversation Memory", meta: "buffer + summary", icon: "MemoryStick", variant: "memory" },
     ],
     fanOut: [
@@ -186,7 +186,7 @@ export const agentFlows: AgentFlow[] = [
     version: "v1.2.0",
     status: "active",
     tags: ["classifier", "fast"],
-    fanIn: [{ label: "Prompt Input", meta: "text", icon: "Send", variant: "input" }],
+    fanIn: [{ label: "Input", meta: "text", icon: "Send", variant: "input" }],
     fanOut: [
       { label: "Gemini 2.5 Flash Lite", meta: "temp 0.0", icon: "Brain", variant: "llm" },
       { label: "Route Decision", meta: "json", icon: "Send", variant: "output" },
