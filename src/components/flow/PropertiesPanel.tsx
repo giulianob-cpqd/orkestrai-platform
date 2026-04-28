@@ -204,7 +204,42 @@ export function PropertiesPanel({ node, mode = "orchestration", onChange, onDele
             </div>
           </>
         );
+      case "llm":
+        return (
+          <SelectField
+            label="LLM cadastrado"
+            placeholder="Selecione um modelo"
+            value={data.llmId as string | undefined}
+            options={registeredLlms}
+            onChange={(v) => {
+              const item = registeredLlms.find((r) => r.id === v);
+              onChange({ llmId: v, label: item?.name ?? label, meta: item?.meta });
+            }}
+          />
+        );
+      case "coord":
+        return (
+          <SelectField
+            label="Estratégia"
+            placeholder="Parallel ou Router"
+            value={(data.strategy as string) ?? ""}
+            options={coordinationStrategies}
+            onChange={(v) => {
+              const item = coordinationStrategies.find((c) => c.id === v);
+              onChange({ strategy: v, meta: item?.meta, label: item?.name ?? label });
+            }}
+          />
+        );
       case "output":
+        if (mode === "orchestration") {
+          return (
+            <div className="rounded-lg border border-border bg-muted/40 p-3 text-[11px] leading-relaxed text-muted-foreground">
+              O formato da resposta acompanha automaticamente o protocolo do
+              <span className="text-foreground"> Request</span> conectado
+              (REST → JSON, SSE → stream, WebSocket → frames, gRPC → stream, GraphQL → response).
+            </div>
+          );
+        }
         return (
           <SelectField
             label="Formato da resposta"
