@@ -16,7 +16,9 @@ export type NodeVariant =
   | "queue"
   | "agentref"
   | "coord"
-  | "input";
+  | "input"
+  | "prompt"
+  | "cron";
 
 export interface AgentNodeData {
   label: string;
@@ -24,13 +26,23 @@ export interface AgentNodeData {
   icon: IconName;
   variant: NodeVariant;
   meta?: string;
+  nodeType?: string;
   [key: string]: unknown;
 }
+
+const PROMPT_HANDLES = [
+  { id: "input", color: "var(--node-input)", label: "in" },
+  { id: "memory", color: "var(--node-memory)", label: "mem" },
+  { id: "tools", color: "var(--node-tool)", label: "tools" },
+  { id: "rag", color: "var(--node-rag)", label: "rag" },
+] as const;
 
 export function AgentNode({ data, selected }: NodeProps) {
   const d = data as AgentNodeData;
   const Icon = resolveIcon(d.icon);
   const v = d.variant;
+  const isPrompt = d.nodeType === "prompt" || v === "prompt";
+
   return (
     <div
       className={cn(
@@ -40,7 +52,26 @@ export function AgentNode({ data, selected }: NodeProps) {
       )}
       style={{ boxShadow: `0 0 24px color-mix(in oklch, var(--node-${v}) 25%, transparent)` }}
     >
-      <Handle type="target" position={Position.Left} />
+      {isPrompt ? (
+        PROMPT_HANDLES.map((h, i) => (
+          <Handle
+            key={h.id}
+            id={h.id}
+            type="target"
+            position={Position.Left}
+            style={{
+              top: `${20 + i * 22}%`,
+              background: h.color,
+              width: 10,
+              height: 10,
+              border: "2px solid var(--background)",
+            }}
+          />
+        ))
+      ) : (
+        <Handle type="target" position={Position.Left} />
+      )}
+
       <div className="flex items-center gap-3 p-3">
         <div
           className={cn("flex h-9 w-9 items-center justify-center rounded-lg")}
@@ -65,6 +96,19 @@ export function AgentNode({ data, selected }: NodeProps) {
           )}
           {d.meta && (
             <p className="mt-1 font-mono text-[10px] text-primary">{d.meta}</p>
+          )}
+          {isPrompt && (
+            <div className="mt-2 flex flex-wrap gap-1">
+              {PROMPT_HANDLES.map((h) => (
+                <span
+                  key={h.id}
+                  className="rounded-sm border px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-wider"
+                  style={{ borderColor: h.color, color: h.color }}
+                >
+                  {h.label}
+                </span>
+              ))}
+            </div>
           )}
         </div>
       )}
