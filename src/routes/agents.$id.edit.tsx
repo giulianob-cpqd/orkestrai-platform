@@ -33,28 +33,36 @@ export const Route = createFileRoute("/agents/$id/edit")({
 
 const initialNodes: Node[] = [
   { id: "a1", type: "agent", position: { x: 40, y: 200 },
-    data: { label: "User Prompt", description: "Incoming message", icon: "Send", variant: "input", meta: "text · multimodal" } },
+    data: { label: "Input", description: "Incoming message", icon: "Send", variant: "input", meta: "text · multimodal", nodeType: "input" } },
   { id: "a2", type: "agent", position: { x: 320, y: 60 },
-    data: { label: "Conversation Memory", description: "Last 20 turns + summary", icon: "MemoryStick", variant: "memory", meta: "buffer + summary" } },
+    data: { label: "Conversation Memory", description: "Last 20 turns + summary", icon: "MemoryStick", variant: "memory", meta: "buffer + summary", nodeType: "memory" } },
   { id: "a3", type: "agent", position: { x: 320, y: 220 },
-    data: { label: "Knowledge Base", description: "Internal docs RAG", icon: "Database", variant: "rag", meta: "pgvector · 12k docs" } },
+    data: { label: "Knowledge Base", description: "Internal docs RAG", icon: "Database", variant: "rag", meta: "pgvector · 12k docs", nodeType: "rag", ragId: "rag/internal-docs" } },
   { id: "a4", type: "agent", position: { x: 320, y: 380 },
-    data: { label: "Web Search", description: "Tavily API tool", icon: "Wrench", variant: "tool", meta: "GET /search" } },
+    data: { label: "Web Search", description: "Tavily API tool", icon: "Wrench", variant: "tool", meta: "GET /search", nodeType: "tool", apiId: "tavily.search" } },
   { id: "a5", type: "agent", position: { x: 320, y: 520 },
-    data: { label: "Filesystem MCP", description: "Local file access", icon: "Server", variant: "mcp", meta: "stdio" } },
-  { id: "a6", type: "agent", position: { x: 660, y: 280 },
-    data: { label: "Gemini 2.5 Pro", description: "Reasoning core", icon: "Brain", variant: "llm", meta: "temp 0.4 · 8k ctx" } },
-  { id: "a7", type: "agent", position: { x: 980, y: 280 },
-    data: { label: "Agent Response", description: "Streamed output", icon: "Send", variant: "output", meta: "stream · json" } },
+    data: { label: "Filesystem MCP", description: "Local file access", icon: "Server", variant: "mcp", meta: "stdio", nodeType: "mcp", mcpId: "mcp/filesystem" } },
+  { id: "ap", type: "agent", position: { x: 660, y: 280 },
+    data: { label: "Prompt", description: "Template + system prompt", icon: "Wand2", variant: "prompt", meta: "main composer", nodeType: "prompt",
+      template: "You are a helpful research assistant.\n\nUser: {{input}}\nMemory: {{memory}}\nContext: {{rag}}\nTools: {{tools}}" } },
+  { id: "a6", type: "agent", position: { x: 980, y: 280 },
+    data: { label: "Gemini 2.5 Pro", description: "Reasoning core", icon: "Brain", variant: "llm", meta: "temp 0.4 · 8k ctx", nodeType: "llm" } },
+  { id: "a7", type: "agent", position: { x: 1280, y: 280 },
+    data: { label: "Response", description: "Streamed output", icon: "Send", variant: "output", meta: "stream · json", nodeType: "output", format: "sse" } },
 ];
 
-const e = (id: string, source: string, target: string): Edge => ({
-  id, source, target, animated: true, markerEnd: { type: MarkerType.ArrowClosed },
+const e = (id: string, source: string, target: string, targetHandle?: string): Edge => ({
+  id, source, target, targetHandle, animated: true, markerEnd: { type: MarkerType.ArrowClosed },
 });
 
 const initialEdges: Edge[] = [
-  e("ae1", "a1", "a6"), e("ae2", "a2", "a6"), e("ae3", "a3", "a6"),
-  e("ae4", "a4", "a6"), e("ae5", "a5", "a6"), e("ae6", "a6", "a7"),
+  e("ae1", "a1", "ap", "input"),
+  e("ae2", "a2", "ap", "memory"),
+  e("ae3", "a3", "ap", "rag"),
+  e("ae4", "a4", "ap", "tools"),
+  e("ae5", "a5", "ap", "tools"),
+  e("ae6", "ap", "a6"),
+  e("ae7", "a6", "a7"),
 ];
 
 function EditAgent() {
