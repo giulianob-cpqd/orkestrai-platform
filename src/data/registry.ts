@@ -67,6 +67,21 @@ export const requestProtocols = [
   { id: "websocket", name: "WebSocket" },
 ];
 
+export const registeredLlms: RegistryItem[] = [
+  { id: "google/gemini-2.5-pro", name: "Gemini 2.5 Pro", meta: "Google · 1M ctx" },
+  { id: "openai/gpt-5", name: "GPT-5", meta: "OpenAI · reasoning" },
+  { id: "google/gemini-2.5-flash", name: "Gemini 2.5 Flash", meta: "Google · fast" },
+  { id: "openai/gpt-5-mini", name: "GPT-5 mini", meta: "OpenAI · mid-tier" },
+  { id: "self-hosted/llama-3.3-70b", name: "Llama 3.3 70B", meta: "self-hosted · vLLM" },
+  { id: "google/gemini-2.5-flash-lite", name: "Gemini Flash Lite", meta: "Google · ultra-fast" },
+  { id: "anthropic/claude-sonnet-4.5", name: "Claude Sonnet 4.5", meta: "Anthropic · balanced" },
+];
+
+export const coordinationStrategies = [
+  { id: "parallel", name: "Parallel", meta: "fan-out → fan-in" },
+  { id: "router", name: "Router", meta: "intent-based dispatch" },
+];
+
 export const cronPresets = [
   { id: "*/5 * * * *", name: "Every 5 minutes" },
   { id: "0 * * * *", name: "Hourly" },
