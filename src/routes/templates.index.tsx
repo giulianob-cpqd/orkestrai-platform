@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageHeader } from "@/components/CatalogGrid";
@@ -28,6 +28,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { LayoutTemplate, Plus, Workflow, Bot, Code2, GitBranch } from "lucide-react";
 import { templates, type Template } from "@/data/templates";
 import { agentFlows, orchestrations } from "@/data/flows";
+import { TemplateWizardDialog } from "@/components/TemplateWizardDialog";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -41,7 +42,7 @@ export const Route = createFileRoute("/templates/")({
   component: TemplatesList,
 });
 
-function TemplateCard({ t }: { t: Template }) {
+function TemplateCard({ t, onUse }: { t: Template; onUse: (t: Template) => void }) {
   return (
     <Card className="h-full border-border bg-card/80 p-5 backdrop-blur-md transition-all hover:border-primary/40 hover:shadow-[var(--shadow-glow)]">
       <div className="flex items-start justify-between gap-3">
@@ -87,13 +88,8 @@ function TemplateCard({ t }: { t: Template }) {
         <span className="font-mono">{t.updatedAt}</span>
       </div>
       <div className="mt-3 flex justify-end">
-        <Button asChild size="sm" variant="outline" className="gap-1.5">
-          <Link
-            to={t.kind === "agent" ? "/agents/new" : "/orchestrations/new"}
-            search={{ template: t.id }}
-          >
-            Use template
-          </Link>
+        <Button size="sm" variant="outline" className="gap-1.5" onClick={() => onUse(t)}>
+          Use template
         </Button>
       </div>
     </Card>
@@ -219,6 +215,7 @@ function CreateTemplateDialog() {
 function TemplatesList() {
   const agentTpls = templates.filter((t) => t.kind === "agent");
   const orchTpls = templates.filter((t) => t.kind === "orchestration");
+  const [wizardTpl, setWizardTpl] = useState<Template | null>(null);
 
   return (
     <AppLayout title="Templates" subtitle="Reusable starting points">
@@ -251,13 +248,18 @@ function TemplatesList() {
             <TabsContent key={v} value={v} className="mt-4">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {list.map((t) => (
-                  <TemplateCard key={t.id} t={t} />
+                  <TemplateCard key={t.id} t={t} onUse={setWizardTpl} />
                 ))}
               </div>
             </TabsContent>
           ))}
         </Tabs>
       </div>
+      <TemplateWizardDialog
+        open={!!wizardTpl}
+        onOpenChange={(o) => { if (!o) setWizardTpl(null); }}
+        template={wizardTpl}
+      />
     </AppLayout>
   );
 }

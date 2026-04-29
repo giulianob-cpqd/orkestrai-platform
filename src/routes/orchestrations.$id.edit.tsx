@@ -3,8 +3,6 @@ import { type Node, type Edge, MarkerType } from "@xyflow/react";
 import { AppLayout } from "@/components/AppLayout";
 import { FlowBuilder } from "@/components/flow/FlowBuilder";
 import { orchestrationNodeCatalog } from "@/components/flow/nodeCatalog";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Save, Share2 } from "lucide-react";
 import { getOrchestration } from "@/data/flows";
 
 export const Route = createFileRoute("/orchestrations/$id/edit")({
@@ -100,21 +98,6 @@ function EditOrchestration() {
     <AppLayout
       title={`${flow.slug}.flow`}
       subtitle={`${flow.name} · ${flow.version}`}
-      actions={
-        <>
-          <Button asChild size="sm" variant="ghost" className="h-8 gap-1.5">
-            <Link to="/orchestrations/$id" params={{ id: params.id }}>
-              <ArrowLeft className="h-3.5 w-3.5" /> Back
-            </Link>
-          </Button>
-          <Button size="sm" variant="ghost" className="h-8 gap-1.5">
-            <Share2 className="h-3.5 w-3.5" /> Share
-          </Button>
-          <Button size="sm" variant="outline" className="h-8 gap-1.5">
-            <Save className="h-3.5 w-3.5" /> Save
-          </Button>
-        </>
-      }
     >
       <FlowBuilder
         catalog={orchestrationNodeCatalog}
@@ -124,6 +107,9 @@ function EditOrchestration() {
         paletteSubtitle="Agents, endpoints, queues"
         runLabel="Deploy flow"
         assistantMode="orchestration"
+        backHref={`/orchestrations/${params.id}`}
+        backLabel="Back to flow"
+        flowName={flow.slug}
       />
     </AppLayout>
   );

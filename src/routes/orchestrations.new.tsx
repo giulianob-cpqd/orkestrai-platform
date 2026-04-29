@@ -1,10 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { AppLayout } from "@/components/AppLayout";
 import { FlowBuilder } from "@/components/flow/FlowBuilder";
 import { orchestrationNodeCatalog } from "@/components/flow/nodeCatalog";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Save, Share2 } from "lucide-react";
 import { getTemplate } from "@/data/templates";
 
 const searchSchema = z.object({
@@ -28,21 +26,6 @@ function NewOrchestrationPage() {
     <AppLayout
       title="new-orchestration.flow"
       subtitle={tpl ? `From template · ${tpl.name}` : "Untitled orchestration"}
-      actions={
-        <>
-          <Button asChild size="sm" variant="ghost" className="h-8 gap-1.5">
-            <Link to="/">
-              <ArrowLeft className="h-3.5 w-3.5" /> Back
-            </Link>
-          </Button>
-          <Button size="sm" variant="ghost" className="h-8 gap-1.5">
-            <Share2 className="h-3.5 w-3.5" /> Share
-          </Button>
-          <Button size="sm" variant="outline" className="h-8 gap-1.5">
-            <Save className="h-3.5 w-3.5" /> Save
-          </Button>
-        </>
-      }
     >
       {usingHighcode ? (
         <div className="flex h-[calc(100vh-3.5rem)] items-center justify-center p-12">
@@ -65,6 +48,9 @@ function NewOrchestrationPage() {
           paletteSubtitle="Agents, endpoints, queues"
           runLabel="Deploy flow"
           assistantMode="orchestration"
+          backHref="/"
+          backLabel="Back to orchestrations"
+          flowName="new-orchestration"
         />
       )}
     </AppLayout>

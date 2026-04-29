@@ -22,7 +22,9 @@ import type { NodeTemplate } from "./nodeCatalog";
 import { AIAssistantPanel, type AssistantMode } from "./AIAssistantPanel";
 import { PropertiesPanel } from "./PropertiesPanel";
 import { TestFlowDialog } from "./TestFlowDialog";
-import { Sparkles, Settings2, Play } from "lucide-react";
+import { DeployPipelineDialog } from "./DeployPipelineDialog";
+import { Link } from "@tanstack/react-router";
+import { Sparkles, Settings2, Play, ArrowLeft } from "lucide-react";
 import { resolveIcon } from "@/lib/icons";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -40,6 +42,9 @@ export interface FlowBuilderProps {
   paletteSubtitle?: string;
   runLabel?: string;
   assistantMode?: AssistantMode;
+  backHref?: string;
+  backLabel?: string;
+  flowName?: string;
 }
 
 let idCounter = 1000;
@@ -52,6 +57,9 @@ function FlowInner({
   paletteSubtitle = "Drag to canvas",
   runLabel = "Run flow",
   assistantMode = "orchestration",
+  backHref,
+  backLabel = "Back",
+  flowName,
 }: FlowBuilderProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
@@ -60,6 +68,7 @@ function FlowInner({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [tab, setTab] = useState<"properties" | "assistant">("properties");
   const [testOpen, setTestOpen] = useState(false);
+  const [deployOpen, setDeployOpen] = useState(false);
 
   const handleAssistantApply = useCallback(
     (newNodes: Node[], newEdges: Edge[]) => {
@@ -214,12 +223,16 @@ function FlowInner({
 
         <div className="pointer-events-none absolute left-1/2 top-4 -translate-x-1/2">
           <div className="pointer-events-auto flex items-center gap-2 rounded-full border border-border bg-card/80 px-2 py-1 backdrop-blur-xl shadow-[var(--shadow-card)]">
+            {backHref && (
+              <Button asChild size="sm" variant="ghost" className="h-7 gap-1">
+                <Link to={backHref}>
+                  <ArrowLeft className="h-3 w-3" /> {backLabel}
+                </Link>
+              </Button>
+            )}
             <Badge variant="outline" className="gap-1 border-success/40 text-success">
               <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" /> Draft saved
             </Badge>
-            <Button size="sm" variant="ghost" className="h-7">
-              Validate
-            </Button>
             <Button
               size="sm"
               variant="ghost"
@@ -228,13 +241,18 @@ function FlowInner({
             >
               <Play className="h-3 w-3" /> Test Flow
             </Button>
-            <Button size="sm" className="h-7 gap-1 bg-[image:var(--gradient-primary)] text-primary-foreground hover:opacity-90">
+            <Button
+              size="sm"
+              className="h-7 gap-1 bg-[image:var(--gradient-primary)] text-primary-foreground hover:opacity-90"
+              onClick={() => setDeployOpen(true)}
+            >
               <Sparkles className="h-3 w-3" /> {runLabel}
             </Button>
           </div>
         </div>
 
         <TestFlowDialog open={testOpen} onOpenChange={setTestOpen} nodes={nodes} mode={assistantMode} />
+        <DeployPipelineDialog open={deployOpen} onOpenChange={setDeployOpen} flowName={flowName ?? "flow"} />
       </div>
 
       <aside className="flex w-96 shrink-0 flex-col border-l border-border bg-sidebar/60 backdrop-blur-md">

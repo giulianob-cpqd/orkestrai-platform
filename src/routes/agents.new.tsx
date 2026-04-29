@@ -1,10 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { AppLayout } from "@/components/AppLayout";
 import { FlowBuilder } from "@/components/flow/FlowBuilder";
 import { agentNodeCatalog } from "@/components/flow/nodeCatalog";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Save, Share2 } from "lucide-react";
 import { getTemplate } from "@/data/templates";
 
 const searchSchema = z.object({
@@ -28,21 +26,6 @@ function NewAgentPage() {
     <AppLayout
       title="new-agent.agent"
       subtitle={tpl ? `From template · ${tpl.name}` : "Untitled agent"}
-      actions={
-        <>
-          <Button asChild size="sm" variant="ghost" className="h-8 gap-1.5">
-            <Link to="/agents">
-              <ArrowLeft className="h-3.5 w-3.5" /> Back
-            </Link>
-          </Button>
-          <Button size="sm" variant="ghost" className="h-8 gap-1.5">
-            <Share2 className="h-3.5 w-3.5" /> Share
-          </Button>
-          <Button size="sm" variant="outline" className="h-8 gap-1.5">
-            <Save className="h-3.5 w-3.5" /> Publish
-          </Button>
-        </>
-      }
     >
       {usingHighcode ? (
         <div className="flex h-[calc(100vh-3.5rem)] items-center justify-center p-12">
@@ -66,8 +49,11 @@ function NewAgentPage() {
           initialEdges={initialEdges}
           paletteTitle="Agent Parts"
           paletteSubtitle="LLM · RAG · Memory · Tools"
-          runLabel="Test agent"
+          runLabel="Deploy agent"
           assistantMode="agent"
+          backHref="/agents"
+          backLabel="Back to agents"
+          flowName="new-agent"
         />
       )}
     </AppLayout>
