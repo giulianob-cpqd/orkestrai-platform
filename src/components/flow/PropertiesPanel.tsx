@@ -21,6 +21,9 @@ import {
   requestProtocols,
   cronPresets,
   coordinationStrategies,
+  agentTasks,
+  messagingBrokers,
+  dbOperations,
   type RegistryItem,
 } from "@/data/registry";
 
@@ -154,31 +157,131 @@ export function PropertiesPanel({ node, mode = "orchestration", onChange, onDele
             }}
           />
         );
-      case "agentref":
+      case "agentref": {
+        const agentId = data.agentId as string | undefined;
+        const tasks = agentId ? agentTasks[agentId] ?? [] : [];
+        const showTaskSelector = tasks.length > 1;
         return (
-          <SelectField
-            label="Agente cadastrado"
-            placeholder="Selecione um agente publicado"
-            value={data.agentId as string | undefined}
-            options={registeredAgents}
-            onChange={(v) => {
-              const item = registeredAgents.find((r) => r.id === v);
-              onChange({ agentId: v, label: item?.name ?? label, meta: item?.meta });
-            }}
-          />
+          <>
+            <SelectField
+              label="Agente cadastrado"
+              placeholder="Selecione um agente publicado"
+              value={agentId}
+              options={registeredAgents}
+              onChange={(v) => {
+                const item = registeredAgents.find((r) => r.id === v);
+                onChange({ agentId: v, label: item?.name ?? label, meta: item?.meta, taskId: undefined });
+              }}
+            />
+            {showTaskSelector ? (
+              <SelectField
+                label="Task a executar"
+                placeholder="Selecione a task"
+                value={data.taskId as string | undefined}
+                options={tasks}
+                onChange={(v) => {
+                  const t = tasks.find((x) => x.id === v);
+                  onChange({ taskId: v, meta: `${data.meta ?? ""} · ${t?.name ?? v}`.trim() });
+                }}
+              />
+            ) : agentId ? (
+              <div className="rounded-lg border border-border bg-muted/40 p-3 text-[11px] text-muted-foreground">
+                Este agente expõe apenas uma task — será executada por padrão.
+              </div>
+            ) : null}
+          </>
         );
+      }
       case "db":
         return (
-          <SelectField
-            label="Tipo de banco"
-            placeholder="Selecione o banco"
-            value={data.dbType as string | undefined}
-            options={databaseTypes}
-            onChange={(v) => {
-              const item = databaseTypes.find((r) => r.id === v);
-              onChange({ dbType: v, meta: item?.name });
-            }}
-          />
+          <>
+            <SelectField
+              label="Tipo de banco"
+              placeholder="Selecione o banco"
+              value={data.dbType as string | undefined}
+              options={databaseTypes}
+              onChange={(v) => {
+                const item = databaseTypes.find((r) => r.id === v);
+                onChange({ dbType: v, meta: item?.name });
+              }}
+            />
+            <SelectField
+              label="Operação"
+              placeholder="Selecione a operação"
+              value={(data.dbOperation as string) ?? ""}
+              options={dbOperations}
+              onChange={(v) => {
+                const op = dbOperations.find((o) => o.id === v);
+                const dbName = databaseTypes.find((d) => d.id === data.dbType)?.name ?? "";
+                onChange({ dbOperation: v, meta: `${dbName} · ${op?.name ?? v}`.trim() });
+              }}
+            />
+          </>
+        );
+      case "consumer":
+      case "producer":
+        return (
+          <>
+            <SelectField
+              label="Broker"
+              placeholder="Selecione o broker"
+              value={data.broker as string | undefined}
+              options={messagingBrokers}
+              onChange={(v) => {
+                const item = messagingBrokers.find((b) => b.id === v);
+                onChange({ broker: v, meta: item?.name });
+              }}
+            />
+            <div className="space-y-2">
+              <Label className="text-xs">
+                {nodeType === "consumer" ? "Topic / Queue (subscribe)" : "Topic / Queue (publish)"}
+              </Label>
+              <Input
+                className="font-mono text-xs"
+                placeholder="events.user.created"
+                value={(data.topic as string) ?? ""}
+                onChange={(e) => onChange({ topic: e.target.value })}
+              />
+            </div>
+            {nodeType === "consumer" && (
+              <div className="space-y-2">
+                <Label className="text-xs">Consumer group</Label>
+                <Input
+                  className="font-mono text-xs"
+                  placeholder="inspire-orch"
+                  value={(data.consumerGroup as string) ?? ""}
+                  onChange={(e) => onChange({ consumerGroup: e.target.value })}
+                />
+              </div>
+            )}
+          </>
+        );
+      case "task":
+        return (
+          <>
+            <div className="space-y-2">
+              <Label className="text-xs">Task ID</Label>
+              <Input
+                className="font-mono text-xs"
+                placeholder="deep_research"
+                value={(data.taskId as string) ?? ""}
+                onChange={(e) => onChange({ taskId: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Descrição da capacidade</Label>
+              <Textarea
+                rows={3}
+                placeholder="O que essa task faz e quando o agente deve usá-la."
+                value={(data.taskDescription as string) ?? ""}
+                onChange={(e) => onChange({ taskDescription: e.target.value })}
+              />
+            </div>
+            <div className="rounded-lg border border-border bg-muted/40 p-3 text-[11px] text-muted-foreground">
+              Um agente pode ter <strong>múltiplas tasks</strong>. No editor de orquestração,
+              ao referenciar este agente, o usuário poderá escolher qual task executar.
+            </div>
+          </>
         );
       case "endpoint":
         return (
