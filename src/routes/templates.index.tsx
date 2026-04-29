@@ -215,6 +215,7 @@ function CreateTemplateDialog() {
 function TemplatesList() {
   const agentTpls = templates.filter((t) => t.kind === "agent");
   const orchTpls = templates.filter((t) => t.kind === "orchestration");
+  const [wizardTpl, setWizardTpl] = useState<Template | null>(null);
 
   return (
     <AppLayout title="Templates" subtitle="Reusable starting points">
@@ -247,13 +248,18 @@ function TemplatesList() {
             <TabsContent key={v} value={v} className="mt-4">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {list.map((t) => (
-                  <TemplateCard key={t.id} t={t} />
+                  <TemplateCard key={t.id} t={t} onUse={setWizardTpl} />
                 ))}
               </div>
             </TabsContent>
           ))}
         </Tabs>
       </div>
+      <TemplateWizardDialog
+        open={!!wizardTpl}
+        onOpenChange={(o) => { if (!o) setWizardTpl(null); }}
+        template={wizardTpl}
+      />
     </AppLayout>
   );
 }
