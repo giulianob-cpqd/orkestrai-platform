@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageHeader } from "@/components/CatalogGrid";
 import { Card } from "@/components/ui/card";
@@ -7,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Bot, Users, ArrowRight, Database } from "lucide-react";
 import { agentFlows } from "@/data/flows";
 import { cn } from "@/lib/utils";
+import { NewFromTemplateDialog } from "@/components/NewFromTemplateDialog";
 
 export const Route = createFileRoute("/agents/")({
   head: () => ({
@@ -25,17 +27,21 @@ const statusMap = {
 };
 
 function AgentsList() {
+  const [open, setOpen] = useState(false);
   return (
     <AppLayout title="Agents" subtitle="Catalog of deployable AI agents">
+      <NewFromTemplateDialog open={open} onOpenChange={setOpen} kind="agent" />
       <div className="p-6">
         <PageHeader
           title="Agents"
           description="Single agents composed of an LLM, memory, RAG and tools — referenced inside orchestrations."
         >
-          <Button asChild size="sm" className="gap-1.5 bg-[image:var(--gradient-primary)] text-primary-foreground">
-            <Link to="/agents/new">
-              <Plus className="h-3.5 w-3.5" /> New agent
-            </Link>
+          <Button
+            size="sm"
+            onClick={() => setOpen(true)}
+            className="gap-1.5 bg-[image:var(--gradient-primary)] text-primary-foreground"
+          >
+            <Plus className="h-3.5 w-3.5" /> New agent
           </Button>
         </PageHeader>
 
