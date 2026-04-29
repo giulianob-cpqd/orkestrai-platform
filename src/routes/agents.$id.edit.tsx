@@ -3,8 +3,6 @@ import { type Node, type Edge, MarkerType } from "@xyflow/react";
 import { AppLayout } from "@/components/AppLayout";
 import { FlowBuilder } from "@/components/flow/FlowBuilder";
 import { agentNodeCatalog } from "@/components/flow/nodeCatalog";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Save, Share2 } from "lucide-react";
 import { getAgentFlow } from "@/data/flows";
 
 export const Route = createFileRoute("/agents/$id/edit")({
@@ -73,21 +71,6 @@ function EditAgent() {
     <AppLayout
       title={`${flow.slug}.agent`}
       subtitle={`${flow.name} · ${flow.version}`}
-      actions={
-        <>
-          <Button asChild size="sm" variant="ghost" className="h-8 gap-1.5">
-            <Link to="/agents/$id" params={{ id: params.id }}>
-              <ArrowLeft className="h-3.5 w-3.5" /> Back
-            </Link>
-          </Button>
-          <Button size="sm" variant="ghost" className="h-8 gap-1.5">
-            <Share2 className="h-3.5 w-3.5" /> Share
-          </Button>
-          <Button size="sm" variant="outline" className="h-8 gap-1.5">
-            <Save className="h-3.5 w-3.5" /> Publish
-          </Button>
-        </>
-      }
     >
       <FlowBuilder
         catalog={agentNodeCatalog}
@@ -95,8 +78,11 @@ function EditAgent() {
         initialEdges={initialEdges}
         paletteTitle="Agent Parts"
         paletteSubtitle="LLM · RAG · Memory · Tools"
-        runLabel="Test agent"
+        runLabel="Deploy agent"
         assistantMode="agent"
+        backHref={`/agents/${params.id}`}
+        backLabel="Back to agent"
+        flowName={flow.slug}
       />
     </AppLayout>
   );
