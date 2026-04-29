@@ -91,3 +91,48 @@ export const cronPresets = [
   { id: "0 0 * * 0", name: "Weekly (Sunday)" },
   { id: "0 0 1 * *", name: "Monthly" },
 ];
+
+/* Tasks declared by published agents (only agents with >1 task expose a selector) */
+export const agentTasks: Record<string, RegistryItem[]> = {
+  agent_research_v3: [
+    { id: "deep_research", name: "Deep Research", meta: "multi-step web + RAG" },
+    { id: "quick_lookup", name: "Quick Lookup", meta: "single web search" },
+    { id: "summarize_sources", name: "Summarize Sources", meta: "map-reduce" },
+  ],
+  agent_writer_v1: [
+    { id: "draft_doc", name: "Draft Document", meta: "long-form markdown" },
+    { id: "rewrite", name: "Rewrite Section", meta: "tone/style" },
+  ],
+  agent_router_v1: [
+    { id: "classify", name: "Classify Intent", meta: "single task" },
+  ],
+  agent_sql_v2: [
+    { id: "generate_sql", name: "Generate SQL", meta: "NL → SQL" },
+    { id: "execute_safe", name: "Execute Safe Query", meta: "guardrailed" },
+    { id: "explain_plan", name: "Explain Plan", meta: "EXPLAIN ANALYZE" },
+  ],
+  agent_critic_v2: [
+    { id: "review", name: "Review Draft", meta: "rubric-based" },
+  ],
+  agent_summarizer_v1: [
+    { id: "summarize", name: "Summarize", meta: "default" },
+  ],
+};
+
+export const messagingBrokers: RegistryItem[] = [
+  { id: "kafka", name: "Apache Kafka", meta: "topic · partitions" },
+  { id: "rabbitmq", name: "RabbitMQ", meta: "queue · exchange" },
+  { id: "nats", name: "NATS", meta: "subject · jetstream" },
+  { id: "sqs", name: "AWS SQS", meta: "queue · FIFO" },
+  { id: "pubsub", name: "Google Pub/Sub", meta: "topic · subscription" },
+  { id: "redis-streams", name: "Redis Streams", meta: "consumer group" },
+];
+
+export const dbOperations: RegistryItem[] = [
+  { id: "insert", name: "Insert", meta: "create row(s)" },
+  { id: "update", name: "Update", meta: "modify by predicate" },
+  { id: "upsert", name: "Upsert", meta: "insert or update" },
+  { id: "delete", name: "Delete", meta: "remove by predicate" },
+  { id: "search", name: "Search", meta: "select / query" },
+];
+
