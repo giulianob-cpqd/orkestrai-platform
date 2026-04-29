@@ -22,7 +22,9 @@ import type { NodeTemplate } from "./nodeCatalog";
 import { AIAssistantPanel, type AssistantMode } from "./AIAssistantPanel";
 import { PropertiesPanel } from "./PropertiesPanel";
 import { TestFlowDialog } from "./TestFlowDialog";
-import { Sparkles, Settings2, Play } from "lucide-react";
+import { DeployPipelineDialog } from "./DeployPipelineDialog";
+import { Link } from "@tanstack/react-router";
+import { Sparkles, Settings2, Play, ArrowLeft } from "lucide-react";
 import { resolveIcon } from "@/lib/icons";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -40,6 +42,9 @@ export interface FlowBuilderProps {
   paletteSubtitle?: string;
   runLabel?: string;
   assistantMode?: AssistantMode;
+  backHref?: string;
+  backLabel?: string;
+  flowName?: string;
 }
 
 let idCounter = 1000;
@@ -52,6 +57,9 @@ function FlowInner({
   paletteSubtitle = "Drag to canvas",
   runLabel = "Run flow",
   assistantMode = "orchestration",
+  backHref,
+  backLabel = "Back",
+  flowName,
 }: FlowBuilderProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
@@ -60,6 +68,7 @@ function FlowInner({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [tab, setTab] = useState<"properties" | "assistant">("properties");
   const [testOpen, setTestOpen] = useState(false);
+  const [deployOpen, setDeployOpen] = useState(false);
 
   const handleAssistantApply = useCallback(
     (newNodes: Node[], newEdges: Edge[]) => {
