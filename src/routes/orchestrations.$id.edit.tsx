@@ -60,13 +60,13 @@ const initialNodes: Node[] = [
     id: "f5",
     type: "agent",
     position: { x: 320, y: 320 },
-    data: { label: "events.research", description: "Kafka topic emission", icon: "Radio", variant: "queue", meta: "kafka · partitions 6", nodeType: "queue" },
+    data: { label: "events.research", description: "Kafka producer", icon: "Megaphone", variant: "producer", meta: "kafka · partitions 6", nodeType: "producer", broker: "kafka", topic: "events.research" },
   },
   {
     id: "f6",
     type: "agent",
     position: { x: 620, y: 320 },
-    data: { label: "Warehouse", description: "Postgres analytics DB", icon: "Database", variant: "db", meta: "PostgreSQL", nodeType: "db", dbType: "postgres" },
+    data: { label: "Warehouse", description: "Postgres analytics DB", icon: "Database", variant: "db", meta: "PostgreSQL · upsert", nodeType: "db", dbType: "postgres", dbOperation: "upsert" },
   },
   {
     id: "f7",
