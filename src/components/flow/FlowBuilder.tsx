@@ -21,7 +21,8 @@ import { AgentNode } from "./AgentNode";
 import type { NodeTemplate } from "./nodeCatalog";
 import { AIAssistantPanel, type AssistantMode } from "./AIAssistantPanel";
 import { PropertiesPanel } from "./PropertiesPanel";
-import { Sparkles, Settings2 } from "lucide-react";
+import { TestFlowDialog } from "./TestFlowDialog";
+import { Sparkles, Settings2, Play } from "lucide-react";
 import { resolveIcon } from "@/lib/icons";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -58,6 +59,7 @@ function FlowInner({
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [tab, setTab] = useState<"properties" | "assistant">("properties");
+  const [testOpen, setTestOpen] = useState(false);
 
   const handleAssistantApply = useCallback(
     (newNodes: Node[], newEdges: Edge[]) => {
@@ -222,15 +224,17 @@ function FlowInner({
               size="sm"
               variant="ghost"
               className="h-7 gap-1"
-              onClick={() => setTab("assistant")}
+              onClick={() => setTestOpen(true)}
             >
-              <Sparkles className="h-3 w-3" /> AI Assistant
+              <Play className="h-3 w-3" /> Test Flow
             </Button>
             <Button size="sm" className="h-7 gap-1 bg-[image:var(--gradient-primary)] text-primary-foreground hover:opacity-90">
               <Sparkles className="h-3 w-3" /> {runLabel}
             </Button>
           </div>
         </div>
+
+        <TestFlowDialog open={testOpen} onOpenChange={setTestOpen} nodes={nodes} mode={assistantMode} />
       </div>
 
       <aside className="flex w-96 shrink-0 flex-col border-l border-border bg-sidebar/60 backdrop-blur-md">
