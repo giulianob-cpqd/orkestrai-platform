@@ -13,6 +13,10 @@ import {
   GitBranch,
   Wand2,
   Clock,
+  Inbox,
+  Megaphone,
+  ListChecks,
+  LayoutTemplate,
   type LucideIcon,
 } from "lucide-react";
 
@@ -30,7 +34,11 @@ export type IconName =
   | "Wrench"
   | "GitBranch"
   | "Wand2"
-  | "Clock";
+  | "Clock"
+  | "Inbox"
+  | "Megaphone"
+  | "ListChecks"
+  | "LayoutTemplate";
 
 const iconMap: Record<IconName, LucideIcon> = {
   Bot,
@@ -47,6 +55,10 @@ const iconMap: Record<IconName, LucideIcon> = {
   GitBranch,
   Wand2,
   Clock,
+  Inbox,
+  Megaphone,
+  ListChecks,
+  LayoutTemplate,
 };
 
 export function resolveIcon(name: IconName): LucideIcon {

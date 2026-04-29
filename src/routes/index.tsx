@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageHeader } from "@/components/CatalogGrid";
 import { Card } from "@/components/ui/card";
@@ -7,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Workflow, Users, ArrowRight, Bot } from "lucide-react";
 import { orchestrations } from "@/data/flows";
 import { cn } from "@/lib/utils";
+import { NewFromTemplateDialog } from "@/components/NewFromTemplateDialog";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -25,17 +27,21 @@ const statusMap = {
 };
 
 function OrchestrationsList() {
+  const [open, setOpen] = useState(false);
   return (
     <AppLayout title="Orchestrations" subtitle="Multi-agent flows">
+      <NewFromTemplateDialog open={open} onOpenChange={setOpen} kind="orchestration" />
       <div className="p-6">
         <PageHeader
           title="Orchestrations"
           description="Flows that coordinate multiple agents through endpoints, queues and services."
         >
-          <Button asChild size="sm" className="gap-1.5 bg-[image:var(--gradient-primary)] text-primary-foreground">
-            <Link to="/orchestrations/new">
-              <Plus className="h-3.5 w-3.5" /> New orchestration
-            </Link>
+          <Button
+            size="sm"
+            onClick={() => setOpen(true)}
+            className="gap-1.5 bg-[image:var(--gradient-primary)] text-primary-foreground"
+          >
+            <Plus className="h-3.5 w-3.5" /> New orchestration
           </Button>
         </PageHeader>
 

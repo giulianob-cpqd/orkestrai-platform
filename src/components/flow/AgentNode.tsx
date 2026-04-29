@@ -18,7 +18,10 @@ export type NodeVariant =
   | "coord"
   | "input"
   | "prompt"
-  | "cron";
+  | "cron"
+  | "task"
+  | "consumer"
+  | "producer";
 
 export interface AgentNodeData {
   label: string;

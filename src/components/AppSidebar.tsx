@@ -1,5 +1,5 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { Workflow, Bot, Brain, Plug, Server, Database, Sparkles } from "lucide-react";
+import { Workflow, Bot, Brain, Plug, Server, Database, Sparkles, LayoutTemplate } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -16,6 +16,7 @@ import {
 const buildItems = [
   { title: "Orchestrations", url: "/", icon: Workflow, match: (p: string) => p === "/" || p.startsWith("/orchestrations") },
   { title: "Agents", url: "/agents", icon: Bot, match: (p: string) => p === "/agents" || p.startsWith("/agents/") },
+  { title: "Templates", url: "/templates", icon: LayoutTemplate, match: (p: string) => p === "/templates" || p.startsWith("/templates/") },
 ];
 
 const catalogItems = [
