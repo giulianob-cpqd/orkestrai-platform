@@ -106,8 +106,9 @@ function generateFlow(
   /* Orchestration: linear chain (unchanged behaviour) */
   const sequence: NodeTemplate[] = [];
   if (/cron|agendado|schedule|di[áa]rio|hor[áa]rio/.test(p)) sequence.push(pick("cron")!);
+  else if (/consum|consome|subscribe|kafka|rabbit|nats|t[óo]pico|topic|fila|queue/.test(p))
+    sequence.push(pick("consumer")!);
   else sequence.push(pick("endpoint")!);
-  if (/fila|queue|kafka|rabbit|nats|t[óo]pico|topic/.test(p)) sequence.push(pick("queue")!);
   sequence.push(pick("agentref")!);
   if (/paralelo|parallel|roteia|router|coordena|supervisor|debate|sequencial/.test(p)) {
     sequence.push(pick("coord")!);
@@ -116,8 +117,7 @@ function generateFlow(
   if (/postgres|mysql|sqlite|mongo|redis|banco|database|db/.test(p)) sequence.push(pick("db")!);
   if (/s3|lambda|bigquery|cloud|aws|gcp|azure/.test(p)) sequence.push(pick("cloud")!);
   if (/api externa|third-party|terceiro/.test(p)) sequence.push(pick("tool")!);
-  if (/kafka|rabbit|publica|publish/.test(p) && !sequence.find((s) => s.type === "queue"))
-    sequence.push(pick("queue")!);
+  if (/publica|publish|produce|emit/.test(p)) sequence.push(pick("producer")!);
   sequence.push(pick("output")!);
 
   const nodes: Node[] = sequence
