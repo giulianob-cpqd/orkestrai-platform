@@ -30,12 +30,7 @@ export function AppLayout({ children, title, subtitle, actions }: AppLayoutProps
               </div>
               <div className="flex items-center gap-2">
                 {actions}
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <Bell className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <Github className="h-4 w-4" />
-                </Button>
+                <NotificationsMenu />
                 <UserMenu />
               </div>
             </div>
