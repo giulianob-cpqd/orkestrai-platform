@@ -15,8 +15,8 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as LlmsRouteImport } from './routes/llms'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ApisRouteImport } from './routes/apis'
-import { Route as IndexRouteImport } from './routes/index'
 import { Route as TemplatesIndexRouteImport } from './routes/templates.index'
+import { Route as OrchestrationsIndexRouteImport } from './routes/orchestrations.index'
 import { Route as AgentsIndexRouteImport } from './routes/agents.index'
 import { Route as OrchestrationsNewRouteImport } from './routes/orchestrations.new'
 import { Route as AgentsNewRouteImport } from './routes/agents.new'
@@ -55,14 +55,14 @@ const ApisRoute = ApisRouteImport.update({
   path: '/apis',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const TemplatesIndexRoute = TemplatesIndexRouteImport.update({
   id: '/templates/',
   path: '/templates/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrchestrationsIndexRoute = OrchestrationsIndexRouteImport.update({
+  id: '/orchestrations/',
+  path: '/orchestrations/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AgentsIndexRoute = AgentsIndexRouteImport.update({
@@ -102,7 +102,6 @@ const AgentsIdEditRoute = AgentsIdEditRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
   '/apis': typeof ApisRoute
   '/dashboard': typeof DashboardRoute
   '/llms': typeof LlmsRoute
@@ -112,6 +111,7 @@ export interface FileRoutesByFullPath {
   '/agents/new': typeof AgentsNewRoute
   '/orchestrations/new': typeof OrchestrationsNewRoute
   '/agents/': typeof AgentsIndexRoute
+  '/orchestrations/': typeof OrchestrationsIndexRoute
   '/templates/': typeof TemplatesIndexRoute
   '/agents/$id/edit': typeof AgentsIdEditRoute
   '/orchestrations/$id/edit': typeof OrchestrationsIdEditRoute
@@ -119,7 +119,6 @@ export interface FileRoutesByFullPath {
   '/orchestrations/$id/': typeof OrchestrationsIdIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
   '/apis': typeof ApisRoute
   '/dashboard': typeof DashboardRoute
   '/llms': typeof LlmsRoute
@@ -129,6 +128,7 @@ export interface FileRoutesByTo {
   '/agents/new': typeof AgentsNewRoute
   '/orchestrations/new': typeof OrchestrationsNewRoute
   '/agents': typeof AgentsIndexRoute
+  '/orchestrations': typeof OrchestrationsIndexRoute
   '/templates': typeof TemplatesIndexRoute
   '/agents/$id/edit': typeof AgentsIdEditRoute
   '/orchestrations/$id/edit': typeof OrchestrationsIdEditRoute
@@ -137,7 +137,6 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
   '/apis': typeof ApisRoute
   '/dashboard': typeof DashboardRoute
   '/llms': typeof LlmsRoute
@@ -147,6 +146,7 @@ export interface FileRoutesById {
   '/agents/new': typeof AgentsNewRoute
   '/orchestrations/new': typeof OrchestrationsNewRoute
   '/agents/': typeof AgentsIndexRoute
+  '/orchestrations/': typeof OrchestrationsIndexRoute
   '/templates/': typeof TemplatesIndexRoute
   '/agents/$id/edit': typeof AgentsIdEditRoute
   '/orchestrations/$id/edit': typeof OrchestrationsIdEditRoute
@@ -156,7 +156,6 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/'
     | '/apis'
     | '/dashboard'
     | '/llms'
@@ -166,6 +165,7 @@ export interface FileRouteTypes {
     | '/agents/new'
     | '/orchestrations/new'
     | '/agents/'
+    | '/orchestrations/'
     | '/templates/'
     | '/agents/$id/edit'
     | '/orchestrations/$id/edit'
@@ -173,7 +173,6 @@ export interface FileRouteTypes {
     | '/orchestrations/$id/'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
     | '/apis'
     | '/dashboard'
     | '/llms'
@@ -183,6 +182,7 @@ export interface FileRouteTypes {
     | '/agents/new'
     | '/orchestrations/new'
     | '/agents'
+    | '/orchestrations'
     | '/templates'
     | '/agents/$id/edit'
     | '/orchestrations/$id/edit'
@@ -190,7 +190,6 @@ export interface FileRouteTypes {
     | '/orchestrations/$id'
   id:
     | '__root__'
-    | '/'
     | '/apis'
     | '/dashboard'
     | '/llms'
@@ -200,6 +199,7 @@ export interface FileRouteTypes {
     | '/agents/new'
     | '/orchestrations/new'
     | '/agents/'
+    | '/orchestrations/'
     | '/templates/'
     | '/agents/$id/edit'
     | '/orchestrations/$id/edit'
@@ -208,7 +208,6 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
   ApisRoute: typeof ApisRoute
   DashboardRoute: typeof DashboardRoute
   LlmsRoute: typeof LlmsRoute
@@ -218,6 +217,7 @@ export interface RootRouteChildren {
   AgentsNewRoute: typeof AgentsNewRoute
   OrchestrationsNewRoute: typeof OrchestrationsNewRoute
   AgentsIndexRoute: typeof AgentsIndexRoute
+  OrchestrationsIndexRoute: typeof OrchestrationsIndexRoute
   TemplatesIndexRoute: typeof TemplatesIndexRoute
   AgentsIdEditRoute: typeof AgentsIdEditRoute
   OrchestrationsIdEditRoute: typeof OrchestrationsIdEditRoute
@@ -269,18 +269,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApisRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/templates/': {
       id: '/templates/'
       path: '/templates'
       fullPath: '/templates/'
       preLoaderRoute: typeof TemplatesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/orchestrations/': {
+      id: '/orchestrations/'
+      path: '/orchestrations'
+      fullPath: '/orchestrations/'
+      preLoaderRoute: typeof OrchestrationsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/agents/': {
@@ -336,7 +336,6 @@ declare module '@tanstack/react-router' {
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
   ApisRoute: ApisRoute,
   DashboardRoute: DashboardRoute,
   LlmsRoute: LlmsRoute,
@@ -346,6 +345,7 @@ const rootRouteChildren: RootRouteChildren = {
   AgentsNewRoute: AgentsNewRoute,
   OrchestrationsNewRoute: OrchestrationsNewRoute,
   AgentsIndexRoute: AgentsIndexRoute,
+  OrchestrationsIndexRoute: OrchestrationsIndexRoute,
   TemplatesIndexRoute: TemplatesIndexRoute,
   AgentsIdEditRoute: AgentsIdEditRoute,
   OrchestrationsIdEditRoute: OrchestrationsIdEditRoute,
