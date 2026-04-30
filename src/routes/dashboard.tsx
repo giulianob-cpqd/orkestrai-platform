@@ -127,7 +127,7 @@ function DashboardPage() {
               <h2 className="font-display text-lg font-semibold">Top orchestrations</h2>
               <p className="text-xs text-muted-foreground">Most active multi-agent flows.</p>
             </div>
-            <Link to="/" className="text-xs font-medium text-primary hover:underline">
+            <Link to="/orchestrations" className="text-xs font-medium text-primary hover:underline">
               View all
             </Link>
           </div>
