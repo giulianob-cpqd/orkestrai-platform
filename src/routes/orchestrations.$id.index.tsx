@@ -27,7 +27,7 @@ export const Route = createFileRoute("/orchestrations/$id/")({
     <AppLayout title="Not found">
       <div className="p-6 text-sm text-muted-foreground">
         Orchestration not found.{" "}
-        <Link to="/" className="text-primary underline">
+        <Link to="/orchestrations" className="text-primary underline">
           Back to list
         </Link>
       </div>
@@ -51,7 +51,7 @@ function OrchestrationDetail() {
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <Button asChild variant="ghost" size="sm" className="-ml-2 mb-2 h-7 gap-1 text-muted-foreground">
-              <Link to="/">
+              <Link to="/orchestrations">
                 <ArrowLeft className="h-3.5 w-3.5" /> Orchestrations
               </Link>
             </Button>

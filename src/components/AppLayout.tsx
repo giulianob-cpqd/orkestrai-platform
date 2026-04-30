@@ -2,7 +2,8 @@ import { ReactNode } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { Button } from "@/components/ui/button";
-import { Bell, Github, Play } from "lucide-react";
+import { Bell, Github } from "lucide-react";
+import { UserMenu } from "./UserMenu";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -36,7 +37,7 @@ export function AppLayout({ children, title, subtitle, actions }: AppLayoutProps
                 <Button variant="ghost" size="icon" className="h-8 w-8">
                   <Github className="h-4 w-4" />
                 </Button>
-                <div className="h-8 w-8 rounded-full bg-[image:var(--gradient-primary)] ring-2 ring-border" />
+                <UserMenu />
               </div>
             </div>
           </header>

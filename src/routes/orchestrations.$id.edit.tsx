@@ -20,7 +20,7 @@ export const Route = createFileRoute("/orchestrations/$id/edit")({
     <AppLayout title="Not found">
       <div className="p-6 text-sm text-muted-foreground">
         Orchestration not found.{" "}
-        <Link to="/" className="text-primary underline">
+        <Link to="/orchestrations" className="text-primary underline">
           Back to list
         </Link>
       </div>
