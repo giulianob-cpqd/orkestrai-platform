@@ -11,7 +11,9 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as RagsRouteImport } from './routes/rags'
 import { Route as McpRouteImport } from './routes/mcp'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as LlmsRouteImport } from './routes/llms'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ApisRouteImport } from './routes/apis'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TemplatesIndexRouteImport } from './routes/templates.index'
@@ -33,9 +35,19 @@ const McpRoute = McpRouteImport.update({
   path: '/mcp',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LlmsRoute = LlmsRouteImport.update({
   id: '/llms',
   path: '/llms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApisRoute = ApisRouteImport.update({
@@ -92,7 +104,9 @@ const AgentsIdEditRoute = AgentsIdEditRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/apis': typeof ApisRoute
+  '/dashboard': typeof DashboardRoute
   '/llms': typeof LlmsRoute
+  '/login': typeof LoginRoute
   '/mcp': typeof McpRoute
   '/rags': typeof RagsRoute
   '/agents/new': typeof AgentsNewRoute
@@ -107,7 +121,9 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/apis': typeof ApisRoute
+  '/dashboard': typeof DashboardRoute
   '/llms': typeof LlmsRoute
+  '/login': typeof LoginRoute
   '/mcp': typeof McpRoute
   '/rags': typeof RagsRoute
   '/agents/new': typeof AgentsNewRoute
@@ -123,7 +139,9 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/apis': typeof ApisRoute
+  '/dashboard': typeof DashboardRoute
   '/llms': typeof LlmsRoute
+  '/login': typeof LoginRoute
   '/mcp': typeof McpRoute
   '/rags': typeof RagsRoute
   '/agents/new': typeof AgentsNewRoute
@@ -140,7 +158,9 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/apis'
+    | '/dashboard'
     | '/llms'
+    | '/login'
     | '/mcp'
     | '/rags'
     | '/agents/new'
@@ -155,7 +175,9 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/apis'
+    | '/dashboard'
     | '/llms'
+    | '/login'
     | '/mcp'
     | '/rags'
     | '/agents/new'
@@ -170,7 +192,9 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/apis'
+    | '/dashboard'
     | '/llms'
+    | '/login'
     | '/mcp'
     | '/rags'
     | '/agents/new'
@@ -186,7 +210,9 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ApisRoute: typeof ApisRoute
+  DashboardRoute: typeof DashboardRoute
   LlmsRoute: typeof LlmsRoute
+  LoginRoute: typeof LoginRoute
   McpRoute: typeof McpRoute
   RagsRoute: typeof RagsRoute
   AgentsNewRoute: typeof AgentsNewRoute
@@ -215,11 +241,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof McpRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/llms': {
       id: '/llms'
       path: '/llms'
       fullPath: '/llms'
       preLoaderRoute: typeof LlmsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/apis': {
@@ -298,7 +338,9 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ApisRoute: ApisRoute,
+  DashboardRoute: DashboardRoute,
   LlmsRoute: LlmsRoute,
+  LoginRoute: LoginRoute,
   McpRoute: McpRoute,
   RagsRoute: RagsRoute,
   AgentsNewRoute: AgentsNewRoute,
