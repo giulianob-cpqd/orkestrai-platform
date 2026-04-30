@@ -1,9 +1,8 @@
 import { ReactNode } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
-import { Button } from "@/components/ui/button";
-import { Bell, Github } from "lucide-react";
 import { UserMenu } from "./UserMenu";
+import { NotificationsMenu } from "./NotificationsMenu";
 
 interface AppLayoutProps {
   children: ReactNode;
