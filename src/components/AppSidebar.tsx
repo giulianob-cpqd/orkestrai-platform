@@ -55,6 +55,27 @@ export function AppSidebar() {
 
       <SidebarContent>
         <SidebarGroup>
+          <SidebarGroupLabel>Overview</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {overviewItems.map((item) => {
+                const active = item.match(pathname);
+                return (
+                  <SidebarMenuItem key={item.url}>
+                    <SidebarMenuButton asChild isActive={active}>
+                      <Link to={item.url}>
+                        <item.icon className="h-4 w-4 shrink-0" />
+                        {!collapsed && <span className="font-medium">{item.title}</span>}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
           <SidebarGroupLabel>Build</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
