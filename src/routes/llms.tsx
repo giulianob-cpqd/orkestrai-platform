@@ -1,94 +1,68 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AppLayout } from "@/components/AppLayout";
-import { CatalogGrid, PageHeader, type CatalogItem } from "@/components/CatalogGrid";
-import { Button } from "@/components/ui/button";
-import { Brain, Plus } from "lucide-react";
+import { Brain } from "lucide-react";
+import { CatalogManager, type CatalogEntry, type EnvFieldDef } from "@/components/CatalogManager";
 
 export const Route = createFileRoute("/llms")({
-  head: () => ({ meta: [{ title: "LLMs · Synapse" }] }),
+  head: () => ({ meta: [{ title: "LLMs · Inspire" }] }),
   component: LLMsPage,
 });
 
-const llms: CatalogItem[] = [
+const envFields: EnvFieldDef[] = [
+  { key: "endpoint", label: "Endpoint URL", placeholder: "https://api.openai.com/v1" },
+  { key: "model", label: "Model identifier", placeholder: "gpt-5" },
+  { key: "apiKey", label: "API key", type: "password", placeholder: "sk-..." },
+  { key: "maxTokens", label: "Max tokens", type: "number", placeholder: "4096" },
+];
+
+const initial: CatalogEntry[] = [
   {
-    id: "google/gemini-2.5-pro",
-    name: "Gemini 2.5 Pro",
-    description: "Top-tier multimodal model with 1M context window.",
-    tags: ["multimodal", "1M ctx", "tools"],
-    meta: [
-      { label: "Provider", value: "Google" },
-      { label: "Cost / 1M in", value: "$1.25" },
-    ],
-    status: "active", icon: Brain, accent: "info",
-  },
-  {
-    id: "openai/gpt-5",
+    id: "openai-gpt-5",
     name: "GPT-5",
     description: "Powerful all-rounder with excellent reasoning and nuance.",
-    tags: ["reasoning", "vision", "tools"],
-    meta: [
-      { label: "Provider", value: "OpenAI" },
-      { label: "Cost / 1M in", value: "$2.50" },
-    ],
-    status: "active", icon: Brain, accent: "primary",
+    tags: ["OpenAI", "reasoning", "tools"],
+    status: "active",
+    envs: {
+      dev: { endpoint: "https://api.openai.com/v1", model: "gpt-5-mini", apiKey: "sk-dev-***", maxTokens: "4096" },
+      staging: { endpoint: "https://api.openai.com/v1", model: "gpt-5", apiKey: "sk-stg-***", maxTokens: "8192" },
+      production: { endpoint: "https://api.openai.com/v1", model: "gpt-5", apiKey: "sk-prod-***", maxTokens: "8192" },
+    },
   },
   {
-    id: "google/gemini-2.5-flash",
-    name: "Gemini 2.5 Flash",
-    description: "Balanced speed and capability for high-volume workloads.",
-    tags: ["fast", "cheap"],
-    meta: [
-      { label: "Provider", value: "Google" },
-      { label: "p50", value: "420ms" },
-    ],
-    status: "active", icon: Brain, accent: "success",
+    id: "google-gemini-2-5-pro",
+    name: "Gemini 2.5 Pro",
+    description: "Top-tier multimodal model with 1M context window.",
+    tags: ["Google", "multimodal", "1M ctx"],
+    status: "active",
+    envs: {
+      dev: { endpoint: "https://generativelanguage.googleapis.com", model: "gemini-2.5-flash", apiKey: "***", maxTokens: "8192" },
+      staging: { endpoint: "https://generativelanguage.googleapis.com", model: "gemini-2.5-pro", apiKey: "***", maxTokens: "16384" },
+      production: { endpoint: "https://generativelanguage.googleapis.com", model: "gemini-2.5-pro", apiKey: "***", maxTokens: "32768" },
+    },
   },
   {
-    id: "openai/gpt-5-mini",
-    name: "GPT-5 mini",
-    description: "Lower cost and latency, keeps most reasoning strength.",
-    tags: ["mid-tier"],
-    meta: [
-      { label: "Provider", value: "OpenAI" },
-      { label: "Cost / 1M in", value: "$0.40" },
-    ],
-    status: "active", icon: Brain, accent: "accent",
-  },
-  {
-    id: "self-hosted/llama-3.3-70b",
+    id: "self-hosted-llama",
     name: "Llama 3.3 70B",
-    description: "Self-hosted on internal GPU cluster. vLLM + tensor parallel.",
-    tags: ["on-prem", "vLLM", "GPU"],
-    meta: [
-      { label: "Cluster", value: "k8s/llm-prod" },
-      { label: "Replicas", value: "4" },
-    ],
-    status: "draft", icon: Brain, accent: "warning",
-  },
-  {
-    id: "google/gemini-2.5-flash-lite",
-    name: "Gemini Flash Lite",
-    description: "Fastest and cheapest for classification and simple workloads.",
-    tags: ["classifier", "ultra-fast"],
-    meta: [
-      { label: "Provider", value: "Google" },
-      { label: "p50", value: "120ms" },
-    ],
-    status: "active", icon: Brain, accent: "destructive",
+    description: "Self-hosted on internal GPU cluster (vLLM + tensor parallel).",
+    tags: ["on-prem", "vLLM"],
+    status: "draft",
+    envs: {
+      dev: { endpoint: "http://llm-dev.svc:8000/v1", model: "llama-3.3-70b", apiKey: "", maxTokens: "4096" },
+      staging: { endpoint: "", model: "", apiKey: "", maxTokens: "" },
+      production: { endpoint: "", model: "", apiKey: "", maxTokens: "" },
+    },
   },
 ];
 
 function LLMsPage() {
   return (
-    <AppLayout title="LLMs" subtitle="Registered models and providers">
-      <div className="p-6">
-        <PageHeader title="LLMs" description="Model registry available to your agents.">
-          <Button size="sm" className="gap-1.5 bg-[image:var(--gradient-primary)] text-primary-foreground">
-            <Plus className="h-3.5 w-3.5" /> Register model
-          </Button>
-        </PageHeader>
-        <CatalogGrid items={llms} />
-      </div>
-    </AppLayout>
+    <CatalogManager
+      title="LLMs"
+      subtitle="Registered models and providers"
+      description="Model registry available to your agents."
+      newButtonLabel="Register model"
+      icon={Brain}
+      envFields={envFields}
+      initialItems={initial}
+    />
   );
 }
