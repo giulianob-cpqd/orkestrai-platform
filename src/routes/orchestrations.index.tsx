@@ -10,7 +10,7 @@ import { orchestrations } from "@/data/flows";
 import { cn } from "@/lib/utils";
 import { NewFromTemplateDialog } from "@/components/NewFromTemplateDialog";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/orchestrations/")({
   head: () => ({
     meta: [
       { title: "Orchestrations · Synapse" },
