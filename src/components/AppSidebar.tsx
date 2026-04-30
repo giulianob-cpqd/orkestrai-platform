@@ -1,5 +1,5 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { Workflow, Bot, Brain, Plug, Server, Database, Sparkles, LayoutTemplate } from "lucide-react";
+import { Workflow, Bot, Brain, Plug, Server, Database, Sparkles, LayoutTemplate, LayoutDashboard } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -14,7 +14,8 @@ import {
 } from "@/components/ui/sidebar";
 
 const buildItems = [
-  { title: "Orchestrations", url: "/", icon: Workflow, match: (p: string) => p === "/" || p.startsWith("/orchestrations") },
+  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard, match: (p: string) => p === "/dashboard" },
+  { title: "Orchestrations", url: "/orchestrations", icon: Workflow, match: (p: string) => p === "/orchestrations" || p.startsWith("/orchestrations/") },
   { title: "Agents", url: "/agents", icon: Bot, match: (p: string) => p === "/agents" || p.startsWith("/agents/") },
   { title: "Templates", url: "/templates", icon: LayoutTemplate, match: (p: string) => p === "/templates" || p.startsWith("/templates/") },
 ];
@@ -34,7 +35,7 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
       <SidebarHeader className="border-b border-sidebar-border">
-        <Link to="/" className="flex items-center gap-2 px-2 py-3">
+        <Link to="/dashboard" className="flex items-center gap-2 px-2 py-3">
           <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-[image:var(--gradient-primary)] shadow-[var(--shadow-glow)]">
             <Sparkles className="h-4 w-4 text-primary-foreground" />
           </div>

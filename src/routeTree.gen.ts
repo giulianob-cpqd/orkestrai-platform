@@ -15,6 +15,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as LlmsRouteImport } from './routes/llms'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ApisRouteImport } from './routes/apis'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as TemplatesIndexRouteImport } from './routes/templates.index'
 import { Route as OrchestrationsIndexRouteImport } from './routes/orchestrations.index'
 import { Route as AgentsIndexRouteImport } from './routes/agents.index'
@@ -53,6 +54,11 @@ const DashboardRoute = DashboardRouteImport.update({
 const ApisRoute = ApisRouteImport.update({
   id: '/apis',
   path: '/apis',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TemplatesIndexRoute = TemplatesIndexRouteImport.update({
@@ -102,6 +108,7 @@ const AgentsIdEditRoute = AgentsIdEditRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
+  '/': typeof IndexRoute
   '/apis': typeof ApisRoute
   '/dashboard': typeof DashboardRoute
   '/llms': typeof LlmsRoute
@@ -119,6 +126,7 @@ export interface FileRoutesByFullPath {
   '/orchestrations/$id/': typeof OrchestrationsIdIndexRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof IndexRoute
   '/apis': typeof ApisRoute
   '/dashboard': typeof DashboardRoute
   '/llms': typeof LlmsRoute
@@ -137,6 +145,7 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
   '/apis': typeof ApisRoute
   '/dashboard': typeof DashboardRoute
   '/llms': typeof LlmsRoute
@@ -156,6 +165,7 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/'
     | '/apis'
     | '/dashboard'
     | '/llms'
@@ -173,6 +183,7 @@ export interface FileRouteTypes {
     | '/orchestrations/$id/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
     | '/apis'
     | '/dashboard'
     | '/llms'
@@ -190,6 +201,7 @@ export interface FileRouteTypes {
     | '/orchestrations/$id'
   id:
     | '__root__'
+    | '/'
     | '/apis'
     | '/dashboard'
     | '/llms'
@@ -208,6 +220,7 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
   ApisRoute: typeof ApisRoute
   DashboardRoute: typeof DashboardRoute
   LlmsRoute: typeof LlmsRoute
@@ -267,6 +280,13 @@ declare module '@tanstack/react-router' {
       path: '/apis'
       fullPath: '/apis'
       preLoaderRoute: typeof ApisRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/templates/': {
@@ -336,6 +356,7 @@ declare module '@tanstack/react-router' {
 }
 
 const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
   ApisRoute: ApisRoute,
   DashboardRoute: DashboardRoute,
   LlmsRoute: LlmsRoute,
