@@ -13,8 +13,11 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
-const buildItems = [
+const overviewItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard, match: (p: string) => p === "/dashboard" },
+];
+
+const buildItems = [
   { title: "Orchestrations", url: "/orchestrations", icon: Workflow, match: (p: string) => p === "/orchestrations" || p.startsWith("/orchestrations/") },
   { title: "Agents", url: "/agents", icon: Bot, match: (p: string) => p === "/agents" || p.startsWith("/agents/") },
   { title: "Templates", url: "/templates", icon: LayoutTemplate, match: (p: string) => p === "/templates" || p.startsWith("/templates/") },
@@ -51,6 +54,27 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>Overview</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {overviewItems.map((item) => {
+                const active = item.match(pathname);
+                return (
+                  <SidebarMenuItem key={item.url}>
+                    <SidebarMenuButton asChild isActive={active}>
+                      <Link to={item.url}>
+                        <item.icon className="h-4 w-4 shrink-0" />
+                        {!collapsed && <span className="font-medium">{item.title}</span>}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
         <SidebarGroup>
           <SidebarGroupLabel>Build</SidebarGroupLabel>
           <SidebarGroupContent>
