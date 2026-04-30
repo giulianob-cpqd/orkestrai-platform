@@ -4,58 +4,51 @@ import { AppLayout } from "@/components/AppLayout";
 import { FlowBuilder } from "@/components/flow/FlowBuilder";
 import { agentNodeCatalog } from "@/components/flow/nodeCatalog";
 import { getTemplate } from "@/data/templates";
+import { getAgentFlow } from "@/data/flows";
 
 const searchSchema = z.object({
   template: z.string().optional(),
+  appId: z.string().optional(),
 });
 
 export const Route = createFileRoute("/agents/new")({
   validateSearch: searchSchema,
-  head: () => ({ meta: [{ title: "New agent · Inspire" }] }),
+  head: () => ({ meta: [{ title: "New agent · OrkestrAI" }] }),
   component: NewAgentPage,
 });
 
 function NewAgentPage() {
-  const { template } = Route.useSearch();
+  const { template, appId } = Route.useSearch();
   const tpl = template ? getTemplate(template) : undefined;
-  const usingHighcode = tpl?.source === "highcode";
+  const app = appId ? getAgentFlow(appId) : undefined;
   const initialNodes = tpl?.flow?.nodes ?? [];
   const initialEdges = tpl?.flow?.edges ?? [];
 
+  const title = app ? `${app.slug}.agent` : "new-agent.agent";
+  const subtitle = app
+    ? `${app.name} · v0.1.0`
+    : tpl
+      ? `From template · ${tpl.name}`
+      : "Untitled agent";
+
+  const backHref = appId ? `/agents/${appId}` : "/agents";
+  const backLabel = appId ? "Back to detail" : "Back to agents";
+
   return (
-    <AppLayout
-      title="new-agent.agent"
-      subtitle={tpl ? `From template · ${tpl.name}` : "Untitled agent"}
-    >
-      {usingHighcode ? (
-        <div className="flex h-[calc(100vh-3.5rem)] items-center justify-center p-12">
-          <div className="max-w-md rounded-xl border border-border bg-card p-6 text-center">
-            <p className="font-display text-lg font-semibold">High-code template</p>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Este template aponta para um repositório de código:{" "}
-              <a href={tpl?.repoUrl} className="text-primary underline" target="_blank" rel="noreferrer">
-                {tpl?.repoUrl}
-              </a>
-            </p>
-            <p className="mt-3 text-xs text-muted-foreground">
-              Conecte seu Git para clonar e editar como agente high-code.
-            </p>
-          </div>
-        </div>
-      ) : (
-        <FlowBuilder
-          catalog={agentNodeCatalog}
-          initialNodes={initialNodes}
-          initialEdges={initialEdges}
-          paletteTitle="Agent Parts"
-          paletteSubtitle="LLM · RAG · Memory · Tools"
-          runLabel="Deploy agent"
-          assistantMode="agent"
-          backHref="/agents"
-          backLabel="Back to agents"
-          flowName="new-agent"
-        />
-      )}
+    <AppLayout title={title} subtitle={subtitle}>
+      <FlowBuilder
+        catalog={agentNodeCatalog}
+        initialNodes={initialNodes}
+        initialEdges={initialEdges}
+        paletteTitle="Agent Parts"
+        paletteSubtitle="LLM · RAG · Memory · Tools"
+        runLabel="Deploy agent"
+        assistantMode="agent"
+        backHref={backHref}
+        backLabel={backLabel}
+        flowName={app?.slug ?? "new-agent"}
+        appId={appId}
+      />
     </AppLayout>
   );
 }

@@ -59,6 +59,21 @@ export const databaseTypes = [
   { id: "clickhouse", name: "ClickHouse" },
 ];
 
+export const registeredDatabases: RegistryItem[] = [
+  { id: "db/postgres-analytics", name: "PostgreSQL — Analytics", meta: "SQL · 1.2 TB" },
+  { id: "db/postgres-primary", name: "PostgreSQL — Primary", meta: "SQL · OLTP" },
+  { id: "db/mysql-legacy", name: "MySQL — Legacy Billing", meta: "SQL · legacy" },
+  { id: "db/mssql-erp", name: "SQL Server — ERP", meta: "SQL · readonly" },
+  { id: "db/sqlite-local", name: "SQLite — Dev/Test", meta: "SQL · ephemeral" },
+  { id: "db/mongodb-content", name: "MongoDB — Content Store", meta: "NoSQL · documents" },
+  { id: "db/redis-cache", name: "Redis — Cache & Sessions", meta: "NoSQL · cache" },
+  { id: "db/dynamodb-events", name: "DynamoDB — Events", meta: "NoSQL · serverless" },
+  { id: "db/cassandra-timeseries", name: "Cassandra — Time Series", meta: "NoSQL · timeseries" },
+  { id: "db/neo4j-graph", name: "Neo4j — Knowledge Graph", meta: "NoSQL · graph" },
+  { id: "db/clickhouse-logs", name: "ClickHouse — Logs", meta: "SQL · OLAP" },
+  { id: "db/elasticsearch-search", name: "Elasticsearch — Search", meta: "NoSQL · search" },
+];
+
 export const requestProtocols = [
   { id: "rest", name: "REST" },
   { id: "graphql", name: "GraphQL" },

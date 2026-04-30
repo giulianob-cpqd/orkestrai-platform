@@ -1,4 +1,5 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
+import { useEffect, useRef } from "react";
 
 import appCss from "../styles.css?url";
 
@@ -29,9 +30,9 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Inspire — AI Low Code Platform" },
+      { title: "OrkestrAI — Agentic AI Platform" },
       { name: "description", content: "Low-code platform to design, deploy and observe collaborative AI agents on Kubernetes." },
-      { property: "og:title", content: "Inspire — AI Low Code Platform" },
+      { property: "og:title", content: "OrkestrAI — Agentic AI Platform" },
       { property: "og:description", content: "Low-code platform to design, deploy and observe collaborative AI agents." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -63,5 +64,12 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
+  const seeded = useRef(false);
+  useEffect(() => {
+    if (!seeded.current) {
+      seeded.current = true;
+      import("../data/seedFlows").then((m) => m.seedFlowStore());
+    }
+  }, []);
   return <Outlet />;
 }

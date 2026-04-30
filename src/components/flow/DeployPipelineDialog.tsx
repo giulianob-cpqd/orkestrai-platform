@@ -21,12 +21,14 @@ import {
   Container,
   Server,
 } from "lucide-react";
+import { setAppStatus } from "@/data/flows";
 import { cn } from "@/lib/utils";
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   flowName?: string;
+  appId?: string;
 }
 
 type StageState = "idle" | "running" | "done";
@@ -42,11 +44,11 @@ const STAGES: Stage[] = [
   { key: "checkout", name: "Checkout", description: "git clone main @ a3f12c4", icon: GitCommit, duration: 1200 },
   { key: "build", name: "Build", description: "docker build · multi-stage", icon: Hammer, duration: 1800 },
   { key: "test", name: "Test", description: "unit + integration suites", icon: TestTube2, duration: 1600 },
-  { key: "push", name: "Push image", description: "registry.inspire.ai/...", icon: Container, duration: 1300 },
+  { key: "push", name: "Push image", description: "registry.orkestrai.ai/...", icon: Container, duration: 1300 },
   { key: "deploy", name: "Deploy → dev", icon: Server, description: "kubectl rollout · agents-dev", duration: 1500 },
 ];
 
-export function DeployPipelineDialog({ open, onOpenChange, flowName = "flow" }: Props) {
+export function DeployPipelineDialog({ open, onOpenChange, flowName = "flow", appId }: Props) {
   const [states, setStates] = useState<Record<string, StageState>>({});
   const [done, setDone] = useState(false);
 
@@ -64,6 +66,7 @@ export function DeployPipelineDialog({ open, onOpenChange, flowName = "flow" }: 
         setStates((prev) => ({ ...prev, [s.key]: "done" }));
       }
       setDone(true);
+      if (appId) setAppStatus(appId, "active");
     })();
     return () => { cancelled = true; };
   }, [open]);

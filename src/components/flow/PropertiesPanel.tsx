@@ -1,4 +1,5 @@
 import type { Node } from "@xyflow/react";
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,13 +11,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Trash2 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Trash2, MoreHorizontal } from "lucide-react";
 import {
   registeredRags,
   registeredApis,
   registeredMcpServers,
   registeredAgents,
   registeredLlms,
+  registeredDatabases,
   databaseTypes,
   requestProtocols,
   cronPresets,
@@ -68,6 +77,180 @@ function SelectField({
         </SelectContent>
       </Select>
     </div>
+  );
+}
+
+function DatabaseProperties({
+  data,
+  onChange,
+}: {
+  data: Record<string, unknown>;
+  onChange: (patch: Record<string, unknown>) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState((data.dbInstructions as string) ?? "");
+
+  return (
+    <>
+      <SelectField
+        label="Database"
+        placeholder="Selecione um database do catálogo"
+        value={data.dbCatalogId as string | undefined}
+        options={registeredDatabases}
+        onChange={(v) => {
+          const item = registeredDatabases.find((r) => r.id === v);
+          onChange({ dbCatalogId: v, label: item?.name ?? "Database", meta: item?.meta });
+        }}
+      />
+      <div className="space-y-2">
+        <Label className="text-xs">Instruções (SQL / DSL)</Label>
+        <div className="flex items-center gap-2">
+          <Input
+            readOnly
+            className="font-mono text-xs flex-1"
+            value={
+              (data.dbInstructions as string)
+                ? `${((data.dbInstructions as string).split("\n")[0] ?? "").slice(0, 40)}…`
+                : "(vazio)"
+            }
+            placeholder="Clique em [...] para editar"
+          />
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 px-2.5 shrink-0"
+            onClick={() => {
+              setDraft((data.dbInstructions as string) ?? "");
+              setOpen(true);
+            }}
+          >
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Instruções do Database (SQL / DSL)</DialogTitle>
+          </DialogHeader>
+          <Textarea
+            rows={14}
+            className="font-mono text-xs resize-none"
+            placeholder={"SELECT u.id, u.name, o.total\nFROM users u\nJOIN orders o ON o.user_id = u.id\nWHERE o.created_at >= NOW() - INTERVAL '7 days'\nORDER BY o.total DESC\nLIMIT 100;"}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+          />
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => {
+                onChange({ dbInstructions: draft });
+                setOpen(false);
+              }}
+              className="bg-[image:var(--gradient-primary)] text-primary-foreground"
+            >
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+function ScriptTaskProperties({
+  data,
+  onChange,
+}: {
+  data: Record<string, unknown>;
+  onChange: (patch: Record<string, unknown>) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState((data.script as string) ?? "");
+  const lang = (data.scriptLang as string) ?? "javascript";
+
+  return (
+    <>
+      <div className="space-y-2">
+        <Label className="text-xs">Linguagem</Label>
+        <Select
+          value={lang}
+          onValueChange={(v) => onChange({ scriptLang: v, meta: v === "javascript" ? "JavaScript" : "Python" })}
+        >
+          <SelectTrigger className="h-9 text-sm">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="javascript">JavaScript</SelectItem>
+            <SelectItem value="python">Python</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-2">
+        <Label className="text-xs">Script</Label>
+        <div className="flex items-center gap-2">
+          <Input
+            readOnly
+            className="font-mono text-xs flex-1"
+            value={
+              (data.script as string)
+                ? `${((data.script as string).split("\n")[0] ?? "").slice(0, 40)}…`
+                : "(vazio)"
+            }
+            placeholder="Clique em [...] para editar"
+          />
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 px-2.5 shrink-0"
+            onClick={() => {
+              setDraft((data.script as string) ?? "");
+              setOpen(true);
+            }}
+          >
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              Editar Script ({lang === "javascript" ? "JavaScript" : "Python"})
+            </DialogTitle>
+          </DialogHeader>
+          <Textarea
+            rows={18}
+            className="font-mono text-xs resize-none"
+            placeholder={
+              lang === "javascript"
+                ? '// Seu código JavaScript aqui\nmodule.exports = async (input) => {\n  return { result: input };\n};'
+                : '# Seu código Python aqui\ndef handler(input):\n    return {"result": input}'
+            }
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+          />
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => {
+                onChange({ script: draft });
+                setOpen(false);
+              }}
+              className="bg-[image:var(--gradient-primary)] text-primary-foreground"
+            >
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
@@ -193,31 +376,7 @@ export function PropertiesPanel({ node, mode = "orchestration", onChange, onDele
         );
       }
       case "db":
-        return (
-          <>
-            <SelectField
-              label="Tipo de banco"
-              placeholder="Selecione o banco"
-              value={data.dbType as string | undefined}
-              options={databaseTypes}
-              onChange={(v) => {
-                const item = databaseTypes.find((r) => r.id === v);
-                onChange({ dbType: v, meta: item?.name });
-              }}
-            />
-            <SelectField
-              label="Operação"
-              placeholder="Selecione a operação"
-              value={(data.dbOperation as string) ?? ""}
-              options={dbOperations}
-              onChange={(v) => {
-                const op = dbOperations.find((o) => o.id === v);
-                const dbName = databaseTypes.find((d) => d.id === data.dbType)?.name ?? "";
-                onChange({ dbOperation: v, meta: `${dbName} · ${op?.name ?? v}`.trim() });
-              }}
-            />
-          </>
-        );
+        return <DatabaseProperties data={data} onChange={onChange} />;
       case "consumer":
       case "producer":
         return (
@@ -248,7 +407,7 @@ export function PropertiesPanel({ node, mode = "orchestration", onChange, onDele
                 <Label className="text-xs">Consumer group</Label>
                 <Input
                   className="font-mono text-xs"
-                  placeholder="inspire-orch"
+                  placeholder="orkestrai-orch"
                   value={(data.consumerGroup as string) ?? ""}
                   onChange={(e) => onChange({ consumerGroup: e.target.value })}
                 />
@@ -380,6 +539,69 @@ export function PropertiesPanel({ node, mode = "orchestration", onChange, onDele
                 onChange={(e) => onChange({ cron: e.target.value })}
               />
             </div>
+          </>
+        );
+      case "scripttask":
+        return <ScriptTaskProperties data={data} onChange={onChange} />;
+      case "validator":
+        return (
+          <>
+            <div className="space-y-2">
+              <Label className="text-xs">Modo de validação</Label>
+              <Select
+                value={(data.validatorMode as string) ?? "ai"}
+                onValueChange={(v) => onChange({ validatorMode: v, meta: v === "ai" ? "AI · LLM" : "Template · JSON" })}
+              >
+                <SelectTrigger className="h-9 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ai">IA (LLM + Prompt)</SelectItem>
+                  <SelectItem value="template">Template JSON</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {((data.validatorMode as string) ?? "ai") === "ai" ? (
+              <>
+                <SelectField
+                  label="LLM para validação"
+                  placeholder="Selecione um modelo"
+                  value={data.llmId as string | undefined}
+                  options={registeredLlms}
+                  onChange={(v) => {
+                    const item = registeredLlms.find((r) => r.id === v);
+                    onChange({ llmId: v });
+                  }}
+                />
+                <div className="space-y-2">
+                  <Label className="text-xs">Prompt de validação</Label>
+                  <Textarea
+                    rows={6}
+                    className="font-mono text-xs"
+                    placeholder={"Avalie a saída anterior e retorne um JSON:\n{ \"valid\": true/false, \"reason\": \"...\" }"}
+                    value={(data.validatorPrompt as string) ?? ""}
+                    onChange={(e) => onChange({ validatorPrompt: e.target.value })}
+                  />
+                  <p className="text-[10px] text-muted-foreground">
+                    O prompt será enviado ao LLM junto com o output do nó anterior.
+                  </p>
+                </div>
+              </>
+            ) : (
+              <div className="space-y-2">
+                <Label className="text-xs">Template JSON</Label>
+                <Textarea
+                  rows={8}
+                  className="font-mono text-xs"
+                  placeholder={'{\n  "type": "object",\n  "required": ["status", "result"],\n  "properties": {\n    "status": { "enum": ["ok", "error"] },\n    "result": { "type": "string" }\n  }\n}'}
+                  value={(data.validatorTemplate as string) ?? ""}
+                  onChange={(e) => onChange({ validatorTemplate: e.target.value })}
+                />
+                <p className="text-[10px] text-muted-foreground">
+                  JSON Schema ou template de validação aplicado ao output do nó anterior.
+                </p>
+              </div>
+            )}
           </>
         );
       default:

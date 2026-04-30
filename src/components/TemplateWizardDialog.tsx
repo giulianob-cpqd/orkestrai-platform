@@ -22,6 +22,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, ChevronRight, ChevronLeft } from "lucide-react";
 import type { Template } from "@/data/templates";
+import { addOrchestration, addAgentFlow } from "@/data/flows";
 import { toast } from "sonner";
 
 interface Props {
@@ -39,6 +40,7 @@ export function TemplateWizardDialog({ open, onOpenChange, template }: Props) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [team, setTeam] = useState("Platform");
+  const [area, setArea] = useState("General");
   const [environment, setEnvironment] = useState("dev");
   const [visibility, setVisibility] = useState("private");
   const [llm, setLlm] = useState("google/gemini-2.5-pro");
@@ -61,9 +63,50 @@ export function TemplateWizardDialog({ open, onOpenChange, template }: Props) {
       toast.error("Informe o nome da aplicação");
       return;
     }
-    toast.success(`Criando ${template.kind} "${name}" a partir de ${template.name}`);
     onOpenChange(false);
-    navigate({ to: target, search: { template: template.id } });
+
+    const appId = slug || "untitled";
+    const ownerEmail = `${team.toLowerCase().replace(/\s+/g, "")}@orkestrai.ai`;
+    const baseTags = template.id === "__blank__" ? [] : (template.tags ?? []);
+
+    // Always catalog the application first
+    if (template.kind === "agent") {
+      addAgentFlow({
+        id: appId, name, slug, description, area, team,
+        owner: ownerEmail,
+        version: "v0.1.0",
+        status: "draft",
+        tags: [template.source, ...baseTags],
+        fanIn: [], fanOut: [], rags: [],
+      });
+    } else {
+      addOrchestration({
+        id: appId, name, slug, description, area, team,
+        owner: ownerEmail,
+        version: "v0.1.0",
+        status: "draft",
+        tags: [template.source, ...baseTags],
+        fanIn: [], fanOut: [], agents: [],
+      });
+    }
+
+    if (template.source === "highcode") {
+      // High-code: go to detail page (pipeline will run)
+      toast.success(`"${name}" catalogado. Pipeline de deploy iniciado.`);
+      if (template.kind === "agent") {
+        navigate({ to: "/agents/$id", params: { id: appId } });
+      } else {
+        navigate({ to: "/orchestrations/$id", params: { id: appId } });
+      }
+    } else {
+      // Low-code / blank: go to editor
+      toast.success(`"${name}" catalogado. Abrindo editor.`);
+      const search: Record<string, string> = { appId };
+      if (template.id !== "__blank__") {
+        search.template = template.id;
+      }
+      navigate({ to: target, search });
+    }
   };
 
   return (
@@ -165,6 +208,9 @@ export function TemplateWizardDialog({ open, onOpenChange, template }: Props) {
                 <li>visibility: {visibility}</li>
                 {template.kind === "agent" && <li>llm: {llm}</li>}
                 <li>template: {template.id}</li>
+                {template.source === "highcode" && template.repoUrl && (
+                  <li>repo: {template.repoUrl}</li>
+                )}
               </ul>
             </div>
           </div>

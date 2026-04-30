@@ -23,6 +23,7 @@ const catalogItems = [
   { title: "LLMs", url: "/llms", icon: Brain },
   { title: "APIs", url: "/apis", icon: Plug },
   { title: "MCP Servers", url: "/mcp", icon: Server },
+  { title: "Databases", url: "/databases", icon: Database },
   { title: "RAGs", url: "/rags", icon: Database },
 ];
 
@@ -40,9 +41,9 @@ export function AppSidebar() {
           </div>
           {!collapsed && (
             <div className="flex flex-col leading-tight">
-              <span className="font-display text-sm font-bold tracking-tight">Inspire</span>
+              <span className="font-display text-sm font-bold tracking-tight">OrkestrAI</span>
               <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                AI Low Code Platform
+                Agentic AI Platform
               </span>
             </div>
           )}

@@ -35,7 +35,7 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/templates/")({
   head: () => ({
     meta: [
-      { title: "Templates · Inspire" },
+      { title: "Templates · OrkestrAI" },
       { name: "description", content: "Reusable templates for agents and orchestrations." },
     ],
   }),

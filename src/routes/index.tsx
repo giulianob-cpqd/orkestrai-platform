@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/CatalogGrid";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Plus, Workflow, Users, ArrowRight, Bot } from "lucide-react";
+import { Plus, Workflow, Users, ArrowRight, Bot, GitBranch, Code2, Building2 } from "lucide-react";
 import { orchestrations } from "@/data/flows";
 import { cn } from "@/lib/utils";
 import { NewFromTemplateDialog } from "@/components/NewFromTemplateDialog";
@@ -66,10 +66,24 @@ function OrchestrationsList() {
                       </p>
                     </div>
                   </div>
-                  <Badge variant="outline" className={cn("gap-1.5", statusMap[o.status])}>
-                    <span className="h-1.5 w-1.5 rounded-full bg-current" />
-                    {o.status}
-                  </Badge>
+                  <div className="flex items-center gap-1.5">
+                    <Badge variant="outline" className={cn("gap-1.5", statusMap[o.status])}>
+                      <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                      {o.status}
+                    </Badge>
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        "gap-1 text-[10px]",
+                        o.tags.includes("highcode")
+                          ? "border-warning/40 text-warning"
+                          : "border-primary/40 text-primary",
+                      )}
+                    >
+                      {o.tags.includes("highcode") ? <Code2 className="h-3 w-3" /> : <GitBranch className="h-3 w-3" />}
+                      {o.tags.includes("highcode") ? "highcode" : "lowcode"}
+                    </Badge>
+                  </div>
                 </div>
 
                 <p className="mt-3 text-sm text-muted-foreground">{o.description}</p>
@@ -82,7 +96,7 @@ function OrchestrationsList() {
                   ))}
                 </div>
 
-                <div className="mt-4 grid grid-cols-2 gap-3 border-t border-border pt-3">
+                <div className="mt-4 grid grid-cols-3 gap-3 border-t border-border pt-3">
                   <div className="flex items-center gap-2">
                     <Users className="h-3.5 w-3.5 text-muted-foreground" />
                     <div className="leading-tight">
@@ -90,6 +104,15 @@ function OrchestrationsList() {
                         Team
                       </p>
                       <p className="text-xs font-semibold">{o.team}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
+                    <div className="leading-tight">
+                      <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+                        Area
+                      </p>
+                      <p className="text-xs font-semibold">{o.area}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">

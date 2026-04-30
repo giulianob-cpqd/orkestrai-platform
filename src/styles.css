@@ -60,6 +60,12 @@
   --color-node-task: var(--node-task);
   --color-node-consumer: var(--node-consumer);
   --color-node-producer: var(--node-producer);
+  --color-node-router: var(--node-router);
+  --color-node-scripttask: var(--node-scripttask);
+  --color-node-humantask: var(--node-humantask);
+  --color-node-loop: var(--node-loop);
+  --color-node-validator: var(--node-validator);
+  --color-node-merge: var(--node-merge);
 
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
@@ -131,6 +137,12 @@
   --node-task: oklch(0.8 0.15 90);      /* yellow */
   --node-consumer: oklch(0.74 0.16 145);/* teal-green */
   --node-producer: oklch(0.76 0.17 95); /* gold-lime */
+  --node-router: oklch(0.72 0.18 320);  /* magenta */
+  --node-scripttask: oklch(0.76 0.14 200); /* steel cyan */
+  --node-humantask: oklch(0.78 0.16 55);   /* warm orange */
+  --node-loop: oklch(0.74 0.17 270);       /* indigo */
+  --node-validator: oklch(0.76 0.16 160);  /* emerald */
+  --node-merge: oklch(0.72 0.15 240);      /* slate blue */
 
   --sidebar: oklch(0.16 0.02 260);
   --sidebar-foreground: oklch(0.92 0.01 240);

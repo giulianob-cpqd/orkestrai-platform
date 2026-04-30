@@ -1,15 +1,35 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { useState } from "react";
 import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Pencil, Users, User, GitBranch, Database } from "lucide-react";
-import { getAgentFlow, type AgentFlow } from "@/data/flows";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { ArrowLeft, Pencil, Users, User, GitBranch, Database, Building2 } from "lucide-react";
+import { getAgentFlow, updateAgentFlow, type AgentFlow } from "@/data/flows";
+import { deriveFanIn, deriveFanOut, deriveRags } from "@/data/flowStore";
 import { FanDiagram } from "@/components/flow/FanDiagram";
 import { PipelineSection } from "@/components/sections/PipelineSection";
 import { ObservabilitySection } from "@/components/sections/ObservabilitySection";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/agents/$id/")({
   loader: ({ params }) => {
@@ -44,6 +64,37 @@ const statusMap = {
 
 function AgentDetail() {
   const { flow } = Route.useLoaderData() as { flow: AgentFlow };
+  const storedFanIn = deriveFanIn(flow.id, "agent");
+  const storedFanOut = deriveFanOut(flow.id, "agent");
+  const storedRags = deriveRags(flow.id);
+  const fanIn = storedFanIn.length > 0 ? storedFanIn : flow.fanIn;
+  const fanOut = storedFanOut.length > 0 ? storedFanOut : flow.fanOut;
+  const rags = storedRags.length > 0 ? storedRags : flow.rags;
+
+  const [editOpen, setEditOpen] = useState(false);
+  const [editDescription, setEditDescription] = useState(flow.description);
+  const [editArea, setEditArea] = useState(flow.area);
+  const [editTeam, setEditTeam] = useState(flow.team);
+  const [editTags, setEditTags] = useState(flow.tags.join(", "));
+
+  const openEditDialog = () => {
+    setEditDescription(flow.description);
+    setEditArea(flow.area);
+    setEditTeam(flow.team);
+    setEditTags(flow.tags.join(", "));
+    setEditOpen(true);
+  };
+
+  const saveEdit = () => {
+    updateAgentFlow(flow.id, {
+      description: editDescription,
+      area: editArea,
+      team: editTeam,
+      tags: editTags.split(",").map((t) => t.trim()).filter(Boolean),
+    });
+    setEditOpen(false);
+    toast.success("Aplicação atualizada");
+  };
 
   return (
     <AppLayout title={flow.name} subtitle={`Agent · ${flow.version}`}>
@@ -64,8 +115,12 @@ function AgentDetail() {
             <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{flow.description}</p>
             <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
               <span className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5" /> {flow.team}</span>
+              <span className="flex items-center gap-1.5"><Building2 className="h-3.5 w-3.5" /> {flow.area}</span>
               <span className="flex items-center gap-1.5"><User className="h-3.5 w-3.5" /> {flow.owner}</span>
               <span className="flex items-center gap-1.5 font-mono"><GitBranch className="h-3.5 w-3.5" /> {flow.id}</span>
+              <Button variant="ghost" size="sm" className="h-6 gap-1 px-1.5 text-xs text-muted-foreground hover:text-foreground" onClick={openEditDialog}>
+                <Pencil className="h-3 w-3" /> Edit
+              </Button>
             </div>
             <div className="mt-3 flex flex-wrap gap-1.5">
               {flow.tags.map((t) => (
@@ -73,12 +128,54 @@ function AgentDetail() {
               ))}
             </div>
           </div>
-          <Button asChild size="sm" className="gap-1.5 bg-[image:var(--gradient-primary)] text-primary-foreground">
-            <Link to="/agents/$id/edit" params={{ id: flow.id }}>
-              <Pencil className="h-3.5 w-3.5" /> Edit agent
-            </Link>
-          </Button>
+          {!flow.tags.includes("highcode") && (
+            <Button asChild size="sm" className="gap-1.5 bg-[image:var(--gradient-primary)] text-primary-foreground">
+              <Link to="/agents/$id/edit" params={{ id: flow.id }}>
+                <Pencil className="h-3.5 w-3.5" /> Edit agent
+              </Link>
+            </Button>
+          )}
         </div>
+
+        <Dialog open={editOpen} onOpenChange={setEditOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Edit metadata</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-xs">Description</Label>
+                <Textarea rows={3} value={editDescription} onChange={(e) => setEditDescription(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs">Area</Label>
+                <Input value={editArea} onChange={(e) => setEditArea(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs">Team</Label>
+                <Select value={editTeam} onValueChange={setEditTeam}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Platform">Platform</SelectItem>
+                    <SelectItem value="Research">Research</SelectItem>
+                    <SelectItem value="Customer Success">Customer Success</SelectItem>
+                    <SelectItem value="Data">Data</SelectItem>
+                    <SelectItem value="Finance Ops">Finance Ops</SelectItem>
+                    <SelectItem value="Quality">Quality</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs">Tags (comma-separated)</Label>
+                <Input value={editTags} onChange={(e) => setEditTags(e.target.value)} />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
+              <Button onClick={saveEdit} className="bg-[image:var(--gradient-primary)] text-primary-foreground">Save</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         <Card className="border-border bg-card/60 p-5 backdrop-blur-md">
           <div className="mb-4">
@@ -88,8 +185,8 @@ function AgentDetail() {
             </p>
           </div>
           <FanDiagram
-            fanIn={flow.fanIn}
-            fanOut={flow.fanOut}
+            fanIn={fanIn}
+            fanOut={fanOut}
             centerLabel={flow.name}
             centerSubtitle={flow.version}
           />
@@ -99,16 +196,16 @@ function AgentDetail() {
           <div className="mb-4">
             <p className="font-display text-base font-semibold">Knowledge bases (RAGs)</p>
             <p className="text-xs text-muted-foreground">
-              {flow.rags.length} retriever{flow.rags.length === 1 ? "" : "s"} bound to this agent
+              {rags.length} retriever{rags.length === 1 ? "" : "s"} bound to this agent
             </p>
           </div>
-          {flow.rags.length === 0 ? (
+          {rags.length === 0 ? (
             <div className="rounded-lg border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
               No RAGs attached.
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              {flow.rags.map((r) => (
+              {rags.map((r) => (
                 <div
                   key={r.id}
                   className="flex items-center gap-3 rounded-lg border border-border bg-card/80 p-3"

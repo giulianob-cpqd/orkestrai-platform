@@ -21,7 +21,13 @@ export type NodeVariant =
   | "cron"
   | "task"
   | "consumer"
-  | "producer";
+  | "producer"
+  | "router"
+  | "scripttask"
+  | "humantask"
+  | "loop"
+  | "validator"
+  | "merge";
 
 export interface AgentNodeData {
   label: string;
@@ -30,6 +36,8 @@ export interface AgentNodeData {
   variant: NodeVariant;
   meta?: string;
   nodeType?: string;
+  /** Router conditions — each becomes a source handle */
+  conditions?: string[];
   [key: string]: unknown;
 }
 
@@ -40,11 +48,17 @@ const PROMPT_HANDLES = [
   { id: "rag", color: "var(--node-rag)", label: "rag" },
 ] as const;
 
+const DEFAULT_ROUTER_CONDITIONS = ["default", "condition_1", "condition_2"];
+
 export function AgentNode({ data, selected }: NodeProps) {
   const d = data as AgentNodeData;
   const Icon = resolveIcon(d.icon);
   const v = d.variant;
   const isPrompt = d.nodeType === "prompt" || v === "prompt";
+  const isRouter = d.nodeType === "router" || v === "router";
+  const conditions = isRouter
+    ? (d.conditions as string[] | undefined) ?? DEFAULT_ROUTER_CONDITIONS
+    : [];
 
   return (
     <div
@@ -55,6 +69,7 @@ export function AgentNode({ data, selected }: NodeProps) {
       )}
       style={{ boxShadow: `0 0 24px color-mix(in oklch, var(--node-${v}) 25%, transparent)` }}
     >
+      {/* Target handles */}
       {isPrompt ? (
         PROMPT_HANDLES.map((h, i) => (
           <Handle
@@ -75,6 +90,7 @@ export function AgentNode({ data, selected }: NodeProps) {
         <Handle type="target" position={Position.Left} />
       )}
 
+      {/* Header */}
       <div className="flex items-center gap-3 p-3">
         <div
           className={cn("flex h-9 w-9 items-center justify-center rounded-lg")}
@@ -92,7 +108,9 @@ export function AgentNode({ data, selected }: NodeProps) {
           <span className="text-sm font-semibold">{d.label}</span>
         </div>
       </div>
-      {(d.description || d.meta) && (
+
+      {/* Body */}
+      {(d.description || d.meta || isPrompt || isRouter) && (
         <div className="border-t border-border/50 px-3 py-2">
           {d.description && (
             <p className="text-xs text-muted-foreground">{d.description}</p>
@@ -113,9 +131,44 @@ export function AgentNode({ data, selected }: NodeProps) {
               ))}
             </div>
           )}
+          {isRouter && (
+            <div className="mt-2 flex flex-col gap-1">
+              {conditions.map((c, i) => (
+                <div key={c} className="flex items-center gap-1.5">
+                  <span
+                    className="h-2 w-2 rounded-full"
+                    style={{ background: `var(--node-${v})` }}
+                  />
+                  <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+                    {c}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
-      <Handle type="source" position={Position.Right} />
+
+      {/* Source handles */}
+      {isRouter ? (
+        conditions.map((c, i) => (
+          <Handle
+            key={c}
+            id={c}
+            type="source"
+            position={Position.Right}
+            style={{
+              top: `${Math.round(((i + 1) / (conditions.length + 1)) * 100)}%`,
+              background: `var(--node-${v})`,
+              width: 10,
+              height: 10,
+              border: "2px solid var(--background)",
+            }}
+          />
+        ))
+      ) : (
+        <Handle type="source" position={Position.Right} />
+      )}
     </div>
   );
 }

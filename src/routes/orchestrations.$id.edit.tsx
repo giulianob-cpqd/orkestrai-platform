@@ -4,6 +4,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { FlowBuilder } from "@/components/flow/FlowBuilder";
 import { orchestrationNodeCatalog } from "@/components/flow/nodeCatalog";
 import { getOrchestration } from "@/data/flows";
+import { getFlow } from "@/data/flowStore";
 
 export const Route = createFileRoute("/orchestrations/$id/edit")({
   loader: ({ params }) => {
@@ -93,6 +94,9 @@ const initialEdges: Edge[] = [
 function EditOrchestration() {
   const { flow } = Route.useLoaderData();
   const params = Route.useParams();
+  const saved = getFlow(params.id);
+  const nodes = saved?.nodes ?? initialNodes;
+  const edges = saved?.edges ?? initialEdges;
 
   return (
     <AppLayout
@@ -101,8 +105,8 @@ function EditOrchestration() {
     >
       <FlowBuilder
         catalog={orchestrationNodeCatalog}
-        initialNodes={initialNodes}
-        initialEdges={initialEdges}
+        initialNodes={nodes}
+        initialEdges={edges}
         paletteTitle="Orchestration"
         paletteSubtitle="Agents, endpoints, queues"
         runLabel="Deploy flow"
@@ -110,6 +114,7 @@ function EditOrchestration() {
         backHref={`/orchestrations/${params.id}`}
         backLabel="Back to flow"
         flowName={flow.slug}
+        appId={params.id}
       />
     </AppLayout>
   );

@@ -4,6 +4,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { FlowBuilder } from "@/components/flow/FlowBuilder";
 import { agentNodeCatalog } from "@/components/flow/nodeCatalog";
 import { getAgentFlow } from "@/data/flows";
+import { getFlow } from "@/data/flowStore";
 
 export const Route = createFileRoute("/agents/$id/edit")({
   loader: ({ params }) => {
@@ -66,6 +67,9 @@ const initialEdges: Edge[] = [
 function EditAgent() {
   const { flow } = Route.useLoaderData();
   const params = Route.useParams();
+  const saved = getFlow(params.id);
+  const nodes = saved?.nodes ?? initialNodes;
+  const edges = saved?.edges ?? initialEdges;
 
   return (
     <AppLayout
@@ -74,8 +78,8 @@ function EditAgent() {
     >
       <FlowBuilder
         catalog={agentNodeCatalog}
-        initialNodes={initialNodes}
-        initialEdges={initialEdges}
+        initialNodes={nodes}
+        initialEdges={edges}
         paletteTitle="Agent Parts"
         paletteSubtitle="LLM · RAG · Memory · Tools"
         runLabel="Deploy agent"
@@ -83,6 +87,7 @@ function EditAgent() {
         backHref={`/agents/${params.id}`}
         backLabel="Back to agent"
         flowName={flow.slug}
+        appId={params.id}
       />
     </AppLayout>
   );

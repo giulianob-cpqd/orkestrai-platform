@@ -24,6 +24,7 @@ export interface OrchestrationFlow {
   name: string;
   slug: string;
   description: string;
+  area: string;
   team: string;
   owner: string;
   version: string;
@@ -39,6 +40,7 @@ export interface AgentFlow {
   name: string;
   slug: string;
   description: string;
+  area: string;
   team: string;
   owner: string;
   version: string;
@@ -56,6 +58,7 @@ export const orchestrations: OrchestrationFlow[] = [
     slug: "research-orchestration",
     description:
       "Receives research questions, classifies intent and dispatches to specialist agents that aggregate web + warehouse data.",
+    area: "AI & Machine Learning",
     team: "Knowledge Platform",
     owner: "ana.silva@synapse.ai",
     version: "v0.4.0",
@@ -85,6 +88,7 @@ export const orchestrations: OrchestrationFlow[] = [
     slug: "support-triage",
     description:
       "Classifies incoming support tickets, escalates to specialist agents and writes case state back to CRM.",
+    area: "Customer Experience",
     team: "Customer Success",
     owner: "leo.fernandes@synapse.ai",
     version: "v0.2.3",
@@ -112,6 +116,7 @@ export const orchestrations: OrchestrationFlow[] = [
     slug: "invoice-recon",
     description:
       "Reads invoice events, matches against ERP and produces a reconciliation report nightly.",
+    area: "Finance",
     team: "Finance Ops",
     owner: "mariana.lopes@synapse.ai",
     version: "v0.1.0",
@@ -139,6 +144,7 @@ export const agentFlows: AgentFlow[] = [
     name: "Researcher",
     slug: "researcher",
     description: "Plans, decomposes and delegates web research tasks across tools.",
+    area: "AI & Machine Learning",
     team: "Knowledge Platform",
     owner: "ana.silva@synapse.ai",
     version: "v3.0.1",
@@ -164,6 +170,7 @@ export const agentFlows: AgentFlow[] = [
     name: "Technical Writer",
     slug: "tech-writer",
     description: "Turns research notes into structured markdown documentation.",
+    area: "AI & Machine Learning",
     team: "Knowledge Platform",
     owner: "ana.silva@synapse.ai",
     version: "v1.4.0",
@@ -181,6 +188,7 @@ export const agentFlows: AgentFlow[] = [
     name: "Intent Router",
     slug: "intent-router",
     description: "Classifies user input and dispatches to the right specialist agent.",
+    area: "Platform Engineering",
     team: "Platform Core",
     owner: "leo.fernandes@synapse.ai",
     version: "v1.2.0",
@@ -198,6 +206,7 @@ export const agentFlows: AgentFlow[] = [
     name: "SQL Analyst",
     slug: "sql-analyst",
     description: "Generates and executes safe parameterized queries on warehouse.",
+    area: "Data Engineering",
     team: "Data",
     owner: "mariana.lopes@synapse.ai",
     version: "v2.1.0",
@@ -216,6 +225,7 @@ export const agentFlows: AgentFlow[] = [
     name: "Critic Reviewer",
     slug: "critic",
     description: "Reviews outputs against rubric and triggers revision loops.",
+    area: "Quality Assurance",
     team: "Quality",
     owner: "leo.fernandes@synapse.ai",
     version: "v2.0.0",
@@ -233,6 +243,7 @@ export const agentFlows: AgentFlow[] = [
     name: "Summarizer",
     slug: "summarizer",
     description: "Produces hierarchical summaries with citations.",
+    area: "AI & Machine Learning",
     team: "Knowledge Platform",
     owner: "ana.silva@synapse.ai",
     version: "v1.1.0",
@@ -252,4 +263,37 @@ export function getOrchestration(id: string) {
 }
 export function getAgentFlow(id: string) {
   return agentFlows.find((a) => a.id === id);
+}
+
+export function addOrchestration(flow: OrchestrationFlow) {
+  if (!orchestrations.find((o) => o.id === flow.id)) {
+    orchestrations.unshift(flow);
+  }
+}
+export function addAgentFlow(flow: AgentFlow) {
+  if (!agentFlows.find((a) => a.id === flow.id)) {
+    agentFlows.unshift(flow);
+  }
+}
+
+export function updateOrchestration(id: string, patch: Partial<OrchestrationFlow>) {
+  const o = orchestrations.find((x) => x.id === id);
+  if (o) Object.assign(o, patch);
+}
+export function updateAgentFlow(id: string, patch: Partial<AgentFlow>) {
+  const a = agentFlows.find((x) => x.id === id);
+  if (a) Object.assign(a, patch);
+}
+
+export function setOrchestrationStatus(id: string, status: OrchestrationFlow["status"]) {
+  const o = orchestrations.find((x) => x.id === id);
+  if (o) o.status = status;
+}
+export function setAgentFlowStatus(id: string, status: AgentFlow["status"]) {
+  const a = agentFlows.find((x) => x.id === id);
+  if (a) a.status = status;
+}
+export function setAppStatus(id: string, status: "active" | "draft" | "error") {
+  setOrchestrationStatus(id, status);
+  setAgentFlowStatus(id, status);
 }

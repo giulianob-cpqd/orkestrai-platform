@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState, type DragEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent } from "react";
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -26,6 +26,8 @@ import { DeployPipelineDialog } from "./DeployPipelineDialog";
 import { Link } from "@tanstack/react-router";
 import { Sparkles, Settings2, Play, ArrowLeft } from "lucide-react";
 import { resolveIcon } from "@/lib/icons";
+import { saveFlow } from "@/data/flowStore";
+import { setAppStatus } from "@/data/flows";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -45,6 +47,7 @@ export interface FlowBuilderProps {
   backHref?: string;
   backLabel?: string;
   flowName?: string;
+  appId?: string;
 }
 
 let idCounter = 1000;
@@ -60,6 +63,7 @@ function FlowInner({
   backHref,
   backLabel = "Back",
   flowName,
+  appId,
 }: FlowBuilderProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
@@ -68,6 +72,19 @@ function FlowInner({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [tab, setTab] = useState<"properties" | "assistant">("properties");
   const [testOpen, setTestOpen] = useState(false);
+
+  // Auto-save flow to store on every change
+  const initialSaveRef = useRef(true);
+  useEffect(() => {
+    if (appId) {
+      saveFlow(appId, nodes, edges);
+      if (initialSaveRef.current) {
+        initialSaveRef.current = false;
+      } else {
+        setAppStatus(appId, "draft");
+      }
+    }
+  }, [appId, nodes, edges]);
   const [deployOpen, setDeployOpen] = useState(false);
 
   const handleAssistantApply = useCallback(
@@ -252,7 +269,7 @@ function FlowInner({
         </div>
 
         <TestFlowDialog open={testOpen} onOpenChange={setTestOpen} nodes={nodes} mode={assistantMode} />
-        <DeployPipelineDialog open={deployOpen} onOpenChange={setDeployOpen} flowName={flowName ?? "flow"} />
+        <DeployPipelineDialog open={deployOpen} onOpenChange={setDeployOpen} flowName={flowName ?? "flow"} appId={appId} />
       </div>
 
       <aside className="flex w-96 shrink-0 flex-col border-l border-border bg-sidebar/60 backdrop-blur-md">
