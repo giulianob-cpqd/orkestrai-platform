@@ -1,15 +1,15 @@
 FROM node:22-alpine
 
+RUN apk add --no-cache tini
+
 WORKDIR /app
 
-# Install dependencies
 COPY package.json package-lock.json ./
 RUN npm install
 
-# Copy source
 COPY . .
 
 EXPOSE 8080
 
-ENV VITE_HMR_CLIENT_PORT=3000
+ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

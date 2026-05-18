@@ -5,6 +5,7 @@ import { FlowBuilder } from "@/components/flow/FlowBuilder";
 import { orchestrationNodeCatalog } from "@/components/flow/nodeCatalog";
 import { getOrchestration } from "@/data/flows";
 import { getFlow } from "@/data/flowStore";
+import { useEnvironment } from "@/lib/EnvironmentContext";
 
 export const Route = createFileRoute("/orchestrations/$id/edit")({
   loader: ({ params }) => {
@@ -14,14 +15,14 @@ export const Route = createFileRoute("/orchestrations/$id/edit")({
   },
   head: ({ loaderData }) => ({
     meta: [
-      { title: `Edit ${loaderData?.flow?.name ?? "orchestration"} · Synapse` },
+      { title: `Edit ${loaderData?.flow?.name ?? "orchestration"} · OrkestrAI` },
     ],
   }),
   notFoundComponent: () => (
     <AppLayout title="Not found">
       <div className="p-6 text-sm text-muted-foreground">
         Orchestration not found.{" "}
-        <Link to="/" className="text-primary underline">
+        <Link to="/orchestrations" className="text-primary underline">
           Back to list
         </Link>
       </div>
@@ -47,13 +48,13 @@ const initialNodes: Node[] = [
     id: "f3",
     type: "agent",
     position: { x: 620, y: 0 },
-    data: { label: "Researcher", description: "agent_research_v3", icon: "Bot", variant: "agentref", meta: "v3 · published", nodeType: "agentref", agentId: "agent_research_v3" },
+    data: { label: "Researcher", description: "agent_research", icon: "Bot", variant: "agentref", meta: "v3 · published", nodeType: "agentref", agentId: "agent_research" },
   },
   {
     id: "f4",
     type: "agent",
     position: { x: 620, y: 140 },
-    data: { label: "SQL Analyst", description: "agent_sql_v2", icon: "Bot", variant: "agentref", meta: "v2 · published", nodeType: "agentref", agentId: "agent_sql_v2" },
+    data: { label: "SQL Analyst", description: "agent_sql", icon: "Bot", variant: "agentref", meta: "v2 · published", nodeType: "agentref", agentId: "agent_sql" },
   },
   {
     id: "f5",
@@ -94,7 +95,8 @@ const initialEdges: Edge[] = [
 function EditOrchestration() {
   const { flow } = Route.useLoaderData();
   const params = Route.useParams();
-  const saved = getFlow(params.id);
+  const { activeEnv } = useEnvironment();
+  const saved = getFlow(params.id, activeEnv);
   const nodes = saved?.nodes ?? initialNodes;
   const edges = saved?.edges ?? initialEdges;
 
@@ -115,6 +117,7 @@ function EditOrchestration() {
         backLabel="Back to flow"
         flowName={flow.slug}
         appId={params.id}
+        environment={activeEnv}
       />
     </AppLayout>
   );

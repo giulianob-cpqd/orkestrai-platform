@@ -9,12 +9,26 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TrainingRouteImport } from './routes/training'
+import { Route as TestSuitesRouteImport } from './routes/test-suites'
 import { Route as RagsRouteImport } from './routes/rags'
+import { Route as QuotasRouteImport } from './routes/quotas'
+import { Route as PlaygroundRouteImport } from './routes/playground'
 import { Route as McpRouteImport } from './routes/mcp'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as LlmsRouteImport } from './routes/llms'
+import { Route as KnowledgeRouteImport } from './routes/knowledge'
+import { Route as FinopsRouteImport } from './routes/finops'
+import { Route as DatasetsRouteImport } from './routes/datasets'
+import { Route as DatabasesRouteImport } from './routes/databases'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as ConversationsRouteImport } from './routes/conversations'
 import { Route as ApisRouteImport } from './routes/apis'
+import { Route as AlertsRouteImport } from './routes/alerts'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TemplatesIndexRouteImport } from './routes/templates.index'
+import { Route as OrchestrationsIndexRouteImport } from './routes/orchestrations.index'
+import { Route as ExecutionsIndexRouteImport } from './routes/executions.index'
 import { Route as AgentsIndexRouteImport } from './routes/agents.index'
 import { Route as OrchestrationsNewRouteImport } from './routes/orchestrations.new'
 import { Route as AgentsNewRouteImport } from './routes/agents.new'
@@ -23,9 +37,29 @@ import { Route as AgentsIdIndexRouteImport } from './routes/agents.$id.index'
 import { Route as OrchestrationsIdEditRouteImport } from './routes/orchestrations.$id.edit'
 import { Route as AgentsIdEditRouteImport } from './routes/agents.$id.edit'
 
+const TrainingRoute = TrainingRouteImport.update({
+  id: '/training',
+  path: '/training',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TestSuitesRoute = TestSuitesRouteImport.update({
+  id: '/test-suites',
+  path: '/test-suites',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RagsRoute = RagsRouteImport.update({
   id: '/rags',
   path: '/rags',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QuotasRoute = QuotasRouteImport.update({
+  id: '/quotas',
+  path: '/quotas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlaygroundRoute = PlaygroundRouteImport.update({
+  id: '/playground',
+  path: '/playground',
   getParentRoute: () => rootRouteImport,
 } as any)
 const McpRoute = McpRouteImport.update({
@@ -33,14 +67,54 @@ const McpRoute = McpRouteImport.update({
   path: '/mcp',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LlmsRoute = LlmsRouteImport.update({
   id: '/llms',
   path: '/llms',
   getParentRoute: () => rootRouteImport,
 } as any)
+const KnowledgeRoute = KnowledgeRouteImport.update({
+  id: '/knowledge',
+  path: '/knowledge',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FinopsRoute = FinopsRouteImport.update({
+  id: '/finops',
+  path: '/finops',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DatasetsRoute = DatasetsRouteImport.update({
+  id: '/datasets',
+  path: '/datasets',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DatabasesRoute = DatabasesRouteImport.update({
+  id: '/databases',
+  path: '/databases',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConversationsRoute = ConversationsRouteImport.update({
+  id: '/conversations',
+  path: '/conversations',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApisRoute = ApisRouteImport.update({
   id: '/apis',
   path: '/apis',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AlertsRoute = AlertsRouteImport.update({
+  id: '/alerts',
+  path: '/alerts',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -51,6 +125,16 @@ const IndexRoute = IndexRouteImport.update({
 const TemplatesIndexRoute = TemplatesIndexRouteImport.update({
   id: '/templates/',
   path: '/templates/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrchestrationsIndexRoute = OrchestrationsIndexRouteImport.update({
+  id: '/orchestrations/',
+  path: '/orchestrations/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExecutionsIndexRoute = ExecutionsIndexRouteImport.update({
+  id: '/executions/',
+  path: '/executions/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AgentsIndexRoute = AgentsIndexRouteImport.update({
@@ -91,13 +175,27 @@ const AgentsIdEditRoute = AgentsIdEditRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/alerts': typeof AlertsRoute
   '/apis': typeof ApisRoute
+  '/conversations': typeof ConversationsRoute
+  '/dashboard': typeof DashboardRoute
+  '/databases': typeof DatabasesRoute
+  '/datasets': typeof DatasetsRoute
+  '/finops': typeof FinopsRoute
+  '/knowledge': typeof KnowledgeRoute
   '/llms': typeof LlmsRoute
+  '/login': typeof LoginRoute
   '/mcp': typeof McpRoute
+  '/playground': typeof PlaygroundRoute
+  '/quotas': typeof QuotasRoute
   '/rags': typeof RagsRoute
+  '/test-suites': typeof TestSuitesRoute
+  '/training': typeof TrainingRoute
   '/agents/new': typeof AgentsNewRoute
   '/orchestrations/new': typeof OrchestrationsNewRoute
   '/agents/': typeof AgentsIndexRoute
+  '/executions/': typeof ExecutionsIndexRoute
+  '/orchestrations/': typeof OrchestrationsIndexRoute
   '/templates/': typeof TemplatesIndexRoute
   '/agents/$id/edit': typeof AgentsIdEditRoute
   '/orchestrations/$id/edit': typeof OrchestrationsIdEditRoute
@@ -106,13 +204,27 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/alerts': typeof AlertsRoute
   '/apis': typeof ApisRoute
+  '/conversations': typeof ConversationsRoute
+  '/dashboard': typeof DashboardRoute
+  '/databases': typeof DatabasesRoute
+  '/datasets': typeof DatasetsRoute
+  '/finops': typeof FinopsRoute
+  '/knowledge': typeof KnowledgeRoute
   '/llms': typeof LlmsRoute
+  '/login': typeof LoginRoute
   '/mcp': typeof McpRoute
+  '/playground': typeof PlaygroundRoute
+  '/quotas': typeof QuotasRoute
   '/rags': typeof RagsRoute
+  '/test-suites': typeof TestSuitesRoute
+  '/training': typeof TrainingRoute
   '/agents/new': typeof AgentsNewRoute
   '/orchestrations/new': typeof OrchestrationsNewRoute
   '/agents': typeof AgentsIndexRoute
+  '/executions': typeof ExecutionsIndexRoute
+  '/orchestrations': typeof OrchestrationsIndexRoute
   '/templates': typeof TemplatesIndexRoute
   '/agents/$id/edit': typeof AgentsIdEditRoute
   '/orchestrations/$id/edit': typeof OrchestrationsIdEditRoute
@@ -122,13 +234,27 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/alerts': typeof AlertsRoute
   '/apis': typeof ApisRoute
+  '/conversations': typeof ConversationsRoute
+  '/dashboard': typeof DashboardRoute
+  '/databases': typeof DatabasesRoute
+  '/datasets': typeof DatasetsRoute
+  '/finops': typeof FinopsRoute
+  '/knowledge': typeof KnowledgeRoute
   '/llms': typeof LlmsRoute
+  '/login': typeof LoginRoute
   '/mcp': typeof McpRoute
+  '/playground': typeof PlaygroundRoute
+  '/quotas': typeof QuotasRoute
   '/rags': typeof RagsRoute
+  '/test-suites': typeof TestSuitesRoute
+  '/training': typeof TrainingRoute
   '/agents/new': typeof AgentsNewRoute
   '/orchestrations/new': typeof OrchestrationsNewRoute
   '/agents/': typeof AgentsIndexRoute
+  '/executions/': typeof ExecutionsIndexRoute
+  '/orchestrations/': typeof OrchestrationsIndexRoute
   '/templates/': typeof TemplatesIndexRoute
   '/agents/$id/edit': typeof AgentsIdEditRoute
   '/orchestrations/$id/edit': typeof OrchestrationsIdEditRoute
@@ -139,13 +265,27 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/alerts'
     | '/apis'
+    | '/conversations'
+    | '/dashboard'
+    | '/databases'
+    | '/datasets'
+    | '/finops'
+    | '/knowledge'
     | '/llms'
+    | '/login'
     | '/mcp'
+    | '/playground'
+    | '/quotas'
     | '/rags'
+    | '/test-suites'
+    | '/training'
     | '/agents/new'
     | '/orchestrations/new'
     | '/agents/'
+    | '/executions/'
+    | '/orchestrations/'
     | '/templates/'
     | '/agents/$id/edit'
     | '/orchestrations/$id/edit'
@@ -154,13 +294,27 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/alerts'
     | '/apis'
+    | '/conversations'
+    | '/dashboard'
+    | '/databases'
+    | '/datasets'
+    | '/finops'
+    | '/knowledge'
     | '/llms'
+    | '/login'
     | '/mcp'
+    | '/playground'
+    | '/quotas'
     | '/rags'
+    | '/test-suites'
+    | '/training'
     | '/agents/new'
     | '/orchestrations/new'
     | '/agents'
+    | '/executions'
+    | '/orchestrations'
     | '/templates'
     | '/agents/$id/edit'
     | '/orchestrations/$id/edit'
@@ -169,13 +323,27 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/alerts'
     | '/apis'
+    | '/conversations'
+    | '/dashboard'
+    | '/databases'
+    | '/datasets'
+    | '/finops'
+    | '/knowledge'
     | '/llms'
+    | '/login'
     | '/mcp'
+    | '/playground'
+    | '/quotas'
     | '/rags'
+    | '/test-suites'
+    | '/training'
     | '/agents/new'
     | '/orchestrations/new'
     | '/agents/'
+    | '/executions/'
+    | '/orchestrations/'
     | '/templates/'
     | '/agents/$id/edit'
     | '/orchestrations/$id/edit'
@@ -185,13 +353,27 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AlertsRoute: typeof AlertsRoute
   ApisRoute: typeof ApisRoute
+  ConversationsRoute: typeof ConversationsRoute
+  DashboardRoute: typeof DashboardRoute
+  DatabasesRoute: typeof DatabasesRoute
+  DatasetsRoute: typeof DatasetsRoute
+  FinopsRoute: typeof FinopsRoute
+  KnowledgeRoute: typeof KnowledgeRoute
   LlmsRoute: typeof LlmsRoute
+  LoginRoute: typeof LoginRoute
   McpRoute: typeof McpRoute
+  PlaygroundRoute: typeof PlaygroundRoute
+  QuotasRoute: typeof QuotasRoute
   RagsRoute: typeof RagsRoute
+  TestSuitesRoute: typeof TestSuitesRoute
+  TrainingRoute: typeof TrainingRoute
   AgentsNewRoute: typeof AgentsNewRoute
   OrchestrationsNewRoute: typeof OrchestrationsNewRoute
   AgentsIndexRoute: typeof AgentsIndexRoute
+  ExecutionsIndexRoute: typeof ExecutionsIndexRoute
+  OrchestrationsIndexRoute: typeof OrchestrationsIndexRoute
   TemplatesIndexRoute: typeof TemplatesIndexRoute
   AgentsIdEditRoute: typeof AgentsIdEditRoute
   OrchestrationsIdEditRoute: typeof OrchestrationsIdEditRoute
@@ -201,11 +383,39 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/training': {
+      id: '/training'
+      path: '/training'
+      fullPath: '/training'
+      preLoaderRoute: typeof TrainingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/test-suites': {
+      id: '/test-suites'
+      path: '/test-suites'
+      fullPath: '/test-suites'
+      preLoaderRoute: typeof TestSuitesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/rags': {
       id: '/rags'
       path: '/rags'
       fullPath: '/rags'
       preLoaderRoute: typeof RagsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/quotas': {
+      id: '/quotas'
+      path: '/quotas'
+      fullPath: '/quotas'
+      preLoaderRoute: typeof QuotasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/playground': {
+      id: '/playground'
+      path: '/playground'
+      fullPath: '/playground'
+      preLoaderRoute: typeof PlaygroundRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mcp': {
@@ -215,6 +425,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof McpRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/llms': {
       id: '/llms'
       path: '/llms'
@@ -222,11 +439,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LlmsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/knowledge': {
+      id: '/knowledge'
+      path: '/knowledge'
+      fullPath: '/knowledge'
+      preLoaderRoute: typeof KnowledgeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/finops': {
+      id: '/finops'
+      path: '/finops'
+      fullPath: '/finops'
+      preLoaderRoute: typeof FinopsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/datasets': {
+      id: '/datasets'
+      path: '/datasets'
+      fullPath: '/datasets'
+      preLoaderRoute: typeof DatasetsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/databases': {
+      id: '/databases'
+      path: '/databases'
+      fullPath: '/databases'
+      preLoaderRoute: typeof DatabasesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/conversations': {
+      id: '/conversations'
+      path: '/conversations'
+      fullPath: '/conversations'
+      preLoaderRoute: typeof ConversationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/apis': {
       id: '/apis'
       path: '/apis'
       fullPath: '/apis'
       preLoaderRoute: typeof ApisRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/alerts': {
+      id: '/alerts'
+      path: '/alerts'
+      fullPath: '/alerts'
+      preLoaderRoute: typeof AlertsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -241,6 +507,20 @@ declare module '@tanstack/react-router' {
       path: '/templates'
       fullPath: '/templates/'
       preLoaderRoute: typeof TemplatesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/orchestrations/': {
+      id: '/orchestrations/'
+      path: '/orchestrations'
+      fullPath: '/orchestrations/'
+      preLoaderRoute: typeof OrchestrationsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/executions/': {
+      id: '/executions/'
+      path: '/executions'
+      fullPath: '/executions/'
+      preLoaderRoute: typeof ExecutionsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/agents/': {
@@ -297,13 +577,27 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AlertsRoute: AlertsRoute,
   ApisRoute: ApisRoute,
+  ConversationsRoute: ConversationsRoute,
+  DashboardRoute: DashboardRoute,
+  DatabasesRoute: DatabasesRoute,
+  DatasetsRoute: DatasetsRoute,
+  FinopsRoute: FinopsRoute,
+  KnowledgeRoute: KnowledgeRoute,
   LlmsRoute: LlmsRoute,
+  LoginRoute: LoginRoute,
   McpRoute: McpRoute,
+  PlaygroundRoute: PlaygroundRoute,
+  QuotasRoute: QuotasRoute,
   RagsRoute: RagsRoute,
+  TestSuitesRoute: TestSuitesRoute,
+  TrainingRoute: TrainingRoute,
   AgentsNewRoute: AgentsNewRoute,
   OrchestrationsNewRoute: OrchestrationsNewRoute,
   AgentsIndexRoute: AgentsIndexRoute,
+  ExecutionsIndexRoute: ExecutionsIndexRoute,
+  OrchestrationsIndexRoute: OrchestrationsIndexRoute,
   TemplatesIndexRoute: TemplatesIndexRoute,
   AgentsIdEditRoute: AgentsIdEditRoute,
   OrchestrationsIdEditRoute: OrchestrationsIdEditRoute,

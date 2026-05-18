@@ -187,16 +187,22 @@ const agentSummarizer = agentFlow(
    ═══════════════════════════════════════════ */
 
 export function seedFlowStore() {
+  const environments = ["dev", "staging", "production"];
+
   // Orchestrations
-  saveFlow("orch_research_v4", orchResearch.nodes, orchResearch.edges);
-  saveFlow("orch_support_v2", orchSupport.nodes, orchSupport.edges);
-  saveFlow("orch_billing_v1", orchBilling.nodes, orchBilling.edges);
+  environments.forEach((env) => {
+    saveFlow("orch_research", orchResearch.nodes, orchResearch.edges, undefined, env);
+    saveFlow("orch_support", orchSupport.nodes, orchSupport.edges, undefined, env);
+    saveFlow("orch_billing", orchBilling.nodes, orchBilling.edges, undefined, env);
+  });
 
   // Agents
-  saveFlow("agent_research_v3", agentResearcher.nodes, agentResearcher.edges);
-  saveFlow("agent_writer_v1", agentWriter.nodes, agentWriter.edges);
-  saveFlow("agent_router_v1", agentRouter.nodes, agentRouter.edges);
-  saveFlow("agent_sql_v2", agentSql.nodes, agentSql.edges);
-  saveFlow("agent_critic_v2", agentCritic.nodes, agentCritic.edges);
-  saveFlow("agent_summarizer_v1", agentSummarizer.nodes, agentSummarizer.edges);
+  environments.forEach((env) => {
+    saveFlow("agent_research", agentResearcher.nodes, agentResearcher.edges, undefined, env);
+    saveFlow("agent_writer", agentWriter.nodes, agentWriter.edges, undefined, env);
+    saveFlow("agent_router", agentRouter.nodes, agentRouter.edges, undefined, env);
+    saveFlow("agent_sql", agentSql.nodes, agentSql.edges, undefined, env);
+    saveFlow("agent_critic", agentCritic.nodes, agentCritic.edges, undefined, env);
+    saveFlow("agent_summarizer", agentSummarizer.nodes, agentSummarizer.edges, undefined, env);
+  });
 }

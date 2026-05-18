@@ -108,7 +108,7 @@ export function PageHeader({
   return (
     <div className="mb-6 flex flex-col items-start justify-between gap-3 md:flex-row md:items-center">
       <div>
-        <h1 className="font-display text-2xl font-bold tracking-tight">{title}</h1>
+        <h1 className="font-display text-3xl font-bold tracking-tight">{title}</h1>
         <p className="text-sm text-muted-foreground">{description}</p>
       </div>
       {children && <div className="flex items-center gap-2">{children}</div>}

@@ -1,42 +1,107 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AppLayout } from "@/components/AppLayout";
-import { CatalogGrid, PageHeader, type CatalogItem } from "@/components/CatalogGrid";
-import { Button } from "@/components/ui/button";
-import { Database, Plus } from "lucide-react";
+import { Database } from "lucide-react";
+import { CatalogManager, type CatalogEntry, type EnvFieldDef } from "@/components/CatalogManager";
 
 export const Route = createFileRoute("/databases")({
   head: () => ({ meta: [{ title: "Databases · OrkestrAI" }] }),
   component: DatabasesPage,
 });
 
-const databases: CatalogItem[] = [
-  // SQL
-  { id: "db/postgres-analytics", name: "PostgreSQL — Analytics", description: "Main analytics warehouse. Read replicas in 3 regions.", tags: ["SQL", "PostgreSQL", "read-replica"], meta: [{ label: "Version", value: "16.2" }, { label: "Size", value: "1.2 TB" }], status: "active", icon: Database, accent: "primary" },
-  { id: "db/postgres-primary", name: "PostgreSQL — Primary", description: "Transactional database for tickets, users and CRM data.", tags: ["SQL", "PostgreSQL", "OLTP"], meta: [{ label: "Version", value: "16.2" }, { label: "Connections", value: "120" }], status: "active", icon: Database, accent: "info" },
-  { id: "db/mysql-legacy", name: "MySQL — Legacy Billing", description: "Legacy billing system. Migration to Postgres planned Q3.", tags: ["SQL", "MySQL", "legacy"], meta: [{ label: "Version", value: "8.0" }, { label: "Tables", value: "84" }], status: "draft", icon: Database, accent: "warning" },
-  { id: "db/mssql-erp", name: "SQL Server — ERP", description: "Enterprise ERP database. Read-only access for agents.", tags: ["SQL", "MSSQL", "readonly"], meta: [{ label: "Version", value: "2022" }, { label: "Schemas", value: "12" }], status: "active", icon: Database, accent: "accent" },
-  { id: "db/sqlite-local", name: "SQLite — Dev/Test", description: "Lightweight local database for development and testing.", tags: ["SQL", "SQLite", "ephemeral"], meta: [{ label: "Size", value: "48 MB" }, { label: "Env", value: "dev" }], status: "active", icon: Database, accent: "success" },
-  // NoSQL
-  { id: "db/mongodb-content", name: "MongoDB — Content Store", description: "Document store for unstructured content, articles and drafts.", tags: ["NoSQL", "MongoDB", "documents"], meta: [{ label: "Version", value: "7.0" }, { label: "Collections", value: "32" }], status: "active", icon: Database, accent: "primary" },
-  { id: "db/redis-cache", name: "Redis — Cache & Sessions", description: "In-memory cache for sessions, rate limits and hot data.", tags: ["NoSQL", "Redis", "cache"], meta: [{ label: "Version", value: "7.2" }, { label: "Memory", value: "8 GB" }], status: "active", icon: Database, accent: "destructive" },
-  { id: "db/dynamodb-events", name: "DynamoDB — Events", description: "Serverless event store on AWS. Auto-scaling enabled.", tags: ["NoSQL", "DynamoDB", "serverless"], meta: [{ label: "Region", value: "us-east-1" }, { label: "RCU", value: "5k" }], status: "active", icon: Database, accent: "info" },
-  { id: "db/cassandra-timeseries", name: "Cassandra — Time Series", description: "Distributed time-series store for metrics and telemetry.", tags: ["NoSQL", "Cassandra", "timeseries"], meta: [{ label: "Nodes", value: "6" }, { label: "RF", value: "3" }], status: "draft", icon: Database, accent: "warning" },
-  { id: "db/neo4j-graph", name: "Neo4j — Knowledge Graph", description: "Graph database for entity relationships and ontologies.", tags: ["NoSQL", "Neo4j", "graph"], meta: [{ label: "Version", value: "5.x" }, { label: "Nodes", value: "2.4M" }], status: "active", icon: Database, accent: "accent" },
-  { id: "db/clickhouse-logs", name: "ClickHouse — Logs", description: "Columnar OLAP for log analytics and observability data.", tags: ["SQL", "ClickHouse", "OLAP"], meta: [{ label: "Rows/day", value: "12B" }, { label: "Retention", value: "90d" }], status: "active", icon: Database, accent: "success" },
-  { id: "db/elasticsearch-search", name: "Elasticsearch — Search", description: "Full-text search engine for product catalog and docs.", tags: ["NoSQL", "Elasticsearch", "search"], meta: [{ label: "Version", value: "8.x" }, { label: "Indices", value: "18" }], status: "active", icon: Database, accent: "primary" },
+const envFields: EnvFieldDef[] = [
+  { key: "type", label: "Database type", placeholder: "PostgreSQL | MySQL | MongoDB | Redis | ..." },
+  { key: "host", label: "Host", placeholder: "db.example.com" },
+  { key: "port", label: "Port", placeholder: "5432" },
+  { key: "database", label: "Database name", placeholder: "analytics" },
+  { key: "username", label: "Username", placeholder: "app_user" },
+  { key: "password", label: "Password", type: "password" },
+  { key: "options", label: "Connection options", placeholder: "sslmode=require&pool=10" },
+];
+
+const initial: CatalogEntry[] = [
+  {
+    id: "postgres-analytics",
+    name: "PostgreSQL — Analytics",
+    description: "Main analytics warehouse. Read replicas in 3 regions.",
+    tags: ["SQL", "PostgreSQL", "read-replica"],
+    status: "active",
+    envs: {
+      dev: { type: "PostgreSQL", host: "pg-dev.svc", port: "5432", database: "analytics_dev", username: "app", password: "***", options: "sslmode=disable" },
+      staging: { type: "PostgreSQL", host: "pg-stg.svc", port: "5432", database: "analytics_stg", username: "app", password: "***", options: "sslmode=require" },
+      production: { type: "PostgreSQL", host: "pg-prod.svc", port: "5432", database: "analytics", username: "app_ro", password: "***", options: "sslmode=require&pool=20" },
+    },
+  },
+  {
+    id: "postgres-primary",
+    name: "PostgreSQL — Primary",
+    description: "Transactional database for tickets, users and CRM data.",
+    tags: ["SQL", "PostgreSQL", "OLTP"],
+    status: "active",
+    envs: {
+      dev: { type: "PostgreSQL", host: "pg-primary-dev.svc", port: "5432", database: "primary_dev", username: "app", password: "***", options: "" },
+      staging: { type: "PostgreSQL", host: "pg-primary-stg.svc", port: "5432", database: "primary_stg", username: "app", password: "***", options: "sslmode=require" },
+      production: { type: "PostgreSQL", host: "pg-primary.svc", port: "5432", database: "primary", username: "app", password: "***", options: "sslmode=require&pool=50" },
+    },
+  },
+  {
+    id: "mongodb-content",
+    name: "MongoDB — Content Store",
+    description: "Document store for unstructured content, articles and drafts.",
+    tags: ["NoSQL", "MongoDB", "documents"],
+    status: "active",
+    envs: {
+      dev: { type: "MongoDB", host: "mongo-dev.svc", port: "27017", database: "content_dev", username: "app", password: "***", options: "" },
+      staging: { type: "MongoDB", host: "mongo-stg.svc", port: "27017", database: "content_stg", username: "app", password: "***", options: "replicaSet=rs0" },
+      production: { type: "MongoDB", host: "mongo.svc", port: "27017", database: "content", username: "app", password: "***", options: "replicaSet=rs0&readPreference=secondaryPreferred" },
+    },
+  },
+  {
+    id: "redis-cache",
+    name: "Redis — Cache & Sessions",
+    description: "In-memory cache for sessions, rate limits and hot data.",
+    tags: ["NoSQL", "Redis", "cache"],
+    status: "active",
+    envs: {
+      dev: { type: "Redis", host: "redis-dev.svc", port: "6379", database: "0", username: "", password: "", options: "" },
+      staging: { type: "Redis", host: "redis-stg.svc", port: "6379", database: "0", username: "", password: "***", options: "tls=true" },
+      production: { type: "Redis", host: "redis.svc", port: "6379", database: "0", username: "", password: "***", options: "tls=true&cluster=true" },
+    },
+  },
+  {
+    id: "dynamodb-events",
+    name: "DynamoDB — Events",
+    description: "Serverless event store on AWS. Auto-scaling enabled.",
+    tags: ["NoSQL", "DynamoDB", "serverless"],
+    status: "active",
+    envs: {
+      dev: { type: "DynamoDB", host: "dynamodb.us-east-1.amazonaws.com", port: "", database: "events-dev", username: "", password: "***", options: "region=us-east-1" },
+      staging: { type: "DynamoDB", host: "dynamodb.us-east-1.amazonaws.com", port: "", database: "events-stg", username: "", password: "***", options: "region=us-east-1" },
+      production: { type: "DynamoDB", host: "dynamodb.us-east-1.amazonaws.com", port: "", database: "events", username: "", password: "***", options: "region=us-east-1&rcu=5000" },
+    },
+  },
+  {
+    id: "clickhouse-logs",
+    name: "ClickHouse — Logs",
+    description: "Columnar OLAP for log analytics and observability data.",
+    tags: ["SQL", "ClickHouse", "OLAP"],
+    status: "active",
+    envs: {
+      dev: { type: "ClickHouse", host: "ch-dev.svc", port: "8123", database: "logs_dev", username: "default", password: "", options: "" },
+      staging: { type: "ClickHouse", host: "ch-stg.svc", port: "8123", database: "logs_stg", username: "app", password: "***", options: "" },
+      production: { type: "ClickHouse", host: "ch.svc", port: "8123", database: "logs", username: "app", password: "***", options: "cluster=analytics" },
+    },
+  },
 ];
 
 function DatabasesPage() {
   return (
-    <AppLayout title="Databases" subtitle="SQL and NoSQL data stores">
-      <div className="p-6">
-        <PageHeader title="Databases" description="Registered database connections available to orchestrations and agents.">
-          <Button size="sm" className="gap-1.5 bg-[image:var(--gradient-primary)] text-primary-foreground">
-            <Plus className="h-3.5 w-3.5" /> Add database
-          </Button>
-        </PageHeader>
-        <CatalogGrid items={databases} />
-      </div>
-    </AppLayout>
+    <CatalogManager
+      title="Databases"
+      subtitle="SQL and NoSQL data stores"
+      description="Registered database connections available to orchestrations and agents."
+      newButtonLabel="Add database"
+      icon={Database}
+      envFields={envFields}
+      initialItems={initial}
+    />
   );
 }

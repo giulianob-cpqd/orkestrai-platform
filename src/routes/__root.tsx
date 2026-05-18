@@ -1,5 +1,8 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
+import { AuthProvider } from "@/lib/auth";
+import { EnvironmentProvider } from "@/lib/EnvironmentContext";
+import "../process-polyfill";
 
 import appCss from "../styles.css?url";
 
@@ -71,5 +74,12 @@ function RootComponent() {
       import("../data/seedFlows").then((m) => m.seedFlowStore());
     }
   }, []);
-  return <Outlet />;
+
+  return (
+    <AuthProvider>
+      <EnvironmentProvider>
+        <Outlet />
+      </EnvironmentProvider>
+    </AuthProvider>
+  );
 }

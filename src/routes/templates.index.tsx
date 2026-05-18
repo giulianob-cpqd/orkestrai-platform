@@ -43,56 +43,185 @@ export const Route = createFileRoute("/templates/")({
 });
 
 function TemplateCard({ t, onUse }: { t: Template; onUse: (t: Template) => void }) {
+  const [detailsOpen, setDetailsOpen] = useState(false);
+
   return (
-    <Card className="h-full border-border bg-card/80 p-5 backdrop-blur-md transition-all hover:border-primary/40 hover:shadow-[var(--shadow-glow)]">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div
+    <>
+      <Card 
+        className="h-full border-border bg-card/80 p-5 backdrop-blur-md transition-all hover:border-primary/40 hover:shadow-[var(--shadow-glow)] cursor-pointer"
+        onClick={() => setDetailsOpen(true)}
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div
+              className={cn(
+                "flex h-10 w-10 items-center justify-center rounded-lg",
+                t.kind === "agent" ? "bg-accent/15 text-accent" : "bg-primary/15 text-primary",
+              )}
+            >
+              {t.kind === "agent" ? <Bot className="h-5 w-5" /> : <Workflow className="h-5 w-5" />}
+            </div>
+            <div className="leading-tight">
+              <p className="font-display text-base font-semibold">{t.name}</p>
+              <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                {t.kind} · {t.source}
+              </p>
+            </div>
+          </div>
+          <Badge
+            variant="outline"
             className={cn(
-              "flex h-10 w-10 items-center justify-center rounded-lg",
-              t.kind === "agent" ? "bg-accent/15 text-accent" : "bg-primary/15 text-primary",
+              "gap-1.5",
+              t.source === "lowcode"
+                ? "border-primary/40 text-primary"
+                : "border-warning/40 text-warning",
             )}
           >
-            {t.kind === "agent" ? <Bot className="h-5 w-5" /> : <Workflow className="h-5 w-5" />}
-          </div>
-          <div className="leading-tight">
-            <p className="font-display text-base font-semibold">{t.name}</p>
-            <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-              {t.kind} · {t.source}
-            </p>
-          </div>
-        </div>
-        <Badge
-          variant="outline"
-          className={cn(
-            "gap-1.5",
-            t.source === "lowcode"
-              ? "border-primary/40 text-primary"
-              : "border-warning/40 text-warning",
-          )}
-        >
-          {t.source === "lowcode" ? <GitBranch className="h-3 w-3" /> : <Code2 className="h-3 w-3" />}
-          {t.source}
-        </Badge>
-      </div>
-      <p className="mt-3 text-sm text-muted-foreground">{t.description}</p>
-      <div className="mt-3 flex flex-wrap gap-1.5">
-        {t.tags.map((tag) => (
-          <Badge key={tag} variant="secondary" className="text-[10px] font-normal">
-            {tag}
+            {t.source === "lowcode" ? <GitBranch className="h-3 w-3" /> : <Code2 className="h-3 w-3" />}
+            {t.source}
           </Badge>
-        ))}
-      </div>
-      <div className="mt-4 flex items-center justify-between border-t border-border pt-3 text-[11px] text-muted-foreground">
-        <span>{t.author}</span>
-        <span className="font-mono">{t.updatedAt}</span>
-      </div>
-      <div className="mt-3 flex justify-end">
-        <Button size="sm" variant="outline" className="gap-1.5" onClick={() => onUse(t)}>
-          Use template
-        </Button>
-      </div>
-    </Card>
+        </div>
+        <p className="mt-3 text-sm text-muted-foreground">{t.description}</p>
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {t.tags.map((tag) => (
+            <Badge key={tag} variant="secondary" className="text-[10px] font-normal">
+              {tag}
+            </Badge>
+          ))}
+        </div>
+        <div className="mt-4 flex items-center justify-between border-t border-border pt-3 text-[11px] text-muted-foreground">
+          <span>{t.author}</span>
+          <span className="font-mono">{t.updatedAt}</span>
+        </div>
+        <div className="mt-3 flex justify-end">
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="gap-1.5" 
+            onClick={(e) => {
+              e.stopPropagation();
+              onUse(t);
+            }}
+          >
+            Use template
+          </Button>
+        </div>
+      </Card>
+
+      {/* Template Details Modal */}
+      <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <div
+                className={cn(
+                  "flex h-8 w-8 items-center justify-center rounded-lg",
+                  t.kind === "agent" ? "bg-accent/15 text-accent" : "bg-primary/15 text-primary",
+                )}
+              >
+                {t.kind === "agent" ? <Bot className="h-4 w-4" /> : <Workflow className="h-4 w-4" />}
+              </div>
+              {t.name}
+            </DialogTitle>
+            <DialogDescription>{t.description}</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6">
+            {/* Metadata */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground">Kind</p>
+                <p className="mt-1 capitalize font-semibold">{t.kind}</p>
+              </div>
+              <div>
+                <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground">Source</p>
+                <p className="mt-1 capitalize font-semibold">{t.source}</p>
+              </div>
+              <div>
+                <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground">Author</p>
+                <p className="mt-1 font-semibold">{t.author}</p>
+              </div>
+              <div>
+                <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground">Updated</p>
+                <p className="mt-1 font-mono text-sm">{t.updatedAt}</p>
+              </div>
+            </div>
+
+            {/* Tags */}
+            <div>
+              <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground mb-2">Tags</p>
+              <div className="flex flex-wrap gap-2">
+                {t.tags.map((tag) => (
+                  <Badge key={tag} variant="secondary" className="text-xs">
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+
+            {/* Repository (for both lowcode and highcode) */}
+            {t.repoUrl ? (
+              <div>
+                <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground mb-2">Repository</p>
+                <Card className="border-border bg-muted/20 p-4">
+                  <a 
+                    href={t.repoUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline font-mono text-sm break-all"
+                  >
+                    {t.repoUrl}
+                  </a>
+                </Card>
+              </div>
+            ) : null}
+
+            {/* Parameters (for all templates with parameters) */}
+            {t.parameters && t.parameters.length > 0 ? (
+              <div>
+                <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground mb-2">Configurable Parameters</p>
+                <Card className="border-border bg-muted/20 p-4">
+                  <div className="space-y-3">
+                    {t.parameters.map((param) => (
+                      <div key={param.id} className="border-b border-border/50 pb-3 last:border-0 last:pb-0">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <p className="font-semibold text-sm">{param.name}</p>
+                            <p className="text-xs text-muted-foreground">{param.description}</p>
+                          </div>
+                          {param.required && (
+                            <Badge variant="outline" className="text-[10px] border-warning/40 text-warning">
+                              required
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          <span className="font-mono">Type:</span> {param.type}
+                          {param.defaultValue && <span> · Default: <span className="font-mono">{param.defaultValue}</span></span>}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              </div>
+            ) : null}
+          </div>
+
+          <DialogFooter className="mt-6">
+            <Button variant="ghost" onClick={() => setDetailsOpen(false)}>Close</Button>
+            <Button 
+              onClick={() => {
+                setDetailsOpen(false);
+                onUse(t);
+              }}
+              className="bg-[image:var(--gradient-primary)] text-primary-foreground"
+            >
+              Use template
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 

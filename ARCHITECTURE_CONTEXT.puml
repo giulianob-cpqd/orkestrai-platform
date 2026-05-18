@@ -1,0 +1,23 @@
+@startuml OrkestrAI_Context
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title OrkestrAI - System Context Diagram (Level 1)
+
+Person(user, "End User", "Usuário da plataforma")
+Person(admin, "Administrator", "Administrador do sistema")
+Person(developer, "Developer", "Desenvolvedor de plugins")
+
+System(orchestrai, "OrkestrAI Platform", "Plataforma de orquestração de agentes IA\ndistribuída, plugável e observável")
+
+System_Ext(llm_providers, "LLM Providers", "OpenAI, Anthropic, Google, Cohere, etc")
+System_Ext(external_services, "External Services", "APIs terceirizadas, webhooks")
+System_Ext(data_sources, "Data Sources", "Bancos de dados, data lakes")
+
+Rel(user, orchestrai, "Usa a plataforma")
+Rel(admin, orchestrai, "Gerencia e monitora")
+Rel(developer, orchestrai, "Desenvolve plugins")
+Rel(orchestrai, llm_providers, "Consome LLMs")
+Rel(orchestrai, external_services, "Integra com")
+Rel(orchestrai, data_sources, "Consulta dados")
+
+@enduml

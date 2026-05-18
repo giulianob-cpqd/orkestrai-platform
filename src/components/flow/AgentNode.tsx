@@ -10,6 +10,7 @@ export type NodeVariant =
   | "mcp"
   | "output"
   | "memory"
+  | "conversation"
   | "db"
   | "cloud"
   | "endpoint"
@@ -25,9 +26,14 @@ export type NodeVariant =
   | "router"
   | "scripttask"
   | "humantask"
+  | "humaninfo"
   | "loop"
   | "validator"
-  | "merge";
+  | "merge"
+  | "grpcreq"
+  | "grpcres"
+  | "wsreq"
+  | "wsres";
 
 export interface AgentNodeData {
   label: string;
@@ -65,9 +71,10 @@ export function AgentNode({ data, selected }: NodeProps) {
       className={cn(
         "min-w-[210px] rounded-xl border-2 bg-card/95 backdrop-blur-md transition-all",
         `border-[var(--node-${v})]/50`,
-        selected && "ring-2 ring-primary ring-offset-2 ring-offset-background",
+        selected && "ring-2 ring-primary ring-offset-2 ring-offset-background scale-[1.02]",
+        selected && "animate-[pulse-border_2s_ease-in-out_infinite]",
       )}
-      style={{ boxShadow: `0 0 24px color-mix(in oklch, var(--node-${v}) 25%, transparent)` }}
+      style={{ boxShadow: `0 0 24px color-mix(in oklch, var(--node-${v}) ${selected ? 40 : 25}%, transparent)` }}
     >
       {/* Target handles */}
       {isPrompt ? (

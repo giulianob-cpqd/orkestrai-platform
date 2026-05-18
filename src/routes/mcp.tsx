@@ -1,34 +1,68 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AppLayout } from "@/components/AppLayout";
-import { CatalogGrid, PageHeader, type CatalogItem } from "@/components/CatalogGrid";
-import { Button } from "@/components/ui/button";
-import { Server, Plus } from "lucide-react";
+import { Server } from "lucide-react";
+import { CatalogManager, type CatalogEntry, type EnvFieldDef } from "@/components/CatalogManager";
 
 export const Route = createFileRoute("/mcp")({
-  head: () => ({ meta: [{ title: "MCP Servers · Synapse" }] }),
+  head: () => ({ meta: [{ title: "MCP Servers · OrkestrAI" }] }),
   component: MCPPage,
 });
 
-const servers: CatalogItem[] = [
-  { id: "mcp/filesystem", name: "Filesystem MCP", description: "Read & write files in sandboxed workspace.", tags: ["stdio", "official"], meta: [{ label: "Tools", value: "8" }, { label: "Version", value: "1.4.0" }], status: "active", icon: Server, accent: "primary" },
-  { id: "mcp/postgres", name: "Postgres MCP", description: "Query Postgres databases with safety guards.", tags: ["http", "readonly"], meta: [{ label: "Tools", value: "5" }, { label: "DBs", value: "3" }], status: "active", icon: Server, accent: "info" },
-  { id: "mcp/notion", name: "Notion MCP", description: "Read pages, search workspace, create blocks.", tags: ["http", "OAuth"], meta: [{ label: "Tools", value: "11" }, { label: "Workspace", value: "Acme" }], status: "active", icon: Server, accent: "accent" },
-  { id: "mcp/jira", name: "Jira MCP", description: "Create issues, update sprints, search projects.", tags: ["http", "Atlassian"], meta: [{ label: "Tools", value: "9" }, { label: "Projects", value: "12" }], status: "draft", icon: Server, accent: "warning" },
-  { id: "mcp/slack", name: "Slack MCP", description: "Post messages, read channels, manage threads.", tags: ["http", "bot-token"], meta: [{ label: "Tools", value: "7" }, { label: "Channels", value: "48" }], status: "active", icon: Server, accent: "success" },
-  { id: "mcp/k8s", name: "Kubernetes MCP", description: "Inspect cluster resources, tail pod logs.", tags: ["stdio", "RBAC"], meta: [{ label: "Tools", value: "14" }, { label: "Clusters", value: "2" }], status: "error", icon: Server, accent: "destructive" },
+const envFields: EnvFieldDef[] = [
+  { key: "url", label: "Server URL", placeholder: "https://mcp.example.com" },
+  { key: "transport", label: "Transport", placeholder: "http | sse | stdio" },
+  { key: "token", label: "Auth token", type: "password" },
+  { key: "tools", label: "Allowed tools (comma)", placeholder: "search,fetch,write" },
+];
+
+const initial: CatalogEntry[] = [
+  {
+    id: "mcp-postgres",
+    name: "Postgres MCP",
+    description: "Query Postgres databases with safety guards.",
+    tags: ["http", "readonly"],
+    status: "active",
+    envs: {
+      dev: { url: "https://mcp-pg-dev.svc", transport: "http", token: "***", tools: "query,schema" },
+      staging: { url: "https://mcp-pg-stg.svc", transport: "http", token: "***", tools: "query,schema" },
+      production: { url: "https://mcp-pg.svc", transport: "http", token: "***", tools: "query" },
+    },
+  },
+  {
+    id: "mcp-notion",
+    name: "Notion MCP",
+    description: "Read pages, search workspace, create blocks.",
+    tags: ["http", "OAuth"],
+    status: "active",
+    envs: {
+      dev: { url: "https://mcp.notion.com", transport: "http", token: "secret_dev_***", tools: "search,read" },
+      staging: { url: "https://mcp.notion.com", transport: "http", token: "secret_stg_***", tools: "search,read,write" },
+      production: { url: "https://mcp.notion.com", transport: "http", token: "secret_prod_***", tools: "search,read,write" },
+    },
+  },
+  {
+    id: "mcp-slack",
+    name: "Slack MCP",
+    description: "Post messages, read channels, manage threads.",
+    tags: ["http", "bot-token"],
+    status: "active",
+    envs: {
+      dev: { url: "https://mcp-slack.svc", transport: "sse", token: "xoxb-dev-***", tools: "post,read" },
+      staging: { url: "https://mcp-slack.svc", transport: "sse", token: "xoxb-stg-***", tools: "post,read" },
+      production: { url: "https://mcp-slack.svc", transport: "sse", token: "xoxb-prod-***", tools: "post,read" },
+    },
+  },
 ];
 
 function MCPPage() {
   return (
-    <AppLayout title="MCP Servers" subtitle="Model Context Protocol catalog">
-      <div className="p-6">
-        <PageHeader title="MCP Servers" description="Connected MCP endpoints exposing tool catalogs.">
-          <Button size="sm" className="gap-1.5 bg-[image:var(--gradient-primary)] text-primary-foreground">
-            <Plus className="h-3.5 w-3.5" /> Connect server
-          </Button>
-        </PageHeader>
-        <CatalogGrid items={servers} />
-      </div>
-    </AppLayout>
+    <CatalogManager
+      title="MCP Servers"
+      subtitle="Model Context Protocol catalog"
+      description="Connected MCP endpoints exposing tool catalogs."
+      newButtonLabel="Connect server"
+      icon={Server}
+      envFields={envFields}
+      initialItems={initial}
+    />
   );
 }

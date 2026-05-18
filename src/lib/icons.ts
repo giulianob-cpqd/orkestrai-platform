@@ -24,6 +24,9 @@ import {
   ShieldCheck,
   Merge,
   Hourglass,
+  Zap,
+  Cable,
+  AlertCircle,
   type LucideIcon,
 } from "lucide-react";
 
@@ -52,7 +55,10 @@ export type IconName =
   | "Repeat"
   | "ShieldCheck"
   | "Merge"
-  | "Hourglass";
+  | "Hourglass"
+  | "Zap"
+  | "Cable"
+  | "AlertCircle";
 
 const iconMap: Record<IconName, LucideIcon> = {
   Bot,
@@ -80,6 +86,9 @@ const iconMap: Record<IconName, LucideIcon> = {
   ShieldCheck,
   Merge,
   Hourglass,
+  Zap,
+  Cable,
+  AlertCircle,
 };
 
 export function resolveIcon(name: IconName): LucideIcon {

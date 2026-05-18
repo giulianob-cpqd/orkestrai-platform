@@ -25,7 +25,6 @@ import {
   registeredMcpServers,
   registeredAgents,
   registeredLlms,
-  registeredDatabases,
   databaseTypes,
   requestProtocols,
   cronPresets,
@@ -80,6 +79,85 @@ function SelectField({
   );
 }
 
+function SchemaEditorField({
+  label,
+  dataKey,
+  data,
+  onChange,
+  placeholder,
+  helpText,
+}: {
+  label: string;
+  dataKey: string;
+  data: Record<string, unknown>;
+  onChange: (patch: Record<string, unknown>) => void;
+  placeholder: string;
+  helpText?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState((data[dataKey] as string) ?? "");
+
+  return (
+    <div className="space-y-2">
+      <Label className="text-xs">{label}</Label>
+      <div className="flex items-center gap-2">
+        <Input
+          readOnly
+          className="font-mono text-xs flex-1"
+          value={
+            (data[dataKey] as string)
+              ? `${((data[dataKey] as string).split("\n")[0] ?? "").slice(0, 40)}…`
+              : "(não definido)"
+          }
+          placeholder="Clique em [...] para definir"
+        />
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-9 px-2.5 shrink-0"
+          onClick={() => {
+            setDraft((data[dataKey] as string) ?? "");
+            setOpen(true);
+          }}
+        >
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+      </div>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{label}</DialogTitle>
+          </DialogHeader>
+          <Textarea
+            rows={14}
+            className="font-mono text-xs resize-none"
+            placeholder={placeholder}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+          />
+          {helpText && (
+            <p className="text-[10px] text-muted-foreground">
+              {helpText}
+            </p>
+          )}
+          <p className="text-[10px] text-muted-foreground">
+            Defina a estrutura do objeto em JSON. Use {"{{VAR}}"} para referenciar variáveis de ambiente.
+          </p>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button>
+            <Button
+              onClick={() => { onChange({ [dataKey]: draft }); setOpen(false); }}
+              className="bg-[image:var(--gradient-primary)] text-primary-foreground"
+            >
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
 function DatabaseProperties({
   data,
   onChange,
@@ -96,9 +174,9 @@ function DatabaseProperties({
         label="Database"
         placeholder="Selecione um database do catálogo"
         value={data.dbCatalogId as string | undefined}
-        options={registeredDatabases}
+        options={databaseTypes}
         onChange={(v) => {
-          const item = registeredDatabases.find((r) => r.id === v);
+          const item = databaseTypes.find((r) => r.id === v);
           onChange({ dbCatalogId: v, label: item?.name ?? "Database", meta: item?.meta });
         }}
       />
@@ -271,6 +349,11 @@ export function PropertiesPanel({ node, mode = "orchestration", onChange, onDele
 
   const renderTypeSpecific = () => {
     switch (nodeType) {
+      case "input":
+        if (mode === "agent") {
+          return <SchemaEditorField label="Estrutura de entrada (Input)" dataKey="inputSchema" data={data} onChange={onChange} placeholder={'{\n  "question": "string",\n  "context": "string?",\n  "language": "string"\n}'} />;
+        }
+        return null;
       case "prompt":
         return (
           <>
@@ -372,6 +455,15 @@ export function PropertiesPanel({ node, mode = "orchestration", onChange, onDele
                 Este agente expõe apenas uma task — será executada por padrão.
               </div>
             ) : null}
+            {agentId && (
+              <SchemaEditorField
+                label="Input Data"
+                dataKey="agentInputData"
+                data={data}
+                onChange={onChange}
+                placeholder={'{\n  "question": "What is the revenue trend?",\n  "context": "Q1 2026 financial report",\n  "language": "pt-BR"\n}'}
+              />
+            )}
           </>
         );
       }
@@ -503,19 +595,9 @@ export function PropertiesPanel({ node, mode = "orchestration", onChange, onDele
           );
         }
         return (
-          <SelectField
-            label="Formato da resposta"
-            placeholder="Selecione o formato"
-            value={(data.format as string) ?? ""}
-            options={[
-              { id: "json", name: "JSON" },
-              { id: "sse", name: "SSE Stream" },
-              { id: "ws", name: "WebSocket" },
-              { id: "grpc", name: "gRPC stream" },
-              { id: "graphql", name: "GraphQL response" },
-            ]}
-            onChange={(v) => onChange({ format: v, meta: v.toUpperCase() })}
-          />
+          <>
+            <SchemaEditorField label="Estrutura de saída (Output)" dataKey="outputSchema" data={data} onChange={onChange} placeholder={'{\n  "answer": "string",\n  "sources": ["string"],\n  "confidence": "number"\n}'} />
+          </>
         );
       case "cron":
         return (
@@ -543,6 +625,41 @@ export function PropertiesPanel({ node, mode = "orchestration", onChange, onDele
         );
       case "scripttask":
         return <ScriptTaskProperties data={data} onChange={onChange} />;
+      case "humaninfo":
+        return (
+          <>
+            <SchemaEditorField
+              label="Template (Markdown com parâmetros)"
+              dataKey="infoTemplate"
+              data={data}
+              onChange={onChange}
+              placeholder={'# {{title}}\n\n{{message}}\n\n**Parâmetros:**\n- {{param1}}\n- {{param2}}'}
+              helpText="Use {{paramName}} para criar parâmetros dinâmicos que podem ser substituídos em tempo de execução."
+            />
+          </>
+        );
+      case "humantask":
+        return (
+          <>
+            <div className="space-y-2">
+              <Label className="text-xs">Atribuído a (email)</Label>
+              <Input
+                type="email"
+                placeholder="gerente@synapse.ai"
+                value={(data.taskAssignedTo as string) ?? ""}
+                onChange={(e) => onChange({ taskAssignedTo: e.target.value })}
+              />
+            </div>
+            <SchemaEditorField
+              label="Campos do Formulário (JSON)"
+              dataKey="taskFields"
+              data={data}
+              onChange={onChange}
+              placeholder={'[\n  {\n    "name": "decision",\n    "label": "Decisão",\n    "type": "select",\n    "options": ["Aprovar", "Rejeitar"],\n    "value": "{{defaultDecision}}"\n  },\n  {\n    "name": "comments",\n    "label": "Comentários",\n    "type": "textarea",\n    "value": ""\n  }\n]'}
+              helpText="Use {{paramName}} nos campos para criar parâmetros dinâmicos. A estrutura define os campos e validações para a tarefa humana."
+            />
+          </>
+        );
       case "validator":
         return (
           <>

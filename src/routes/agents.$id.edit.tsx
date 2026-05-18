@@ -5,6 +5,7 @@ import { FlowBuilder } from "@/components/flow/FlowBuilder";
 import { agentNodeCatalog } from "@/components/flow/nodeCatalog";
 import { getAgentFlow } from "@/data/flows";
 import { getFlow } from "@/data/flowStore";
+import { useEnvironment } from "@/lib/EnvironmentContext";
 
 export const Route = createFileRoute("/agents/$id/edit")({
   loader: ({ params }) => {
@@ -14,7 +15,7 @@ export const Route = createFileRoute("/agents/$id/edit")({
   },
   head: ({ loaderData }) => ({
     meta: [
-      { title: `Edit ${loaderData?.flow?.name ?? "agent"} · Synapse` },
+      { title: `Edit ${loaderData?.flow?.name ?? "agent"} · OrkestrAI` },
     ],
   }),
   notFoundComponent: () => (
@@ -67,7 +68,8 @@ const initialEdges: Edge[] = [
 function EditAgent() {
   const { flow } = Route.useLoaderData();
   const params = Route.useParams();
-  const saved = getFlow(params.id);
+  const { activeEnv } = useEnvironment();
+  const saved = getFlow(params.id, activeEnv);
   const nodes = saved?.nodes ?? initialNodes;
   const edges = saved?.edges ?? initialEdges;
 
@@ -88,6 +90,7 @@ function EditAgent() {
         backLabel="Back to agent"
         flowName={flow.slug}
         appId={params.id}
+        environment={activeEnv}
       />
     </AppLayout>
   );

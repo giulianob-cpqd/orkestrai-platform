@@ -19,6 +19,12 @@ export interface FanItem {
     | "input";
 }
 
+export interface EnvDeployInfo {
+  status: "active" | "draft" | "error" | "not_deployed" | "deploying";
+  version: string;
+  flowId?: string; // Reference to the flow JSON for this env
+}
+
 export interface OrchestrationFlow {
   id: string;
   name: string;
@@ -28,11 +34,14 @@ export interface OrchestrationFlow {
   team: string;
   owner: string;
   version: string;
-  status: "active" | "draft" | "error";
+  status: "active" | "draft" | "error" | "deploying";
   tags: string[];
+  codeLevel: "highcode" | "lowcode";
   fanIn: FanItem[];
   fanOut: FanItem[];
   agents: { id: string; name: string; role: string }[];
+  envStatus?: Record<string, EnvDeployInfo>;
+  repoUrl?: string;
 }
 
 export interface AgentFlow {
@@ -44,16 +53,20 @@ export interface AgentFlow {
   team: string;
   owner: string;
   version: string;
-  status: "active" | "draft" | "error";
+  status: "active" | "draft" | "error" | "deploying";
   tags: string[];
+  codeLevel: "highcode" | "lowcode";
   fanIn: FanItem[];
   fanOut: FanItem[];
   rags: { id: string; name: string; meta: string }[];
+  envStatus?: Record<string, EnvDeployInfo>;
+  hasConversation?: boolean;
+  repoUrl?: string;
 }
 
 export const orchestrations: OrchestrationFlow[] = [
   {
-    id: "orch_research_v4",
+    id: "orch_research",
     name: "Research Orchestration",
     slug: "research-orchestration",
     description:
@@ -64,6 +77,7 @@ export const orchestrations: OrchestrationFlow[] = [
     version: "v0.4.0",
     status: "active",
     tags: ["multi-agent", "router", "streaming"],
+    codeLevel: "lowcode",
     fanIn: [
       { label: "POST /v1/research", meta: "REST · bearer", icon: "Webhook", variant: "endpoint" },
       { label: "events.user.asked", meta: "Kafka · 6 partitions", icon: "Radio", variant: "queue" },
@@ -76,14 +90,20 @@ export const orchestrations: OrchestrationFlow[] = [
       { label: "SSE Stream", meta: "text/event-stream", icon: "Send", variant: "output" },
     ],
     agents: [
-      { id: "agent_router_v1", name: "Intent Router", role: "Classifier" },
-      { id: "agent_research_v3", name: "Researcher", role: "Specialist" },
-      { id: "agent_sql_v2", name: "SQL Analyst", role: "Specialist" },
-      { id: "agent_writer_v1", name: "Technical Writer", role: "Composer" },
+      { id: "agent_router", name: "Intent Router", role: "Classifier" },
+      { id: "agent_research", name: "Researcher", role: "Specialist" },
+      { id: "agent_sql", name: "SQL Analyst", role: "Specialist" },
+      { id: "agent_writer", name: "Technical Writer", role: "Composer" },
     ],
+    envStatus: {
+      dev: { status: "active", version: "v0.4.0" },
+      staging: { status: "active", version: "v0.3.0" },
+      production: { status: "active", version: "v0.3.0" },
+    },
+    repoUrl: "https://github.com/inspire-ai/orchestration-research",
   },
   {
-    id: "orch_support_v2",
+    id: "orch_support",
     name: "Customer Support Triage",
     slug: "support-triage",
     description:
@@ -94,6 +114,7 @@ export const orchestrations: OrchestrationFlow[] = [
     version: "v0.2.3",
     status: "active",
     tags: ["triage", "crm", "rabbitmq"],
+    codeLevel: "lowcode",
     fanIn: [
       { label: "POST /v1/tickets", meta: "REST · hmac", icon: "Webhook", variant: "endpoint" },
       { label: "support.inbound", meta: "RabbitMQ · topic", icon: "Radio", variant: "queue" },
@@ -105,13 +126,19 @@ export const orchestrations: OrchestrationFlow[] = [
       { label: "support.resolved", meta: "RabbitMQ", icon: "Radio", variant: "queue" },
     ],
     agents: [
-      { id: "agent_router_v1", name: "Intent Router", role: "Classifier" },
-      { id: "agent_critic_v2", name: "Critic Reviewer", role: "QA" },
-      { id: "agent_summarizer_v1", name: "Summarizer", role: "Writer" },
+      { id: "agent_router", name: "Intent Router", role: "Classifier" },
+      { id: "agent_critic", name: "Critic Reviewer", role: "QA" },
+      { id: "agent_summarizer", name: "Summarizer", role: "Writer" },
     ],
+    envStatus: {
+      dev: { status: "active", version: "v0.2.3" },
+      staging: { status: "active", version: "v0.2.3" },
+      production: { status: "active", version: "v0.2.0" },
+    },
+    repoUrl: "https://github.com/inspire-ai/orchestration-support-triage",
   },
   {
-    id: "orch_billing_v1",
+    id: "orch_billing",
     name: "Invoice Reconciliation",
     slug: "invoice-recon",
     description:
@@ -122,6 +149,7 @@ export const orchestrations: OrchestrationFlow[] = [
     version: "v0.1.0",
     status: "draft",
     tags: ["batch", "graphql", "report"],
+    codeLevel: "lowcode",
     fanIn: [
       { label: "Cron 02:00 UTC", meta: "scheduler", icon: "Webhook", variant: "endpoint" },
       { label: "billing.invoice.new", meta: "Kafka", icon: "Radio", variant: "queue" },
@@ -132,15 +160,81 @@ export const orchestrations: OrchestrationFlow[] = [
       { label: "Reports bucket", meta: "GCS", icon: "Cloud", variant: "cloud" },
     ],
     agents: [
-      { id: "agent_sql_v2", name: "SQL Analyst", role: "Extractor" },
-      { id: "agent_writer_v1", name: "Technical Writer", role: "Reporter" },
+      { id: "agent_sql", name: "SQL Analyst", role: "Extractor" },
+      { id: "agent_writer", name: "Technical Writer", role: "Reporter" },
     ],
+    envStatus: {
+      dev: { status: "draft", version: "v0.1.0" },
+      staging: { status: "not_deployed", version: "-" },
+      production: { status: "not_deployed", version: "-" },
+    },
+    repoUrl: "https://github.com/inspire-ai/orchestration-invoice-reconciliation",
+  },
+  {
+    id: "orch_approval",
+    name: "Expense Approval Workflow",
+    slug: "expense-approval",
+    description:
+      "Routes expense reports through approval chain with human review and decision gates.",
+    area: "Finance",
+    team: "Finance Ops",
+    owner: "mariana.lopes@synapse.ai",
+    version: "v0.3.0",
+    status: "active",
+    tags: ["human-in-loop", "approval", "workflow"],
+    codeLevel: "lowcode",
+    fanIn: [
+      { label: "expenses.submitted", meta: "Kafka · partition 2", icon: "Inbox", variant: "queue" },
+    ],
+    fanOut: [
+      { label: "expenses.approved", meta: "Kafka · partition 1", icon: "Megaphone", variant: "queue" },
+    ],
+    agents: [
+      { id: "agent_validator", name: "Expense Validator", role: "Checker" },
+      { id: "agent_router", name: "Approval Router", role: "Classifier" },
+    ],
+    envStatus: {
+      dev: { status: "active", version: "v0.3.0" },
+      staging: { status: "active", version: "v0.3.0" },
+      production: { status: "active", version: "v0.2.0" },
+    },
+    repoUrl: "https://github.com/inspire-ai/orchestration-expense-approval",
+  },
+  {
+    id: "orch_content_review",
+    name: "Content Review Pipeline",
+    slug: "content-review",
+    description:
+      "Processes user-generated content through moderation and human review stages with feedback loops.",
+    area: "Content & Moderation",
+    team: "Quality",
+    owner: "leo.fernandes@synapse.ai",
+    version: "v0.2.0",
+    status: "active",
+    tags: ["moderation", "human-review", "feedback"],
+    codeLevel: "lowcode",
+    fanIn: [
+      { label: "grpc.ContentService/Review", meta: "gRPC · unary", icon: "Zap", variant: "endpoint" },
+    ],
+    fanOut: [
+      { label: "grpc.ContentService/Publish", meta: "gRPC · unary", icon: "Zap", variant: "output" },
+    ],
+    agents: [
+      { id: "agent_moderation", name: "Content Moderator", role: "Classifier" },
+      { id: "agent_feedback", name: "Feedback Generator", role: "Composer" },
+    ],
+    envStatus: {
+      dev: { status: "active", version: "v0.2.0" },
+      staging: { status: "active", version: "v0.2.0" },
+      production: { status: "active", version: "v0.1.0" },
+    },
+    repoUrl: "https://github.com/inspire-ai/orchestration-content-review",
   },
 ];
 
 export const agentFlows: AgentFlow[] = [
   {
-    id: "agent_research_v3",
+    id: "agent_research",
     name: "Researcher",
     slug: "researcher",
     description: "Plans, decomposes and delegates web research tasks across tools.",
@@ -150,6 +244,7 @@ export const agentFlows: AgentFlow[] = [
     version: "v3.0.1",
     status: "active",
     tags: ["ReAct", "multi-tool", "stream"],
+    codeLevel: "lowcode",
     fanIn: [
       { label: "Input", meta: "text · multimodal", icon: "Send", variant: "input" },
       { label: "Conversation Memory", meta: "buffer + summary", icon: "MemoryStick", variant: "memory" },
@@ -164,9 +259,16 @@ export const agentFlows: AgentFlow[] = [
       { id: "rag_internal_docs", name: "Internal Docs", meta: "pgvector · 12k docs" },
       { id: "rag_research_papers", name: "Research Papers", meta: "pinecone · 48k chunks" },
     ],
+    envStatus: {
+      dev: { status: "active", version: "v3.0.1" },
+      staging: { status: "active", version: "v3.0.0" },
+      production: { status: "active", version: "v3.0.0" },
+    },
+    hasConversation: true,
+    repoUrl: "https://github.com/inspire-ai/agent-researcher",
   },
   {
-    id: "agent_writer_v1",
+    id: "agent_writer",
     name: "Technical Writer",
     slug: "tech-writer",
     description: "Turns research notes into structured markdown documentation.",
@@ -176,15 +278,23 @@ export const agentFlows: AgentFlow[] = [
     version: "v1.4.0",
     status: "active",
     tags: ["CoT", "markdown", "long-context"],
+    codeLevel: "lowcode",
     fanIn: [{ label: "Notes Payload", meta: "json", icon: "Send", variant: "input" }],
     fanOut: [
       { label: "GPT-5", meta: "temp 0.2", icon: "Brain", variant: "llm" },
       { label: "Markdown Out", meta: "stream", icon: "Send", variant: "output" },
     ],
     rags: [{ id: "rag_style_guide", name: "Editorial Style Guide", meta: "pgvector · 320 docs" }],
+    envStatus: {
+      dev: { status: "active", version: "v1.4.0" },
+      staging: { status: "active", version: "v1.4.0" },
+      production: { status: "active", version: "v1.3.0" },
+    },
+    hasConversation: true,
+    repoUrl: "https://github.com/inspire-ai/agent-technical-writer",
   },
   {
-    id: "agent_router_v1",
+    id: "agent_router",
     name: "Intent Router",
     slug: "intent-router",
     description: "Classifies user input and dispatches to the right specialist agent.",
@@ -194,15 +304,22 @@ export const agentFlows: AgentFlow[] = [
     version: "v1.2.0",
     status: "active",
     tags: ["classifier", "fast"],
+    codeLevel: "lowcode",
     fanIn: [{ label: "Input", meta: "text", icon: "Send", variant: "input" }],
     fanOut: [
       { label: "Gemini 2.5 Flash Lite", meta: "temp 0.0", icon: "Brain", variant: "llm" },
       { label: "Route Decision", meta: "json", icon: "Send", variant: "output" },
     ],
     rags: [],
+    envStatus: {
+      dev: { status: "active", version: "v1.2.0" },
+      staging: { status: "active", version: "v1.2.0" },
+      production: { status: "active", version: "v1.2.0" },
+    },
+    repoUrl: "https://github.com/inspire-ai/agent-intent-router",
   },
   {
-    id: "agent_sql_v2",
+    id: "agent_sql",
     name: "SQL Analyst",
     slug: "sql-analyst",
     description: "Generates and executes safe parameterized queries on warehouse.",
@@ -212,6 +329,7 @@ export const agentFlows: AgentFlow[] = [
     version: "v2.1.0",
     status: "error",
     tags: ["function-calling", "guardrails"],
+    codeLevel: "lowcode",
     fanIn: [{ label: "Question", meta: "natural language", icon: "Send", variant: "input" }],
     fanOut: [
       { label: "GPT-5 mini", meta: "temp 0.1", icon: "Brain", variant: "llm" },
@@ -219,9 +337,15 @@ export const agentFlows: AgentFlow[] = [
       { label: "Result Set", meta: "json", icon: "Send", variant: "output" },
     ],
     rags: [{ id: "rag_schema_catalog", name: "Schema Catalog", meta: "pgvector · 12 schemas" }],
+    envStatus: {
+      dev: { status: "error", version: "v2.1.0" },
+      staging: { status: "active", version: "v2.0.0" },
+      production: { status: "active", version: "v2.0.0" },
+    },
+    repoUrl: "https://github.com/inspire-ai/agent-sql-analyst",
   },
   {
-    id: "agent_critic_v2",
+    id: "agent_critic",
     name: "Critic Reviewer",
     slug: "critic",
     description: "Reviews outputs against rubric and triggers revision loops.",
@@ -231,15 +355,22 @@ export const agentFlows: AgentFlow[] = [
     version: "v2.0.0",
     status: "draft",
     tags: ["self-reflect", "evaluator"],
+    codeLevel: "lowcode",
     fanIn: [{ label: "Draft Payload", meta: "json", icon: "Send", variant: "input" }],
     fanOut: [
       { label: "Gemini 2.5 Flash", meta: "temp 0.3", icon: "Brain", variant: "llm" },
       { label: "Verdict", meta: "json", icon: "Send", variant: "output" },
     ],
     rags: [{ id: "rag_rubrics", name: "Quality Rubrics", meta: "pgvector · 80 docs" }],
+    envStatus: {
+      dev: { status: "draft", version: "v2.0.0" },
+      staging: { status: "not_deployed", version: "-" },
+      production: { status: "not_deployed", version: "-" },
+    },
+    repoUrl: "https://github.com/inspire-ai/agent-critic-reviewer",
   },
   {
-    id: "agent_summarizer_v1",
+    id: "agent_summarizer",
     name: "Summarizer",
     slug: "summarizer",
     description: "Produces hierarchical summaries with citations.",
@@ -249,12 +380,20 @@ export const agentFlows: AgentFlow[] = [
     version: "v1.1.0",
     status: "active",
     tags: ["map-reduce", "citations"],
+    codeLevel: "lowcode",
     fanIn: [{ label: "Documents", meta: "text[]", icon: "Send", variant: "input" }],
     fanOut: [
       { label: "Gemini 2.5 Flash", meta: "temp 0.2", icon: "Brain", variant: "llm" },
       { label: "Summary", meta: "markdown", icon: "Send", variant: "output" },
     ],
     rags: [],
+    envStatus: {
+      dev: { status: "active", version: "v1.1.0" },
+      staging: { status: "active", version: "v1.1.0" },
+      production: { status: "active", version: "v1.0.0" },
+    },
+    hasConversation: true,
+    repoUrl: "https://github.com/inspire-ai/agent-summarizer",
   },
 ];
 
@@ -296,4 +435,38 @@ export function setAgentFlowStatus(id: string, status: AgentFlow["status"]) {
 export function setAppStatus(id: string, status: "active" | "draft" | "error") {
   setOrchestrationStatus(id, status);
   setAgentFlowStatus(id, status);
+}
+
+export function setAppEnvStatus(id: string, environment: string, status: "active" | "draft" | "error" | "not_deployed") {
+  const o = orchestrations.find((x) => x.id === id);
+  if (o) {
+    if (!o.envStatus) o.envStatus = {};
+    o.envStatus[environment] = { ...o.envStatus[environment], status };
+  }
+  const a = agentFlows.find((x) => x.id === id);
+  if (a) {
+    if (!a.envStatus) a.envStatus = {};
+    a.envStatus[environment] = { ...a.envStatus[environment], status };
+  }
+}
+
+export function getAppVersion(id: string): string {
+  const o = orchestrations.find((x) => x.id === id);
+  if (o) return o.version;
+  const a = agentFlows.find((x) => x.id === id);
+  if (a) return a.version;
+  return "v0.1.0";
+}
+
+export function bumpAppVersion(id: string): string {
+  const bump = (v: string) => {
+    const match = v.match(/^v?(\d+)\.(\d+)\.(\d+)$/);
+    if (!match) return "v0.2.0";
+    return `v${match[1]}.${Number(match[2]) + 1}.0`;
+  };
+  const o = orchestrations.find((x) => x.id === id);
+  if (o) { o.version = bump(o.version); return o.version; }
+  const a = agentFlows.find((x) => x.id === id);
+  if (a) { a.version = bump(a.version); return a.version; }
+  return "v0.2.0";
 }

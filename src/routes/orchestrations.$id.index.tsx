@@ -1,5 +1,5 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -22,12 +22,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Pencil, Users, User, GitBranch, Bot, Building2 } from "lucide-react";
+import { ArrowLeft, Pencil, Users, User, GitBranch, Bot, Building2, Server, Cloud, Monitor, Code2 } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
 import { getOrchestration, updateOrchestration, type OrchestrationFlow } from "@/data/flows";
 import { deriveFanIn, deriveFanOut } from "@/data/flowStore";
 import { FanDiagram } from "@/components/flow/FanDiagram";
-import { PipelineSection } from "@/components/sections/PipelineSection";
+import { PipelineSection, DeploySection } from "@/components/sections/PipelineSection";
 import { ObservabilitySection } from "@/components/sections/ObservabilitySection";
+import { useEnvironment } from "@/lib/EnvironmentContext";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -39,7 +41,7 @@ export const Route = createFileRoute("/orchestrations/$id/")({
   },
   head: ({ loaderData }) => ({
     meta: [
-      { title: `${loaderData?.flow.name ?? "Orchestration"} · Synapse` },
+      { title: `${loaderData?.flow.name ?? "Orchestration"} · OrkestrAI` },
       { name: "description", content: loaderData?.flow.description ?? "" },
     ],
   }),
@@ -47,7 +49,7 @@ export const Route = createFileRoute("/orchestrations/$id/")({
     <AppLayout title="Not found">
       <div className="p-6 text-sm text-muted-foreground">
         Orchestration not found.{" "}
-        <Link to="/" className="text-primary underline">
+        <Link to="/orchestrations" className="text-primary underline">
           Back to list
         </Link>
       </div>
@@ -60,15 +62,54 @@ const statusMap = {
   active: "border-success/40 text-success",
   draft: "border-warning/40 text-warning",
   error: "border-destructive/40 text-destructive",
+  deploying: "border-blue-400/40 text-blue-400",
 };
 
 function OrchestrationDetail() {
-  const { flow } = Route.useLoaderData() as { flow: OrchestrationFlow };
-  const storedFanIn = deriveFanIn(flow.id, "orchestration");
-  const storedFanOut = deriveFanOut(flow.id, "orchestration");
-  const fanIn = storedFanIn.length > 0 ? storedFanIn : flow.fanIn;
-  const fanOut = storedFanOut.length > 0 ? storedFanOut : flow.fanOut;
+  const { flow: initialFlow } = Route.useLoaderData() as { flow: OrchestrationFlow };
+  const { activeEnv } = useEnvironment();
+  const [flow, setFlow] = useState(initialFlow);
+  
+  // Recarregar o fluxo quando a janela volta para o foco ou aba fica visível
+  useEffect(() => {
+    const handleFocus = () => {
+      const updatedFlow = getOrchestration(initialFlow.id);
+      if (updatedFlow) {
+        setFlow(updatedFlow);
+      }
+    };
+    
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        const updatedFlow = getOrchestration(initialFlow.id);
+        if (updatedFlow) {
+          setFlow(updatedFlow);
+        }
+      }
+    };
+    
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [initialFlow.id]);
+  
+  // Calculate current version based on active environment
+  const currentVersion = flow.envStatus?.[activeEnv]?.version ?? flow.version;
+  
+  const { fanIn, fanOut } = useMemo(() => {
+    const storedFanIn = deriveFanIn(flow.id, "orchestration", activeEnv);
+    const storedFanOut = deriveFanOut(flow.id, "orchestration", activeEnv);
+    return {
+      fanIn: storedFanIn.length > 0 ? storedFanIn : flow.fanIn,
+      fanOut: storedFanOut.length > 0 ? storedFanOut : flow.fanOut,
+    };
+  }, [flow.id, activeEnv, flow.fanIn, flow.fanOut]);
 
+  const navigate = useNavigate();
   const [editOpen, setEditOpen] = useState(false);
   const [editDescription, setEditDescription] = useState(flow.description);
   const [editArea, setEditArea] = useState(flow.area);
@@ -97,52 +138,77 @@ function OrchestrationDetail() {
   return (
     <AppLayout title={flow.name} subtitle={`Orchestration · ${flow.version}`}>
       <div className="space-y-6 p-6">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <Button asChild variant="ghost" size="sm" className="-ml-2 mb-2 h-7 gap-1 text-muted-foreground">
-              <Link to="/">
-                <ArrowLeft className="h-3.5 w-3.5" /> Orchestrations
-              </Link>
-            </Button>
-            <div className="flex items-center gap-3">
-              <h1 className="font-display text-2xl font-bold tracking-tight">{flow.name}</h1>
-              <Badge variant="outline" className={cn("gap-1.5", statusMap[flow.status])}>
-                <span className="h-1.5 w-1.5 rounded-full bg-current" /> {flow.status}
-              </Badge>
-            </div>
-            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{flow.description}</p>
-            <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1.5">
-                <Users className="h-3.5 w-3.5" /> {flow.team}
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Building2 className="h-3.5 w-3.5" /> {flow.area}
-              </span>
-              <span className="flex items-center gap-1.5">
-                <User className="h-3.5 w-3.5" /> {flow.owner}
-              </span>
-              <span className="flex items-center gap-1.5 font-mono">
-                <GitBranch className="h-3.5 w-3.5" /> {flow.id}
-              </span>
-              <Button variant="ghost" size="sm" className="h-6 gap-1 px-1.5 text-xs text-muted-foreground hover:text-foreground" onClick={openEditDialog}>
-                <Pencil className="h-3 w-3" /> Edit
-              </Button>
-            </div>
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {flow.tags.map((t) => (
-                <Badge key={t} variant="secondary" className="text-[10px] font-normal">
-                  {t}
+        <div className="w-full">
+          <Button asChild variant="ghost" size="sm" className="-ml-2 mb-2 h-7 gap-1 text-muted-foreground">
+            <Link to="/orchestrations">
+              <ArrowLeft className="h-3.5 w-3.5" /> Orchestrations
+            </Link>
+          </Button>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="flex-1">
+              <h1 className="font-display text-3xl font-bold tracking-tight">{flow.name}</h1>
+              <div className="mt-2 flex items-center gap-2">
+                <Badge variant="outline" className={cn("gap-1 text-[10px]", statusMap[flow.status])}>
+                  <span className="h-1.5 w-1.5 rounded-full bg-current" /> <span>{flow.status}</span>
                 </Badge>
-              ))}
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    "gap-1.5 text-[10px]",
+                    flow.codeLevel === "lowcode"
+                      ? "border-primary/40 text-primary"
+                      : "border-warning/40 text-warning",
+                  )}
+                >
+                  {flow.codeLevel === "lowcode" ? <GitBranch className="h-3 w-3" /> : <Code2 className="h-3 w-3" />}
+                  {flow.codeLevel}
+                </Badge>
+              </div>
             </div>
-          </div>
-          {!flow.tags.includes("highcode") && (
-            <Button asChild size="sm" className="gap-1.5 bg-[image:var(--gradient-primary)] text-primary-foreground">
-              <Link to="/orchestrations/$id/edit" params={{ id: flow.id }}>
+            {!flow.tags.includes("highcode") && (
+              <Button 
+                size="sm" 
+                className="gap-1.5 bg-[image:var(--gradient-primary)] text-primary-foreground" 
+                onClick={() => navigate({ to: "/orchestrations/$id/edit", params: { id: flow.id } })}
+              >
                 <Pencil className="h-3.5 w-3.5" /> Edit flow
-              </Link>
+              </Button>
+            )}
+          </div>
+          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{flow.description}</p>
+          <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <Users className="h-3.5 w-3.5" /> {flow.team}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Building2 className="h-3.5 w-3.5" /> {flow.area}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <User className="h-3.5 w-3.5" /> {flow.owner}
+            </span>
+            <span className="flex items-center gap-1.5 text-info font-semibold">{currentVersion}</span>
+            {flow.repoUrl && (
+              <a 
+                href={flow.repoUrl} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 text-primary hover:underline"
+              >
+                <Code2 className="h-3.5 w-3.5" />
+                {flow.repoUrl.split('/').pop()?.replace('.git', '') || 'Repository'}
+              </a>
+            )}
+            <Button variant="ghost" size="sm" className="h-6 gap-1 px-1.5 text-xs text-muted-foreground hover:text-foreground" onClick={openEditDialog}>
+              <Pencil className="h-3 w-3" /> Edit
             </Button>
-          )}
+          </div>
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {flow.tags.map((t) => (
+              <Badge key={t} variant="secondary" className="text-[10px] font-normal">
+                {t}
+              </Badge>
+            ))}
+          </div>
         </div>
 
         <Dialog open={editOpen} onOpenChange={setEditOpen}>
@@ -233,14 +299,18 @@ function OrchestrationDetail() {
 
         <Tabs defaultValue="pipeline" className="w-full">
           <TabsList>
-            <TabsTrigger value="pipeline">Pipeline & Deploy</TabsTrigger>
+            <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
+            <TabsTrigger value="deploy">Deploy</TabsTrigger>
             <TabsTrigger value="observability">Observability</TabsTrigger>
           </TabsList>
           <TabsContent value="pipeline" className="mt-4">
-            <PipelineSection flowName={flow.slug} />
+            <PipelineSection flowName={flow.slug} environment={activeEnv} flowStatus={flow.status} />
+          </TabsContent>
+          <TabsContent value="deploy" className="mt-4">
+            <DeploySection flowName={flow.slug} flowId={flow.id} environment={activeEnv} mode="orchestration" />
           </TabsContent>
           <TabsContent value="observability" className="mt-4">
-            <ObservabilitySection />
+            <ObservabilitySection flowType="orchestration" />
           </TabsContent>
         </Tabs>
       </div>

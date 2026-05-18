@@ -1,0 +1,195 @@
+@startuml OrkestrAI_Components
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title OrkestrAI - Component Diagram (Level 3)
+
+Container_Boundary(platform_engine, "PLATFORM ENGINE") {
+    Component(llm_gateway, "LLM Gateway", "Node.js Service", "Acesso a três LLMs\n- Serpro LLM\n- OpenAI LLM\n- Google LLM\n- Fallback automático\n- Token counting\n- Cost tracking\n- Streaming")
+    
+    Component(rag_gateway, "RAG Gateway", "Node.js Service", "Busca semântica unificada\n- Lê config do PostgreSQL\n- Weaviate, Pinecone, Milvus, Qdrant\n- Gerenciamento de collections\n- Ranking de resultados")
+    
+    Component(api_gateway_comp, "External API Gateway", "Node.js Service", "Integração com APIs externas\n- REST, GraphQL, SOAP\n- Retry logic\n- Error handling\n- Timeout management\n- Caching")
+    
+    Component(mcp_gateway, "MCP Server Gateway", "Node.js Service", "Acesso a MCP Server Serpro\n- Tools, Resources, Prompts\n- Integração com agentes IA")
+    
+    Component(resource_mgr, "Resource Manager", "Node.js Service", "Gerenciamento de recursos\n- Cache (Redis)\n- Filas (Bull)\n- Object storage (S3)\n- Armazenamento (MongoDB)")
+    
+    Component(auth_mgr, "Auth Manager", "Node.js Service", "Autenticação e Autorização\n- Gov Auth integration\n- RBAC\n- Secrets management (Vault)\n- Audit logging")
+    
+    Component(quota_mgr, "Quota Manager", "Node.js Service", "Controle de quotas\n- Quotas por usuário\n- Quotas por serviço\n- Throttling automático")
+}
+
+Container_Boundary(flow_engine, "FLOW ENGINE") {
+    Component(flow_compiler, "Flow Compiler", "Node.js Service", "Compilação e otimização\n- Validação de flows\n- Otimização de execução\n- Geração de código")
+    
+    Component(flow_executor, "Flow Executor", "Node.js Service", "Execução de workflows\n- Orquestração de nós\n- Gerenciamento de estado\n- Error handling\n- Retry logic\n- Executa aplicações")
+    
+    Component(flow_deployer, "Flow Deployer", "Node.js Service", "Deploy via Jenkins API\n- Acessa Jenkins\n- Escalabilidade automática\n- Rollback de versões\n- Gerenciamento de ciclo de vida")
+    
+    Component(flow_environment, "Flow Environment", "Node.js Service", "Gerenciamento Kubernetes\n- Interage com Kubernetes\n- Configuração de recursos\n- Escalabilidade de pods\n- Health checks")
+    
+    Component(flow_versioning, "Flow Versioning", "Node.js Service", "Controle de versão com Git\n- Comparação entre versões\n- Rollback automático\n- Tags de versão")
+}
+
+Container_Boundary(plugin_services, "PLUGIN SERVICES") {
+    Component(llm_plugin, "LLM Plugin", "Node.js/Python", "Extensão de LLMs\n- Gerenciar provedores\n- Configurações customizadas")
+    
+    Component(rag_plugin, "RAG Plugin", "Python Service", "Extensão de RAG\n- Embeddings customizados\n- Chunking strategies\n- Reranking")
+    
+    Component(workflow_plugin, "Workflow Plugin", "Node.js Service", "Tipos de nós customizados\n- Custom node types\n- Validação customizada")
+    
+    Component(analytics_plugin, "Analytics Plugin", "Node.js Service", "Análise de execuções\n- Estatísticas\n- Relatórios\n- Insights")
+    
+    Component(observability_plugin, "Observability Plugin", "Node.js Service", "Grafana + Alertas\n- Regras de alerta\n- Notificações\n- Escalation")
+    
+    Component(alerts_plugin, "Alerts Management Plugin", "Node.js Service", "Gerenciamento de alertas\n- Criar/editar alertas\n- Configurar notificações\n- Histórico de alertas\n- Integra com AlertManager")
+}
+
+Container_Boundary(frontend_components, "FRONTEND COMPONENTS") {
+    Component(web_shell, "Web Shell", "React 19", "Aplicação principal\n- Layout base\n- Roteamento\n- Autenticação")
+    
+    Component(flow_designer_ui, "Flow Designer UI", "React Component", "Editor visual (Frontend)\n- XYFlow para visualização\n- Drag-and-drop\n- Validação em tempo real")
+    
+    Component(plugin_mgmt_ui, "Plugin Management UI", "React Component", "Gerenciamento de plugins\n- Instalação\n- Configuração\n- Monitoramento")
+    
+    Component(observability_ui, "Observability UI", "React Component", "Dashboards Grafana\n- Métricas em tempo real\n- Logs\n- Traces")
+    
+    Component(executions_ui, "Executions UI", "React Component", "Histórico de execuções\n- Logs de execução\n- Status de flows\n- Detalhes de nós")
+}
+
+Container_Boundary(data_access, "DATA ACCESS LAYER") {
+    Component(postgres_driver, "PostgreSQL Driver", "Node.js", "Acesso a dados estruturados\n- Flows\n- Configurações RAG\n- Usuários")
+    
+    Component(mongodb_driver, "MongoDB Driver", "Node.js", "Acesso a dados não-estruturados\n- Resource Manager\n- Eventos")
+    
+    Component(vector_db_driver, "Vector DB Driver", "Node.js/Python", "Acesso a embeddings\n- Weaviate\n- Pinecone")
+    
+    Component(redis_driver, "Redis Driver", "Node.js", "Cache e filas\n- Cache distribuído\n- Bull queues")
+    
+    Component(s3_driver, "S3 Driver", "Node.js", "Object storage\n- Arquivos\n- Modelos")
+}
+
+Container_Boundary(observability_components, "OBSERVABILITY COMPONENTS") {
+    Component(execution_collector, "Execution Collection", "Node.js Service", "Coleta logs de execução\n- Deployed Applications\n- Gateways (LLM, RAG, API, MCP)\n- Flow Executor\n- Armazena histórico\n- Correlação com Trace ID")
+    
+    Component(flow_executions_api, "Flow Executions API", "Node.js Service", "Acesso a histórico\n- Disponibiliza execuções\n- Integra com Flow Engine\n- Indexa em Elasticsearch\n- Exibe no frontend")
+    
+    Component(alert_manager_comp, "AlertManager", "Alerting Service", "Gerenciamento de alertas\n- Recebe alertas do Prometheus\n- Agrupa e deduplica\n- Roteia notificações\n- Integra com plugins")
+    
+    Component(otel_sdk, "OpenTelemetry SDK", "Node.js/Python", "Instrumentação\n- Traces\n- Metrics\n- Logs")
+    
+    Component(otel_exporter, "OpenTelemetry Exporter", "Node.js/Python", "Exportação de dados\n- Prometheus\n- Tempo\n- Loki")
+    
+    Component(langfuse_exporter, "LangFuse Exporter", "Node.js", "Exportação LLM\n- Métricas → Prometheus\n- Traces → Tempo")
+    
+    Component(metrics_collector, "Metrics Collector", "Node.js", "Coleta de métricas\n- CPU, Memory\n- Request latency\n- Error rates")
+    
+    Component(trace_collector, "Trace Collector", "Node.js", "Coleta de traces\n- Distributed tracing\n- Span correlation")
+    
+    Component(log_collector, "Log Collector", "Node.js", "Coleta de logs\n- Structured logging\n- Log correlation")
+}
+
+Container_Boundary(security_components, "SECURITY COMPONENTS") {
+    Component(auth_provider, "Gov Auth", "External Service", "Autenticação\n- Governamental\n- Integração OIDC")
+    
+    Component(secrets_manager, "Secrets Manager", "Vault", "Gerenciamento de secrets\n- Armazenamento seguro\n- Rotação automática\n- Audit logging")
+    
+    Component(rbac_engine, "RBAC Engine", "Node.js", "Controle de acesso\n- Roles\n- Permissions\n- Fine-grained access")
+}
+
+Container_Boundary(external_integrations, "EXTERNAL INTEGRATIONS") {
+    Component(serpro_llm_api, "Serpro LLM API", "External", "LLM Governamental")
+    Component(openai_api, "OpenAI API", "External", "GPT-4, GPT-3.5")
+    Component(google_api, "Google LLM API", "External", "Gemini, PaLM")
+    Component(serpro_mcp_api, "Serpro MCP API", "External", "Model Context Protocol")
+    Component(jenkins_api, "Jenkins API", "External", "CI/CD Deploy")
+    Component(kubernetes_api, "Kubernetes API", "External", "Container Orchestration")
+}
+
+Rel(flow_compiler, flow_executor, "Envia compiled flow")
+Rel(flow_executor, flow_deployer, "Requisita deploy")
+Rel(flow_deployer, flow_environment, "Gerencia ambiente")
+Rel(flow_environment, kubernetes_api, "Interage")
+
+Rel(flow_executor, llm_gateway, "Usa")
+Rel(flow_executor, rag_gateway, "Usa")
+Rel(flow_executor, api_gateway_comp, "Usa")
+Rel(flow_executor, mcp_gateway, "Usa")
+Rel(flow_executor, resource_mgr, "Usa")
+
+Rel(llm_gateway, auth_mgr, "Valida")
+Rel(rag_gateway, auth_mgr, "Valida")
+Rel(api_gateway_comp, auth_mgr, "Valida")
+Rel(mcp_gateway, auth_mgr, "Valida")
+
+Rel(auth_mgr, quota_mgr, "Aplica quotas")
+
+Rel(flow_compiler, postgres_driver, "Lê")
+Rel(flow_executor, postgres_driver, "Lê/Escreve")
+Rel(flow_deployer, postgres_driver, "Persiste")
+
+Rel(flow_executor, mongodb_driver, "Escreve logs")
+
+Rel(rag_gateway, postgres_driver, "Lê config")
+Rel(rag_gateway, vector_db_driver, "Consulta")
+Rel(resource_mgr, redis_driver, "Usa")
+Rel(resource_mgr, s3_driver, "Usa")
+Rel(resource_mgr, mongodb_driver, "Usa")
+
+Rel(flow_executor, otel_sdk, "Instrumenta")
+Rel(otel_sdk, otel_exporter, "Exporta")
+Rel(otel_exporter, metrics_collector, "Envia")
+Rel(otel_exporter, trace_collector, "Envia")
+Rel(otel_exporter, log_collector, "Envia")
+
+Rel(flow_executor, langfuse_exporter, "Rastreia LLM")
+Rel(langfuse_exporter, metrics_collector, "Exporta métricas")
+Rel(langfuse_exporter, trace_collector, "Exporta traces")
+
+Rel(flow_executor, execution_collector, "Envia logs")
+Rel(llm_gateway, execution_collector, "Envia logs")
+Rel(rag_gateway, execution_collector, "Envia logs")
+Rel(api_gateway_comp, execution_collector, "Envia logs")
+Rel(mcp_gateway, execution_collector, "Envia logs")
+
+Rel(execution_collector, flow_executions_api, "Armazena")
+Rel(flow_executions_api, flow_executor, "Disponibiliza")
+
+Rel(prometheus, alert_manager_comp, "Envia alertas")
+Rel(alert_manager_comp, postgres_driver, "Salva configurações")
+Rel(alerts_plugin, alert_manager_comp, "Gerencia")
+Rel(alerts_plugin, postgres_driver, "Persiste config")
+
+Rel(llm_plugin, llm_gateway, "Gerencia")
+Rel(rag_plugin, rag_gateway, "Gerencia")
+Rel(workflow_plugin, flow_compiler, "Estende")
+Rel(analytics_plugin, postgres_driver, "Consulta")
+Rel(observability_plugin, grafana, "Integra")
+
+Rel(flow_executor, auth_provider, "Valida tokens")
+Rel(flow_executor, secrets_manager, "Consulta secrets")
+Rel(flow_executor, rbac_engine, "Valida permissões")
+
+Rel(web_shell, flow_designer_ui, "Carrega")
+Rel(web_shell, plugin_mgmt_ui, "Carrega")
+Rel(web_shell, observability_ui, "Carrega")
+Rel(web_shell, executions_ui, "Carrega")
+
+Rel(flow_designer_ui, flow_compiler, "Envia flow")
+Rel(plugin_mgmt_ui, llm_plugin, "Gerencia")
+Rel(plugin_mgmt_ui, rag_plugin, "Gerencia")
+Rel(plugin_mgmt_ui, workflow_plugin, "Gerencia")
+Rel(observability_ui, observability_plugin, "Acessa")
+Rel(executions_ui, flow_executions_api, "Consulta")
+
+Rel(llm_gateway, serpro_llm_api, "Chama")
+Rel(llm_gateway, openai_api, "Chama")
+Rel(llm_gateway, google_api, "Chama")
+
+Rel(mcp_gateway, serpro_mcp_api, "Acessa")
+
+Rel(flow_deployer, jenkins_api, "Acessa")
+
+Rel(flow_versioning, postgres_driver, "Persiste refs Git")
+
+@enduml

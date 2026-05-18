@@ -21,7 +21,8 @@ import {
   Container,
   Server,
 } from "lucide-react";
-import { setAppStatus } from "@/data/flows";
+import { setAppStatus, setAppEnvStatus, bumpAppVersion } from "@/data/flows";
+import { incrementVersion } from "@/data/flowStore";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -29,6 +30,8 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   flowName?: string;
   appId?: string;
+  environment?: string;
+  onDeployDone?: (newVersion: string) => void;
 }
 
 type StageState = "idle" | "running" | "done";
@@ -48,7 +51,7 @@ const STAGES: Stage[] = [
   { key: "deploy", name: "Deploy → dev", icon: Server, description: "kubectl rollout · agents-dev", duration: 1500 },
 ];
 
-export function DeployPipelineDialog({ open, onOpenChange, flowName = "flow", appId }: Props) {
+export function DeployPipelineDialog({ open, onOpenChange, flowName = "flow", appId, environment, onDeployDone }: Props) {
   const [states, setStates] = useState<Record<string, StageState>>({});
   const [done, setDone] = useState(false);
 
@@ -66,7 +69,15 @@ export function DeployPipelineDialog({ open, onOpenChange, flowName = "flow", ap
         setStates((prev) => ({ ...prev, [s.key]: "done" }));
       }
       setDone(true);
-      if (appId) setAppStatus(appId, "active");
+      if (appId) {
+        setAppStatus(appId, "active");
+        if (environment) {
+          setAppEnvStatus(appId, environment, "active");
+        }
+        const newVer = bumpAppVersion(appId);
+        incrementVersion(appId);
+        onDeployDone?.(newVer);
+      }
     })();
     return () => { cancelled = true; };
   }, [open]);

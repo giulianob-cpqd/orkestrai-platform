@@ -1,0 +1,49 @@
+<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7B3FE4"></stop>
+      <stop offset="100%" stop-color="#2A7FFF"></stop>
+    </linearGradient>
+  </defs>
+
+  <!-- Círculo central -->
+  <circle cx="128" cy="128" r="36" fill="none" stroke="url(#grad)" stroke-width="6"></circle>
+  
+  <!-- Ponteiro (orquestração) -->
+  <line x1="128" y1="128" x2="160" y2="96" stroke="url(#grad)" stroke-width="6" stroke-linecap="round"></line>
+  <circle cx="128" cy="128" r="5" fill="url(#grad)"></circle>
+
+  <!-- Órbita -->
+  <circle cx="128" cy="128" r="80" fill="none" stroke="url(#grad)" stroke-width="3" stroke-dasharray="6,10"></circle>
+
+  <!-- Nós (agentes) -->
+  <g fill="url(#grad)">
+    <circle cx="128" cy="48" r="10"></circle>
+    <circle cx="196" cy="80" r="10"></circle>
+    <circle cx="196" cy="176" r="10"></circle>
+    <circle cx="128" cy="208" r="10"></circle>
+    <circle cx="60" cy="176" r="10"></circle>
+    <circle cx="60" cy="80" r="10"></circle>
+  </g>
+
+  <!-- "Olhos" dos agentes -->
+  <g fill="white">
+    <circle cx="124" cy="48" r="2"></circle>
+    <circle cx="132" cy="48" r="2"></circle>
+
+    <circle cx="192" cy="80" r="2"></circle>
+    <circle cx="200" cy="80" r="2"></circle>
+
+    <circle cx="192" cy="176" r="2"></circle>
+    <circle cx="200" cy="176" r="2"></circle>
+
+    <circle cx="124" cy="208" r="2"></circle>
+    <circle cx="132" cy="208" r="2"></circle>
+
+    <circle cx="56" cy="176" r="2"></circle>
+    <circle cx="64" cy="176" r="2"></circle>
+
+    <circle cx="56" cy="80" r="2"></circle>
+    <circle cx="64" cy="80" r="2"></circle>
+  </g>
+</svg>

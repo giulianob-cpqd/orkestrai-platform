@@ -48,6 +48,7 @@
   --color-node-mcp: var(--node-mcp);
   --color-node-output: var(--node-output);
   --color-node-memory: var(--node-memory);
+  --color-node-conversation: var(--node-conversation);
   --color-node-db: var(--node-db);
   --color-node-cloud: var(--node-cloud);
   --color-node-endpoint: var(--node-endpoint);
@@ -63,9 +64,14 @@
   --color-node-router: var(--node-router);
   --color-node-scripttask: var(--node-scripttask);
   --color-node-humantask: var(--node-humantask);
+  --color-node-humaninfo: var(--node-humaninfo);
   --color-node-loop: var(--node-loop);
   --color-node-validator: var(--node-validator);
   --color-node-merge: var(--node-merge);
+  --color-node-grpcreq: var(--node-grpcreq);
+  --color-node-grpcres: var(--node-grpcres);
+  --color-node-wsreq: var(--node-wsreq);
+  --color-node-wsres: var(--node-wsres);
 
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
@@ -125,6 +131,7 @@
   --node-mcp: oklch(0.75 0.18 155);     /* green */
   --node-output: oklch(0.7 0.2 25);     /* coral */
   --node-memory: oklch(0.74 0.16 330);  /* pink */
+  --node-conversation: oklch(0.76 0.17 200); /* teal */
   --node-db: oklch(0.7 0.15 210);       /* steel blue */
   --node-cloud: oklch(0.78 0.13 250);   /* periwinkle */
   --node-endpoint: oklch(0.78 0.18 50); /* orange */
@@ -140,9 +147,14 @@
   --node-router: oklch(0.72 0.18 320);  /* magenta */
   --node-scripttask: oklch(0.76 0.14 200); /* steel cyan */
   --node-humantask: oklch(0.78 0.16 55);   /* warm orange */
+  --node-humaninfo: oklch(0.75 0.16 200);  /* steel cyan */
   --node-loop: oklch(0.74 0.17 270);       /* indigo */
   --node-validator: oklch(0.76 0.16 160);  /* emerald */
   --node-merge: oklch(0.72 0.15 240);      /* slate blue */
+  --node-grpcreq: oklch(0.76 0.16 170);   /* teal */
+  --node-grpcres: oklch(0.76 0.16 170);   /* teal */
+  --node-wsreq: oklch(0.78 0.15 290);     /* lavender */
+  --node-wsres: oklch(0.78 0.15 290);     /* lavender */
 
   --sidebar: oklch(0.16 0.02 260);
   --sidebar-foreground: oklch(0.92 0.01 240);
@@ -233,4 +245,9 @@
   .react-flow__attribution {
     display: none;
   }
+}
+
+@keyframes pulse-border {
+  0%, 100% { border-color: var(--primary); }
+  50% { border-color: color-mix(in oklch, var(--primary) 40%, transparent); }
 }

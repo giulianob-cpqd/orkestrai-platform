@@ -1,0 +1,147 @@
+@startuml OrkestrAI_Containers
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title OrkestrAI - Container Diagram (Level 2)
+
+Container_Boundary(core_engines, "Core Engines Layer") {
+    Container_Boundary(platform_engine, "Platform Engine") {
+        Container(llm_gateway, "LLM Gateway", "Node.js", "Serpro LLM, OpenAI, Google")
+        Container(rag_gateway, "RAG Gateway", "Node.js", "Busca semântica (config PostgreSQL)")
+        Container(api_gateway_comp, "External API Gateway", "Node.js", "REST, GraphQL, SOAP")
+        Container(mcp_gateway, "MCP Server Gateway", "Node.js", "Serpro MCP Server")
+        Container(resource_mgr, "Database Manager", "Node.js", "Redis, Bull, S3, MongoDB")
+        Container(auth_mgr, "Auth Manager", "Node.js", "Gov Auth + Autorização")
+        Container(quota_mgr, "Quota Manager", "Node.js", "Quotas por usuário/serviço")
+        Container(alert_manager, "AlertManager", "Alerting", "Gerenciamento de alertas")
+        Container(observability_watch, "Observability Watch", "Observability", "Disponibiliza métricas, traces e logs")
+        Container(template_manager, "Template Manager", "Template", "Gerenciamento de templates")
+
+      System_Boundary(flow_engine, "Flow Engine") {
+          Component(flow_compiler, "Flow Compiler", "Node.js", "Validação e Otimização")
+          Component(flow_deployer, "Flow Deployer", "Node.js", "Deploy via Jenkins API")
+          Component(flow_environment, "Flow Environment", "Node.js", "Gerenciamento Kubernetes")
+          Component(flow_versioning, "Flow Versioning", "Node.js", "Controle de versão Git")
+      }
+    }
+    
+}
+
+Container_Boundary(deployed_apps, "Deployed Applications") {
+    Container(deployed_app, "Deployed Flow App", "Kubernetes Pod", "Aplicação deployada (única)")
+}
+
+Container_Boundary(external_services, "AI Services") {
+    Container_Ext(serpro_llm, "Serpro LLM", "External API", "LLM Governamental")
+    Container_Ext(openai_llm, "OpenAI LLM", "External API", "GPT-4, GPT-3.5")
+    Container_Ext(google_llm, "Google LLM", "External API", "Gemini, PaLM")
+    Container_Ext(serpro_mcp, "Serpro MCP Server", "External API", "Model Context Protocol")
+}
+
+Container_Boundary(cicd, "Pipeline CI/CD") {
+    Container(jenkins, "Jenkins", "External API", "CI/CD e Deploy")
+}
+
+Container_Boundary(data_layer, "Data Layer") {
+    ContainerDb(postgres, "PostgreSQL", "Relational DB", "Flows, config RAG, usuários")
+    ContainerDb(mongodb, "MongoDB", "Document DB", "Resource Manager, eventos")
+    ContainerDb(vector_db, "Qdrant", "Vector DB", "Embeddings Vector para RAG")
+    ContainerDb(graph_db, "neo4j", "Graph DB", "Embeddings Graph para RAG")
+    ContainerDb(redis, "Redis", "In-Memory DB", "Cache distribuído, Bull queues")
+    ContainerDb(elastisearch, "Elastisearch", "Logs DB", "Consultas indexadas de logs")
+    ContainerDb(s3, "S3 (MinIO)", "Object Storage", "Arquivos e modelos")
+}
+
+Container_Boundary(messaging, "Messaging & Events") {
+    ContainerQueue(kafka, "Apache Kafka", "Event Streaming", "Eventos do sistema")
+}
+
+Container_Boundary(observability, "Observability Stack") {
+    Container(execution_collector, "Execution Collection", "Collector", "Logs de execução de flows")
+    Container(otel_collector, "OpenTelemetry Collector", "Collector", "Coleta de dados")
+    Container(prometheus, "Prometheus", "Metrics", "Coleta de métricas")
+    Container(tempo, "Grafana Tempo", "Tracing", "Rastreamento distribuído")
+    Container(loki, "Loki", "Logs", "Agregação de logs")
+    Container(langfuse, "LangFuse", "LLM Obs", "Rastreamento LLM")
+}
+
+Container_Boundary(security, "Security & Auth") {
+    Container_Ext(gov_auth, "Gov Auth", "External API", "Autenticação Governamental")
+    Container(vault, "HashiCorp Vault", "Secrets Manager", "Gerenciamento de secrets")
+}
+
+Container_Boundary(repository, "Repository") {
+    Container_Ext(git, "Git", "Repositiry", "Gerencia Repositórios")
+}
+
+Container_Boundary(alert_services, "Alert Services") {
+    Container_Ext(slack, "Slack API", "External API", "Serviço do Slack")
+    Container_Ext(whatsapp, "WhatsApp API", "External API", "Serviço do WhatsApp")
+    Container_Ext(email, "E-mail", "External API", "Serviço de E-mail")
+}
+
+Rel(flow_compiler, postgres, "Lê")
+Rel(flow_deployer, postgres, "Persiste")
+
+Rel(deployed_app, platform_engine, "Acessa")
+
+Rel(flow_deployer, jenkins, "Acessa API")
+Rel(jenkins, deployed_app, "Deploy")
+
+Rel(flow_environment, deployed_app, "Gerencia")
+
+Rel(llm_gateway, serpro_llm, "Chama")
+Rel(llm_gateway, openai_llm, "Chama")
+Rel(llm_gateway, google_llm, "Chama")
+
+Rel(mcp_gateway, serpro_mcp, "Acessa")
+
+Rel(rag_gateway, postgres, "Lê config")
+Rel(rag_gateway, vector_db, "Consulta")
+Rel(rag_gateway, graph_db, "Consulta")
+
+Rel(quota_mgr, postgres, "Lê/Grava config")
+
+Rel(resource_mgr, redis, "Usa")
+Rel(resource_mgr, s3, "Usa")
+Rel(resource_mgr, mongodb, "Usa")
+
+Rel(auth_mgr, gov_auth, "Valida")
+Rel(auth_mgr, vault, "Consulta secrets")
+
+Rel(deployed_app, kafka, "Publica eventos")
+
+Rel(deployed_app, otel_collector, "Envia dados")
+
+Rel(otel_collector, prometheus, "Exporta métricas")
+Rel(otel_collector, tempo, "Exporta traces")
+Rel(otel_collector, loki, "Exporta logs")
+
+Rel(langfuse, prometheus, "Exporta métricas")
+Rel(langfuse, tempo, "Exporta traces")
+
+Rel(prometheus, alert_manager, "Envia alertas")
+Rel(alert_manager, postgres, "Salva configurações")
+
+Rel(alert_manager, slack, "Envia mensagem")
+Rel(alert_manager, whatsapp, "Envia mensagem")
+Rel(alert_manager, email, "Envia mensagem")
+
+Rel(deployed_app, langfuse, "Rastreia LLM")
+
+Rel(llm_gateway, execution_collector, "Envia logs")
+Rel(rag_gateway, execution_collector, "Envia logs")
+Rel(mcp_gateway, execution_collector, "Envia logs")
+Rel(deployed_app, execution_collector, "Envia logs")
+
+Rel(execution_collector, elastisearch, "Indexa logs")
+
+Rel(flow_versioning, git, "Acessa/Cria")
+
+Rel(observability_watch, prometheus, "Consulta")
+Rel(observability_watch, tempo, "Consulta")
+Rel(observability_watch, loki, "Consulta")
+
+Rel(template_manager, git, "Consulta/Cria")
+Rel(template_manager, postgres, "Gerencia")
+
+@enduml

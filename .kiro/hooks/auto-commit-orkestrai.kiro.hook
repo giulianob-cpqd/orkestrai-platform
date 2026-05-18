@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Auto-commit OrkestrAI Changes",
+  "description": "Automatically commit changes to the OrkestrAI platform repository after agent execution completes",
+  "version": "1",
+  "when": {
+    "type": "agentStop"
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "cd c:\\workspage_ia\\generative-agent-hub && git add -A && git commit -m \"Auto-commit: OrkestrAI platform updates\" && git push origin main"
+  }
+}
