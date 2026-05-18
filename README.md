@@ -1,6 +1,6 @@
-# Inspire — AI Low Code Platform
+# OrkestrAI — Agentic AI Platform
 
-Plataforma low-code para design, deploy e observabilidade de agentes de IA colaborativos. Permite criar orquestrações multi-agente através de uma interface visual drag-and-drop, gerenciar catálogos de LLMs, APIs, MCP Servers e RAGs.
+Plataforma completa para design, deploy e observabilidade de agentes de IA colaborativos. Permite criar orquestrações multi-agente através de uma interface visual drag-and-drop, gerenciar catálogos de modelos (LLMs, ML, Embeddings), APIs, MCP Servers, RAGs, datasets e conhecimento. Inclui recursos avançados como treinamento de modelos, testes automatizados, FinOps e governança.
 
 ## Stack Tecnológica
 
@@ -24,26 +24,45 @@ src/
 ├── components/
 │   ├── flow/           # FlowBuilder, AgentNode, FanDiagram, AI Assistant
 │   ├── sections/       # PipelineSection, ObservabilitySection
-│   └── ui/             # shadcn/ui components (button, card, dialog, etc.)
+│   ├── ui/             # shadcn/ui components (button, card, dialog, etc.)
+│   └── AppSidebar.tsx  # Navegação principal com seções: Overview, Build, Tests, Uses, Catalog, Governance
 ├── data/
-│   └── flows.ts        # Dados de orquestrações e agentes
+│   ├── flows.ts        # Dados de orquestrações e agentes
+│   ├── models.ts       # Catálogo de modelos (LLM, ML, Embeddings)
+│   ├── training.ts     # Dados de treinamentos e datasets
+│   ├── knowledge.ts    # Bases de conhecimento com documentos e versões
+│   ├── finops.ts       # Dados de custos e FinOps
+│   ├── quotas.ts       # Limites e quotas
+│   ├── alerts.ts       # Alertas e notificações
+│   ├── rags.ts         # Bases de RAG
+│   ├── executions.ts   # Histórico de execuções
+│   └── testSuites.ts   # Suites de testes
 ├── hooks/              # Custom hooks (use-mobile)
 ├── lib/
 │   ├── icons.ts        # Mapa centralizado de ícones (serializável para SSR)
-│   └── utils.ts        # Utilitários (cn, etc.)
+│   ├── utils.ts        # Utilitários (cn, etc.)
+│   └── EnvironmentContext.tsx # Contexto de ambiente
 ├── routes/             # File-based routing (TanStack Router)
-│   ├── index.tsx                       # Home — lista de orquestrações
-│   ├── orchestrations.$id.index.tsx    # Detalhe da orquestração
-│   ├── orchestrations.$id.edit.tsx     # Editor visual de fluxo
-│   ├── orchestrations.new.tsx          # Nova orquestração
-│   ├── agents.index.tsx                # Catálogo de agentes
-│   ├── agents.$id.index.tsx            # Detalhe do agente
-│   ├── agents.$id.edit.tsx             # Editor visual do agente
-│   ├── agents.new.tsx                  # Novo agente
-│   ├── llms.tsx                        # Catálogo de LLMs
+│   ├── dashboard.tsx                   # Dashboard principal
+│   ├── orchestrations.*.tsx            # Orquestrações
+│   ├── agents.*.tsx                    # Agentes
+│   ├── templates.*.tsx                 # Templates
+│   ├── knowledge.tsx                   # Bases de conhecimento
+│   ├── training.tsx                    # Treinamento de modelos
+│   ├── test-suites.tsx                 # Suite Cases (testes)
+│   ├── playground.tsx                  # Playground para testar modelos
+│   ├── conversations.tsx               # Histórico de conversas
+│   ├── executions.*.tsx                # Execuções
+│   ├── llms.tsx                        # Catálogo de modelos
 │   ├── apis.tsx                        # Catálogo de APIs
 │   ├── mcp.tsx                         # Catálogo de MCP Servers
-│   └── rags.tsx                        # Catálogo de RAGs
+│   ├── databases.tsx                   # Catálogo de bancos de dados
+│   ├── rags.tsx                        # Catálogo de RAGs
+│   ├── datasets.tsx                    # Catálogo de datasets
+│   ├── finops.tsx                      # FinOps e custos
+│   ├── quotas.tsx                      # Quotas e limites
+│   ├── alerts.tsx                      # Alertas
+│   └── login.tsx                       # Autenticação
 ├── router.tsx          # Configuração do router
 ├── routeTree.gen.ts    # Gerado automaticamente pelo TanStack Router
 └── styles.css          # Estilos globais + Tailwind
@@ -120,10 +139,36 @@ npx wrangler deploy
 
 ## Funcionalidades Principais
 
+### Build
 - **Orquestrações** — Fluxos multi-agente com editor visual drag-and-drop (React Flow)
 - **Agentes** — Catálogo de agentes individuais compostos por LLM, memória, RAG e ferramentas
-- **Fan-in / Fan-out** — Visualização de endpoints, filas e serviços que alimentam e são chamados por cada fluxo
-- **Pipeline & Deploy** — Seção de CI/CD e deploy para cada orquestração/agente
-- **Observabilidade** — Métricas e monitoramento dos fluxos
-- **AI Assistant** — Painel de assistente IA integrado ao editor de fluxos
-- **Catálogos** — Gestão de LLMs, APIs externas, MCP Servers e bases de conhecimento (RAGs)
+- **Templates** — Templates reutilizáveis para orquestrações e agentes
+- **Knowledge** — Bases de conhecimento com documentos, versões e integração com RAGs
+- **Training** — Treinamento de modelos LLM e ML com suporte a diferentes frameworks
+
+### Tests
+- **Suite Cases** — Testes automatizados para orquestrações e agentes
+- **Playground** — Ambiente interativo para testar modelos e conversas
+
+### Uses
+- **Executions** — Histórico e monitoramento de execuções
+- **Conversations** — Histórico de conversas com agentes
+
+### Catalog
+- **Models** — Catálogo de modelos (LLM, ML, Embeddings) com suporte a múltiplos provedores
+- **APIs** — Integração com APIs externas
+- **MCP Servers** — Servidores Model Context Protocol
+- **Databases** — Conexões com bancos de dados
+- **RAGs** — Bases de conhecimento para Retrieval-Augmented Generation
+- **Datasets** — Datasets para treinamento com informações de tamanho e formato
+
+### Governance
+- **FinOps** — Análise de custos por ambiente, modelo e treinamento
+- **Quotas** — Gerenciamento de limites de recursos
+- **Alerts** — Sistema de alertas e notificações
+
+### Recursos Adicionais
+- **Fan-in / Fan-out** — Visualização de endpoints, filas e serviços
+- **Pipeline & Deploy** — Seção de CI/CD e deploy
+- **Observabilidade** — Métricas e monitoramento com OpenTelemetry
+- **AI Assistant** — Painel de assistente IA integrado ao editor
