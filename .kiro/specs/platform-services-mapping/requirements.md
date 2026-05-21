@@ -2,7 +2,7 @@
 
 ## Visão Geral
 
-Mapeamento completo dos recursos implementados na plataforma de IA para os serviços definidos na arquitetura de longo prazo. O documento organiza os requisitos por camada arquitetural — Access, Gateway, Security e Service (Build, Test, Use, Catalog e Governance).
+Mapeamento completo dos recursos implementados na plataforma de IA para os serviços definidos na arquitetura de longo prazo. O documento organiza os requisitos por camada arquitetural — Access, Gateway, Security, Service (Build, Test, Use, Catalog e Governance) e Core.
 
 ---
 
@@ -18,74 +18,6 @@ Mapeamento completo dos recursos implementados na plataforma de IA para os servi
 - O sistema deve suportar seleção de ambiente (dev / staging / production) de forma global e persistente
 - O sistema deve exibir menu de notificações com eventos e alertas recentes
 - O sistema deve oferecer perfil do usuário e configurações da conta
-
-**Build**
-- O sistema deve exibir lista de orquestrações com nome, versão, status, time e quantidade de agentes referenciados
-- O sistema deve exibir detalhe de orquestração com: metadados (nome, descrição, versão, time, responsável, tags), diagrama fan-in/fan-out, lista de agentes referenciados, aba Pipeline & Deploy, aba Observability e aba **Prompt Versions**
-- O sistema deve exibir lista de agentes com nome, versão, status, time e quantidade de RAGs vinculados
-- O sistema deve exibir detalhe de agente com: metadados, diagrama fan-in/fan-out, lista de RAGs vinculados, aba Pipeline & Deploy, aba Observability e aba **Prompt Versions**
-- O sistema deve oferecer editor visual drag-and-drop para criar e editar orquestrações e agentes com paleta de componentes, canvas, mini-map, zoom/pan e salvamento automático de versão por ambiente
-- O editor deve oferecer painel de propriedades lateral para configuração de cada nó selecionado
-- O editor deve oferecer assistente de IA integrado para geração de fluxos a partir de linguagem natural
-- O editor deve suportar botão de validação, teste e deploy do fluxo
-- O sistema deve exibir lista de templates reutilizáveis com filtro por tipo (agent / orchestration) e fonte (lowcode / highcode)
-- O sistema deve oferecer modal de detalhes do template exibindo parâmetros configuráveis, autor, tags e repositório
-- O sistema deve oferecer wizard para instanciar um template com preenchimento de parâmetros
-- O sistema deve oferecer diálogo para criação de novo template a partir de fluxo existente ou repositório Git
-- O sistema deve exibir bases de conhecimento organizadas em grupos de documentos com estratégia de indexação, modelo de embedding, chunk size e vector store
-- O sistema deve permitir criar e editar grupos de documentos com estratégia de indexação configurável
-- O sistema deve permitir upload de documentos com pipeline visual de indexação em etapas (Parsing → Chunking → Embedding → Indexing → Validation)
-- O sistema deve suportar versionamento de documentos com ativação de versão específica
-- O sistema deve exibir RAG interna criada automaticamente para cada grupo de conhecimento
-- O sistema deve exibir jobs de treinamento com status, progresso, métricas (loss, accuracy, f1, perplexity) e custo
-- O sistema deve permitir criar job de treinamento com seleção de tipo, framework, modelo base, dataset, hiperparâmetros e hardware (GPU/nodes)
-- O sistema deve permitir iniciar, pausar e remover jobs de treinamento
-- O sistema deve exibir KPIs de treinamento: total de runs, runs em execução, runs com sucesso, gasto total e GPU·hours
-
-**Prompt Versions (aba nas telas de detalhe de agente e orquestração):**
-- O sistema deve exibir histórico de versões de cada prompt da aplicação com conteúdo, autor, timestamp e nota
-- O sistema deve permitir criar nova versão de prompt a partir de editor de texto inline, sem abrir o editor visual
-- O sistema deve exibir o prompt atualmente ativo destacado no histórico
-- O sistema deve permitir ativar qualquer versão anterior com confirmação
-- O sistema deve permitir comparar duas versões de prompt em visualização diff lado a lado
-- O sistema deve exibir, para orquestrações, a lista de nós que possuem prompts (identificados por ID e label do nó) para seleção antes de editar
-
-**Tests**
-- O sistema deve exibir suites de testes com alvo (orchestration / agent / rag), ambiente, agendamento e resultado da última execução
-- O sistema deve exibir casos de teste com tipo (functional, quality, guardrails, performance), status, duração e severidade
-- O sistema deve permitir habilitar/desabilitar casos de teste individualmente
-- O sistema deve exibir histórico de execuções por suite com percentual de casos passados
-- O sistema deve oferecer playground com três modos: LLM (comparação de modelos lado a lado), Machine Learning (inferência simples e batch) e RAG (retrieve → grounded answer)
-- O playground LLM deve suportar até 4 painéis simultâneos com seleção de modelo, temperatura, top-p e max tokens, com histórico de mensagens e métricas de latência, tokens e custo por resposta
-- O playground ML deve suportar inferência single (com contribuições SHAP) e inferência batch (CSV)
-- O playground RAG deve suportar configuração de estratégia de retrieval, top-k, reranking e seleção de LLM gerador, exibindo chunks recuperados e resposta fundamentada
-
-**Uses**
-- O sistema deve exibir histórico de execuções com ID, trigger, ambiente, duração, status e timestamp
-- O sistema deve exibir modal de detalhe de execução com: parâmetros de entrada, saída final, agentes chamados (com input/output e duração), chamadas externas (API/MCP/RAG/DB com request/response), Human Infos e Human Tasks
-- O sistema deve permitir interagir com Human Tasks pendentes: preencher formulários com campos do tipo text, textarea, select, checkbox e checkbox-group
-- O sistema deve exibir histórico de conversas com agentes filtrado por agente, com busca por título
-- O sistema deve permitir criar nova conversa, selecionar agente, enviar mensagens e receber respostas com suporte a Markdown
-
-**Catalog**
-- O sistema deve exibir catálogo de modelos segmentado por tipo: LLM, ML e Embedding, com nome, provedor, endpoint, tags e status
-- O sistema deve exibir catálogo de APIs externas com autenticação, endpoints e status, com configuração por ambiente (dev/staging/production)
-- O sistema deve exibir catálogo de MCP Servers com transporte, ferramentas disponíveis e status
-- O sistema deve exibir catálogo de bancos de dados externos com tipo (PostgreSQL, MySQL, MongoDB, Redis, DynamoDB, ClickHouse, etc.) e configuração de conexão por ambiente
-- O sistema deve exibir catálogo de RAGs mostrando índices internos (vinculados a grupos de conhecimento, somente leitura) e externos (editáveis), com store vetorial, modelo de embedding e configuração por ambiente
-- O sistema deve exibir catálogo de datasets com nome, formato (CSV, JSONL, Parquet, etc.), path, tamanho, número de linhas, tags e status
-- O sistema deve permitir registrar, editar e remover datasets
-- O sistema deve oferecer capacidade de **Build Dataset**: construção de datasets a partir de fontes da plataforma com pipelines de coleta, transformação, limpeza e splitting
-- O sistema deve exibir e gerenciar a **Feature Store**: grupos de features com definição, versionamento e linhagem, acessíveis em modo offline (treinamento) e online (inferência)
-
-**Governance**
-- O sistema deve exibir análise de custos (FinOps) com breakdown por área, equipe, orquestração, agente, treinamento, LLM e infraestrutura Kubernetes, com filtro por período (7d / 30d / 90d) e área
-- O sistema deve exibir detalhe de custo por orquestração: K8s, agentes utilizados, APIs externas e custo por agente
-- O sistema deve exibir detalhe de custo por agente: K8s, LLM, ML, invocações, tokens in/out e modelos utilizados
-- O sistema deve exibir e gerenciar quotas por escopo (usuário, time, área) com métricas de consumo atual vs limite
-- O sistema deve exibir e gerenciar rate limits por escopo e tipo (requests/s, requests/min, concurrent connections, bandwidth)
-- O sistema deve exibir e gerenciar regras de alerta com severidade, condição, escopo, janela de avaliação e canais de notificação
-- O sistema deve exibir eventos de alerta ativos com estado (firing, acknowledged, resolved, silenced) e timestamp da última ocorrência
 
 #### 1.2 CLI
 
@@ -410,80 +342,69 @@ Mapeamento completo dos recursos implementados na plataforma de IA para os servi
 - O serviço deve permitir experimentação de pipelines RAG com seleção de índice, estratégia de retrieval (hybrid, semantic, parent-child, graph, rerank), top-k e reranking; exibindo chunks recuperados com score e gerando resposta fundamentada via LLM selecionado
 - O serviço deve registrar sessões do playground como conversas para consulta posterior
 
+
 ---
 
-### 5. Componentes Transversais
+### 6. Core Layer
 
-#### 5.1 AI Assistant
+O Core Layer é a fundação operacional da plataforma. Enquanto as camadas superiores (Access, Gateway, Security, Service) se ocupam da lógica de negócio e dos fluxos de IA, o Core Layer provê a infraestrutura de sustentação que garante que tudo funcione com consistência, rastreabilidade e segurança. Sem ele, não há onde armazenar estado, não há como promover código entre ambientes, não há como auditar mudanças e não há como entregar novas versões de agentes e orquestrações de forma confiável.
 
-- O assistente deve estar disponível como painel lateral retrátil no editor visual (FlowBuilder)
-- O assistente deve operar em dois modos: **agent** (gera topologia hub-and-spoke: inputs → Prompt → LLM → Output) e **orchestration** (gera cadeia linear com nós de ingresso, agentes, coordenação e egresso)
-- O assistente deve interpretar linguagem natural em português e inglês para detectar: RAG (rag, knowledge, documento, pdf), memória (memória, memory, histórico), tools (api, rest, serviço), MCP (mcp, filesystem, protocol), triggers (cron, agendado, kafka, consumer), e coordenação (paralelo, router, debate)
-- O assistente deve gerar automaticamente nós e arestas no canvas a partir da descrição
-- O assistente deve informar a quantidade de nós e conexões gerados após cada operação
-- O assistente deve manter histórico de mensagens da sessão
-- O assistente deve oferecer sugestões contextuais pré-definidas por modo (3 sugestões para agent, 3 para orchestration)
-- O assistente deve permitir refinamento iterativo do fluxo gerado via mensagens de acompanhamento
+---
 
-#### 5.2 Flow Engine
+#### 6.1 Data & Messaging
 
-- O serviço deve persistir grafos de fluxo (nós e arestas) por ID de aplicação e ambiente (chave: `appId:environment`)
-- O serviço deve controlar versionamento semântico com histórico de versões por chave
-- O serviço deve derivar itens fan-in (endpoint, cron, consumer, grpcreq, wsreq para orquestrações; input para agentes) a partir dos nós salvos
-- O serviço deve derivar itens fan-out (producer, humantask, db, cloud, tool para orquestrações; llm, memory, tool, mcp para agentes) a partir dos nós salvos
-- O serviço deve derivar RAGs vinculados a um agente a partir dos nós do tipo "rag" salvos no fluxo
-- O serviço deve armazenar parâmetros de configuração associados ao fluxo por ambiente
+Base de dados e mensageria da plataforma. Responsável por persistir todo o estado operacional — execuções, conversas, configurações, métricas, logs — e por prover o backbone de comunicação assíncrona entre os serviços internos e os fluxos de orquestração.
 
-#### 5.3 User Profile
+- A plataforma deve prover bancos de dados relacionais (PostgreSQL) para armazenamento transacional de agentes, orquestrações, execuções, configurações e catálogos
+- A plataforma deve prover bancos vetoriais (pgvector, Pinecone, Qdrant, Weaviate, Neo4j) para persistência dos índices RAG utilizados pelos agentes
+- A plataforma deve prover cache em memória (Redis) para sessões, rate limiting e dados de alta frequência de acesso
+- A plataforma deve prover bancos analíticos (ClickHouse, BigQuery) para armazenamento de logs, traces e métricas de observabilidade de longa retenção
+- A plataforma deve prover um broker de mensageria (Kafka, RabbitMQ, NATS) para comunicação assíncrona entre orquestrações e serviços externos, e para triggers de execução via Message Consumer
+- A plataforma deve garantir isolamento de dados por ambiente (dev / staging / production), com schemas ou instâncias separadas conforme a criticidade
+- A plataforma deve prover mecanismos de backup, retenção e purge de dados por tipo e ambiente
 
-- O serviço deve prover contexto de autenticação com perfil do usuário: nome, e-mail, telefone, gerente, área, time e papel (role)
-- O serviço deve persistir sessão de autenticação no localStorage
-- O serviço deve redirecionar para /login ao detectar acesso não autenticado a rotas protegidas
-- O serviço deve expor hook useAuth para acesso ao usuário autenticado em qualquer componente
+---
 
-#### 5.4 Environment Context
+#### 6.2 Environment & Configuration
 
-- O serviço deve prover contexto global de ambiente ativo (dev / staging / production) compartilhado entre todos os componentes
-- O ambiente ativo deve influenciar dados exibidos no dashboard, detalhe de orquestração/agente, pipeline, observabilidade, finops, quotas e editor visual
-- O sistema deve exibir seletor de ambiente persistente no header da aplicação
+Configuração dos clusters e aplicações. Responsável por gerenciar variáveis de ambiente, segredos, configurações de runtime e o estado dos clusters Kubernetes onde agentes e orquestrações são executados.
 
-#### 5.5 Test Flow
+- A plataforma deve gerenciar configurações de runtime por aplicação (agente / orquestração) e por ambiente (dev / staging / production) de forma centralizada
+- A plataforma deve armazenar segredos (API keys, tokens, credenciais de banco, chaves SSH) em cofre seguro, sem exposição de valores em logs ou na Console UI
+- A plataforma deve prover injeção automática de variáveis de ambiente nas aplicações no momento do deploy, com substituição por ambiente
+- A plataforma deve gerenciar clusters Kubernetes com visibilidade de namespaces, réplicas, uso de CPU, memória e status de saúde por workload
+- A plataforma deve suportar múltiplos provedores de cloud (AWS, GCP, Azure) e deploy on-premises, com configuração de região por ambiente
+- A plataforma deve prover feature flags por ambiente para habilitar ou desabilitar capacidades de um agente ou orquestração sem novo deploy
+- A plataforma deve expor o status de sincronização entre a configuração armazenada e o estado real dos clusters, alertando em caso de desvio (drift)
 
-- O editor visual deve oferecer diálogo de teste que detecta automaticamente os inbounds do fluxo: endpoint (REST/gRPC/WebSocket), consumer (mensageria) e cron (agendamento) para orquestrações; input para agentes
-- O diálogo deve classificar inbounds como **sync** (endpoint) ou **async** (consumer / cron) e exibir detalhes do protocolo, path, broker, topic e expressão cron
-- O diálogo deve permitir editar payload JSON e headers para testes de endpoint; message key para consumer; e simular trigger para cron
-- O diálogo deve exibir log de execução linha a linha com resultado do teste
-- O diálogo deve gerar snippets de código prontos para uso em quatro formatos: Interface (UI), **cURL**, **Python** (requests) e **JavaScript** (fetch) com autenticação Bearer via API key
-- Os snippets devem ser copiáveis para área de transferência
+---
 
-#### 5.6 Pipeline & Deploy
+#### 6.3 Pipeline & Deploy
 
-- O serviço deve gerenciar pipelines CI/CD por fluxo (orquestração / agente) e ambiente com estágios: Build → Test → Push → Deploy
-- O serviço deve exibir pipelines ativas com status (running / success / failed / pending), cluster, namespace, branch, réplicas e imagem Docker
-- O serviço deve exibir histórico de runs de pipeline com trigger (git push / manual / schedule / webhook), commit, mensagem, autor, duração e status
-- O serviço deve expor KPIs de pipeline por ambiente: pipelines ativas, runs em 24h, taxa de sucesso e duração média
-- O serviço deve gerenciar ambientes de deploy com configuração Kubernetes detalhada: cluster, namespace, região, imagem, réplicas (prontas/desejadas), uso de CPU, memória, status de saúde (healthy/degraded/down) e timestamp do último deploy
-- O serviço deve expor gráficos históricos de uso de CPU, memória e pods ativos por ambiente (últimas 24h)
-- O serviço deve expor variáveis de ambiente configuradas por ambiente (envVars)
-- O serviço deve suportar ação de redeploy por ambiente
-- O serviço deve suportar ação de promoção entre ambientes (dev → staging → production)
-- O serviço deve suportar conexão de repositório Git ao fluxo
-- O serviço deve executar pipeline de deploy animado com progresso por estágio (Checkout → Build → Test → Push image → Deploy) ao salvar e fazer deploy via editor visual
-- O serviço deve atualizar o status e versão do fluxo ao concluir o deploy
+Esteiras de build e deploy das aplicações. Responsável por transformar código e fluxos versionados em artefatos executáveis e entregá-los nos ambientes de destino com rastreabilidade completa de cada etapa.
 
-#### 5.7 Repository (Git)
+- A plataforma deve executar pipelines CI/CD por aplicação (agente / orquestração) com estágios: Checkout → Build → Test → Push image → Deploy
+- Cada execução de pipeline deve ser rastreada a um commit específico do repositório Git de origem, garantindo reprodutibilidade total
+- A plataforma deve suportar triggers de pipeline por: push no repositório (webhook), acionamento manual pela Console UI, agendamento (schedule) e promoção entre ambientes
+- A plataforma deve publicar imagens Docker no registry interno com tag vinculada à versão semântica da aplicação (ex: `registry/agent-researcher:v1.0.2`)
+- A plataforma deve suportar promoção de artefatos entre ambientes (dev → staging → production) sem rebuild, garantindo que o mesmo artefato testado em staging é o que vai para produção
+- A plataforma deve exibir histórico de execuções de pipeline com trigger, commit, autor, duração, status e link para logs de cada estágio
+- A plataforma deve expor KPIs agregados de pipeline por ambiente: total de pipelines ativas, runs em 24h, taxa de sucesso e duração média
+- A plataforma deve suportar rollback de deploy para versão anterior com um clique, acionando redeploy do artefato correspondente
 
-O repositório Git é a fonte de verdade da plataforma. Toda a lógica de agentes, orquestrações e templates — seja lowcode (grafo de nós serializado em JSON) ou highcode (código Python, TypeScript, YAML) — precisa ser rastreada, versionada e auditável. Sem um repositório conectado, não há como garantir reprodutibilidade de deploys, rastrear quem alterou o quê, reverter regressões nem aplicar práticas de revisão de código sobre os fluxos de IA.
+---
 
-A dependência do Git é estrutural: o Pipeline & Deploy (5.6) só consegue executar os estágios Build → Test → Push → Deploy porque parte de um commit específico. O histórico de versões semânticas (v1.0.0 → v1.0.1) dos agentes e orquestrações mapeia diretamente para tags ou branches no repositório. Templates highcode são, por definição, repositórios Git — a URL do repo é o próprio artefato.
+#### 6.4 Repository & Versioning
 
-- O serviço deve permitir conectar um repositório Git externo (GitHub, GitLab, Bitbucket, Azure DevOps) a cada agente, orquestração ou template da plataforma
-- O serviço deve armazenar credenciais de acesso ao repositório (PAT, SSH key, OAuth) de forma segura, por ambiente
-- O serviço deve sincronizar automaticamente o grafo de fluxo (JSON) para o repositório ao salvar uma versão no editor visual, realizando commit com mensagem padronizada (ex: `feat(agent/researcher): bump v1.0.2`)
-- O serviço deve suportar o fluxo inverso: ao receber um push no repositório (webhook), disparar automaticamente o pipeline de CI/CD da plataforma
-- O serviço deve registrar, em cada versão de agente ou orquestração, o commit SHA de origem, branch, autor e mensagem de commit correspondentes
-- O serviço deve permitir navegar pelo histórico de commits do repositório vinculado diretamente na tela de detalhe do agente ou orquestração, com link para diff no provedor Git
-- O serviço deve suportar estratégias de branching alinhadas aos ambientes da plataforma: branch `develop` → ambiente dev, `staging` → staging, `main` → production
-- O serviço deve expor o status de sincronização entre a versão ativa na plataforma e o HEAD do repositório, alertando quando houver divergência
-- Templates highcode devem ter o repositório Git como artefato principal, com a URL do repo sendo o identificador do template; a plataforma clona o repositório no momento de instanciação
-- O serviço deve garantir que todo deploy em produção seja rastreável a um commit imutável, garantindo reprodutibilidade e auditabilidade completa do ciclo de vida dos fluxos de IA
+Repositório e versionamento de código das aplicações. Responsável por ser a fonte de verdade de toda a lógica implementada na plataforma — grafos de fluxo, código Python/TypeScript, templates e prompts — garantindo auditabilidade, colaboração e rastreabilidade de qualquer alteração ao longo do ciclo de vida das aplicações de IA.
+
+- A plataforma deve permitir conectar um repositório Git externo (GitHub, GitLab, Bitbucket, Azure DevOps) a cada agente, orquestração e template
+- A plataforma deve sincronizar automaticamente o grafo de fluxo (JSON) para o repositório ao salvar uma nova versão no editor visual, com commit padronizado (ex: `feat(agent/researcher): bump v1.0.2`)
+- A plataforma deve suportar o fluxo inverso: ao receber um push via webhook do repositório, disparar automaticamente o pipeline de CI/CD da aplicação vinculada
+- Cada versão de agente ou orquestração deve registrar o commit SHA de origem, branch, autor e mensagem de commit correspondentes para auditoria completa
+- A plataforma deve suportar estratégias de branching alinhadas aos ambientes: branch `develop` → dev, `staging` → staging, `main` → production
+- A plataforma deve expor o status de sincronização entre a versão ativa na plataforma e o HEAD do repositório, alertando quando houver divergência
+- Templates highcode devem ter o repositório Git como artefato principal; a plataforma clona o repositório no momento de instanciação do template
+- A plataforma deve garantir que todo deploy em produção seja rastreável a um commit imutável, assegurando reprodutibilidade e auditabilidade completa do ciclo de vida dos fluxos de IA
+- A plataforma deve permitir navegar pelo histórico de commits do repositório vinculado diretamente na tela de detalhe do agente ou orquestração, com link para diff no provedor Git
+- A plataforma deve versionar prompts independentemente do grafo de fluxo, armazenando cada versão com conteúdo, autor, timestamp, nota de alteração e referência ao commit Git quando alterado via editor de código
