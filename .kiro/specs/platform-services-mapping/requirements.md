@@ -94,7 +94,11 @@ O Service Layer é onde a lógica de negócio da plataforma vive. É aqui que ag
 
 #### 4.1 Build Services
 
+Os Build Services cobrem tudo o que é necessário para criar e preparar uma aplicação de IA antes de colocá-la em produção. É o grupo onde o trabalho de design acontece: modelar a lógica do agente ou da orquestração no editor visual, organizar as bases de conhecimento que alimentam o RAG, definir templates reutilizáveis que aceleram novos projetos e configurar jobs de treinamento para ajustar modelos. Esses serviços são usados principalmente pelo AI Engineer e pelo Platform Admin — perfis que projetam, constroem e publicam as aplicações. O output de cada Build Service é um artefato versionado e publicado que as outras camadas (Gateways, Use Services, Test Services) podem consumir.
+
 ##### 4.1.1 Agent Service
+
+Serviço central do Build Layer. Gerencia todo o ciclo de vida de um agente de IA — desde o rascunho inicial no editor visual até a publicação no catálogo e o deploy em produção. Um agente é a unidade autônoma da plataforma: combina um modelo de linguagem com memória, bases de conhecimento (RAG), ferramentas e instruções de sistema para produzir comportamento especializado. O Agent Service é responsável por persistir a composição do agente como grafo versionado, expô-lo para invocação via Agent Gateway e manter os prompts atualizados de forma independente do fluxo — permitindo ajustes finos de comportamento sem necessidade de um novo deploy completo.
 
 - O serviço deve criar, versionar, publicar e remover agentes
 - O serviço deve armazenar a composição do agente como grafo de nós e arestas
@@ -128,6 +132,8 @@ O Service Layer é onde a lógica de negócio da plataforma vive. É aqui que ag
 - **Output** — saída do agente; propriedade: outputSchema (JSON)
 
 ##### 4.1.2 Orchestration Service
+
+Enquanto o agente é uma unidade de raciocínio individual, a orquestração é o fluxo que coordena múltiplos agentes, sistemas externos e pontos de decisão para resolver problemas de maior escopo. O Orchestration Service gerencia a criação, o versionamento e o deploy de orquestrações — grafos que conectam ingressos (REST, gRPC, Kafka, Cron), agentes especializados, bancos de dados, serviços de nuvem e respostas. É aqui que padrões de colaboração entre agentes são modelados: roteamento por intenção, execução paralela, loops de retry, validação de qualidade e aprovação humana. Cada orquestração publicada é um fluxo executável e rastreável, com versionamento semântico e configuração de deploy por ambiente.
 
 - O serviço deve criar, versionar, publicar e remover orquestrações
 - O serviço deve armazenar o grafo de fluxo com nós e arestas (JSON ReactFlow) com persistência por ambiente
@@ -179,6 +185,8 @@ O Service Layer é onde a lógica de negócio da plataforma vive. É aqui que ag
 
 ##### 4.1.3 Template Service
 
+Reduz o custo de criação de novos agentes e orquestrações ao disponibilizar pontos de partida validados e reutilizáveis. Um template encapsula um padrão de design — como "agente RAG com memória conversacional" ou "pipeline Kafka → router → dois agentes em paralelo → PostgreSQL" — e expõe apenas os parâmetros que variam por instância (modelo, índice RAG, endpoint, tópico). Suporta templates lowcode (snapshot de fluxo com parâmetros) e highcode (link para repositório Git), cobrindo tanto equipes que constroem visualmente quanto times que trabalham com código. O resultado da instanciação é um novo agente ou orquestração já configurado, pronto para refinamento e deploy.
+
 - O serviço deve armazenar e versionar templates do tipo agent e orchestration
 - O serviço deve suportar templates lowcode (snapshot de fluxo com parâmetros configuráveis tipados: text, select, number) e highcode (link para repositório Git)
 - O serviço deve expor catálogo de templates para listagem com filtro por tipo e fonte
@@ -186,6 +194,8 @@ O Service Layer é onde a lógica de negócio da plataforma vive. É aqui que ag
 - O serviço deve criar um novo agente ou orquestração a partir de um template instanciado, substituindo os parâmetros nos nós do fluxo
 
 ##### 4.1.4 Documents Service
+
+Gerencia o ciclo de vida dos documentos que alimentam as bases de conhecimento (RAG) dos agentes. Organiza documentos em grupos com estratégia de indexação configurável — hybrid search, semantic chunking, parent-child retrieval ou graph RAG — e executa o pipeline de processamento completo ao receber um novo arquivo: parsing, chunking, geração de embeddings, indexação no vector store e validação. Cada grupo de documentos gera automaticamente uma RAG interna disponível para seleção nos agentes, criando um vínculo direto entre o conhecimento gerenciado e os agentes que o consomem. O versionamento de documentos garante que atualizações de conteúdo sejam rastreáveis e reversíveis.
 
 - O serviço deve criar e gerenciar grupos de documentos com estratégia de indexação, modelo de embedding, chunk size, chunk overlap e vector store configuráveis
 - O serviço deve suportar documentos nos formatos PDF, Markdown, HTML, DOCX e TXT
@@ -197,7 +207,9 @@ O Service Layer é onde a lógica de negócio da plataforma vive. É aqui que ag
 
 ##### 4.1.5 Training Service
 
-- O serviço deve criar, enfileirar, iniciar, pausar, parar e remover jobs de treinamento
+Gerencia o ciclo de vida completo de jobs de treinamento e fine-tuning de modelos — de LLMs ajustados via LoRA ou RLHF a modelos de ML clássico (classificação, regressão, forecasting) e modelos de embedding. Cada job é rastreado do enfileiramento à conclusão, com registro de hiperparâmetros, hardware utilizado, métricas de progresso em tempo real e custo acumulado em GPU·hours. Ao concluir com sucesso, o artefato treinado é publicado no registry de modelos da plataforma, tornando-se imediatamente disponível para seleção no editor visual e no Model Gateway. É o serviço que fecha o loop entre dados coletados na operação e modelos melhorados em produção.
+
+
 - O serviço deve suportar tipos: llm-finetune, llm-lora, llm-rlhf, ml-classification, ml-regression, ml-forecasting, ml-clustering e embeddings
 - O serviço deve suportar frameworks LLM: transformers, trl, peft, unsloth e axolotl; e frameworks ML: sklearn, xgboost, lightgbm, pytorch e tensorflow
 - O serviço deve registrar hiperparâmetros (epochs, batch size, learning rate, optimizer, seed), hardware (tipo de GPU, quantidade, nós), métricas de progresso (loss, val_loss, accuracy, f1, perplexity, rmse) e custo acumulado por job
@@ -207,7 +219,9 @@ O Service Layer é onde a lógica de negócio da plataforma vive. É aqui que ag
 
 ##### 4.1.5 Dataset Service
 
-- O serviço deve oferecer capacidade de construção de datasets a partir de fontes de dados da plataforma (execuções, conversas, logs, bases RAG, APIs externas e bancos registrados)
+Responsável pela construção, curadoria e versionamento dos datasets que alimentam o Training Service e o Suite Cases Service. Diferentemente de simplesmente registrar arquivos existentes, o Dataset Service permite construir datasets a partir de fontes vivas da plataforma — execuções, conversas, logs, RAGs, APIs e bancos — aplicando pipelines de transformação e limpeza (filtros, deduplicação, anotação, splitting). Isso cria um ciclo virtuoso onde dados gerados em produção pelos agentes retroalimentam o treinamento de novos modelos. Cada dataset construído é versionado com rastreamento de origem e transformações aplicadas, garantindo reprodutibilidade dos experimentos de ML.
+
+ (execuções, conversas, logs, bases RAG, APIs externas e bancos registrados)
 - O serviço deve permitir definir pipelines de coleta, transformação e limpeza de dados (filtros, deduplicação, anotação e splitting em train/validation/test)
 - O serviço deve versionar datasets construídos, registrando origem, transformações aplicadas, autor e timestamp
 - O serviço deve expor datasets construídos para seleção em jobs de treinamento, suites de testes e na Feature Store
@@ -216,7 +230,11 @@ O Service Layer é onde a lógica de negócio da plataforma vive. É aqui que ag
 
 #### 4.2 Use Services
 
+Os Use Services registram e expõem tudo o que acontece quando uma aplicação de IA está em operação. Enquanto os Build Services cuidam do que foi criado, os Use Services cuidam do que está sendo usado. O Execution Service captura o rastro completo de cada invocação de agente ou orquestração — triggers, chamadas externas, decisões, intervenções humanas, erros e outputs — formando a base de auditoria e depuração da plataforma. O Conversation Service mantém o histórico das trocas diretas com agentes conversacionais, permitindo que usuários e equipes acompanhem interações e identifiquem padrões de uso. Juntos, esses serviços fecham o ciclo de feedback entre o que foi construído e o que efetivamente acontece em produção.
+
 ##### 4.2.1 Execution Service
+
+É o serviço de memória operacional da plataforma. Cada vez que um agente ou orquestração é invocado — por REST, gRPC, Kafka ou Cron — o Execution Service cria um registro completo do que aconteceu: o trigger de entrada, cada chamada a agentes, APIs, RAGs e bancos de dados com seus payloads de request e response, as intervenções humanas solicitadas e concluídas, os alertas emitidos pelo fluxo e o output final. Esse rastro é o que torna possível depurar uma falha em produção, auditar o comportamento de um agente, identificar gargalos de latência e dar visibilidade a stakeholders sobre o que os fluxos de IA estão fazendo.
 
 - O serviço deve registrar cada execução de orquestração ou agente com ID de correlação, trigger, ambiente, status e duração total
 - O serviço deve armazenar o trace completo: chamadas externas (API, MCP, RAG, DB com request/response, duração e status), chamadas a agentes (input, output, role, duração e status), Human Infos e Human Tasks
@@ -229,6 +247,8 @@ O Service Layer é onde a lógica de negócio da plataforma vive. É aqui que ag
 
 ##### 4.2.2 Conversation Service
 
+Gerencia o histórico de trocas diretas entre usuários e agentes conversacionais — aqueles que expõem uma interface de chat multi-turn. Enquanto o Execution Service registra o que aconteceu tecnicamente em uma execução, o Conversation Service preserva o contexto semântico das interações: o que o usuário perguntou, o que o agente respondeu, em que ordem, ao longo de múltiplas sessões. Esse histórico tem valor tanto operacional (debugging de comportamento conversacional) quanto de negócio (análise de padrões de uso, identificação de gaps de conhecimento dos agentes e base para geração de datasets de fine-tuning).
+
 - O serviço deve registrar conversas com agentes que possuem rota de conversação (hasConversation = true)
 - O serviço deve armazenar histórico de mensagens com role (user/agent), conteúdo Markdown e timestamp
 - O serviço deve associar cada conversa a um agente, usuário e título auto-gerado a partir da primeira mensagem
@@ -239,7 +259,11 @@ O Service Layer é onde a lógica de negócio da plataforma vive. É aqui que ag
 
 #### 4.3 Catalog Services
 
+Os Catalog Services são o repositório de recursos compartilhados da plataforma. Eles centralizam o registro e a governança de tudo que agentes e orquestrações podem consumir: modelos de linguagem e ML, APIs externas, servidores MCP, bancos de dados, índices RAG, conectores corporativos, datasets e features. Sem um catálogo, cada time criaria suas próprias integrações de forma isolada, duplicando esforço e introduzindo inconsistências. Com o catálogo, um modelo registrado uma vez está disponível para todos os agentes da plataforma; um conector SAP configurado pelo Platform Admin pode ser reutilizado em qualquer orquestração sem que o AI Engineer precise entender o protocolo de autenticação subjacente. Os Catalog Services são o que torna a plataforma escalável para múltiplos times e projetos simultâneos.
+
 ##### 4.3.1 Model Service
+
+Registro centralizado de todos os modelos disponíveis na plataforma — LLMs, modelos de ML clássico e modelos de embedding. Cada modelo é cadastrado com seu provedor, endpoint, credenciais e tags descritivos, e o serviço garante que qualquer agente ou orquestração possa selecioná-lo sem precisar configurar manualmente a integração. Suporta provedores externos (OpenAI, Google, Anthropic, Cohere, Voyage AI, Hugging Face) e modelos self-hosted via endpoint customizado, como instâncias vLLM rodando on-premises. É o contrato entre quem administra os modelos (Platform Admin) e quem os usa (AI Engineer, Orchestration Service, Model Gateway).
 
 - O serviço deve registrar modelos do tipo LLM, ML e Embedding com nome, provedor, endpoint e credenciais
 - O serviço deve suportar provedores externos: OpenAI, Google, Anthropic, Cohere, Voyage AI, Hugging Face
@@ -248,11 +272,15 @@ O Service Layer é onde a lógica de negócio da plataforma vive. É aqui que ag
 
 ##### 4.3.2 External API Service
 
+Registro de integrações HTTP simples que agentes e orquestrações podem utilizar como ferramentas. Uma API cadastrada aqui representa um endpoint externo com URL base, lista de operações, tipo de autenticação e credenciais por ambiente. Diferentemente do Connector Service (que encapsula fluxos multi-step com sistemas corporativos complexos), o External API Service atende APIs mais diretas — um serviço de busca web, um endpoint de cotação de câmbio, uma API de notificação — onde uma única chamada HTTP já produz o resultado desejado. O registro centralizado evita que cada agente configure a mesma integração de forma independente e garante rotação de credenciais em um único ponto.
+
 - O serviço deve registrar APIs externas com nome, descrição, URL base, endpoints e tipo de autenticação
 - O serviço deve suportar autenticações: API key, OAuth2, JWT, PAT e sem autenticação
 - O serviço deve disponibilizar APIs ativas para seleção no editor visual
 
 ##### 4.3.3 MCP Server Service
+
+Registro dos servidores Model Context Protocol disponíveis na plataforma. Um servidor MCP expõe um catálogo de ferramentas que agentes podem invocar de forma padronizada — acesso ao sistema de arquivos, integração com Slack, operações no GitHub, consultas a um banco de dados — sem que o agente precise conhecer os detalhes de autenticação ou o protocolo de cada ferramenta. O MCP Server Service centraliza o cadastro desses servidores (com suporte a transportes stdio e HTTP), verifica sua conectividade e os disponibiliza para seleção no editor visual, tornando o ecossistema de ferramentas dos agentes extensível sem mudanças no código da plataforma.
 
 - O serviço deve registrar servidores MCP com nome, transporte (stdio / HTTP) e lista de ferramentas
 - O serviço deve verificar conectividade ao registrar ou atualizar um servidor
@@ -260,10 +288,14 @@ O Service Layer é onde a lógica de negócio da plataforma vive. É aqui que ag
 
 ##### 4.3.4 External DB Service
 
+Registro dos bancos de dados externos que agentes e orquestrações podem consultar ou modificar como parte de seus fluxos. Centraliza as credenciais de conexão (host, porta, usuário, senha, opções TLS) por ambiente, de forma que o AI Engineer selecione o banco no editor visual sem precisar gerenciar segredos diretamente. Suporta os principais tipos de banco — relacionais (PostgreSQL, MySQL), documentais (MongoDB), chave-valor (Redis), serverless (DynamoDB) e analíticos (ClickHouse) — cobrindo os padrões de acesso mais comuns em fluxos de IA: leitura de contexto, persistência de resultados e consultas analíticas.
+
 - O serviço deve registrar bancos de dados externos com tipo (PostgreSQL, MySQL, MongoDB, Redis, BigQuery, Elasticsearch), operação e credenciais
 - O serviço deve disponibilizar bancos registrados para seleção no editor visual
 
 ##### 4.3.5 Knowledge Service
+
+Registro centralizado das bases RAG disponíveis para os agentes — tanto as internas (geradas automaticamente pelo Documents Service a partir de grupos de documentos) quanto as externas (índices vetoriais pré-existentes como bases de produtos, wikis corporativas ou coleções de papers). Para cada base, o serviço armazena o store vetorial, o endpoint, o índice, o modelo de embedding e a configuração por ambiente, garantindo que o agente use o índice correto em cada contexto. É o ponto de articulação entre o Documents Service (que cria e atualiza as bases) e o RAG Gateway (que as serve em tempo de execução).
 
 - O serviço deve registrar bases de conhecimento  store vetorial/graph, endpoint, índice e modelo de embedding
 - O serviço deve suportar stores: pgvector, Pinecone, Qdrant, Weaviate e Neo4j
@@ -288,7 +320,11 @@ Catálogo de conectores de negócio reutilizáveis que abstraem integrações co
 
 #### 4.4 Governance Services
 
+Os Governance Services garantem que a plataforma opere dentro dos limites definidos pela organização — financeiros, operacionais, de segurança e de conformidade. Conforme a adoção de IA cresce, cresce também a necessidade de visibilidade e controle: quanto estamos gastando com LLMs? Quais times estão consumindo mais recursos? Os agentes estão produzindo conteúdo dentro das políticas da empresa? Há anomalias que precisam de atenção? Cada serviço deste grupo responde a uma dessas perguntas de forma dedicada: o FinOps Service para custo, o Quota Service para limites de uso, o Alert Service para anomalias operacionais, o Watch Service para observabilidade em tempo real e o Guardrail Service para conformidade de conteúdo. Juntos, eles permitem que a organização escale o uso de IA sem perder controle sobre o que está acontecendo.
+
 ##### 4.4.1 FinOps Service
+
+Provê visibilidade financeira completa sobre o uso da plataforma. Consolida e detalha os gastos gerados pelos fluxos de IA — LLMs (tokens in/out por modelo e provedor), infraestrutura Kubernetes (CPU, memória, GPU, storage, rede por namespace) e APIs externas (chamadas por serviço) — organizados em diferentes granularidades: da visão macro por área e equipe até o detalhe por agente e modelo específico. Permite filtrar por período (7, 30 ou 90 dias) e integra com o Quota Service para exibir o quanto de cada limite já foi consumido. O objetivo é dar ao Platform Admin e ao Team Lead a informação necessária para tomar decisões conscientes sobre modelos, arquitetura e alocação de orçamento.
 
 - O serviço deve calcular e consolidar custos por área, equipe, orquestração (fluxo), agente e job de treinamento
 - O serviço deve discriminar custos por categoria: Kubernetes (CPU, memória, GPU, storage, rede), LLM (tokens in/out por modelo) e External API (chamadas por serviço)
@@ -298,6 +334,8 @@ Catálogo de conectores de negócio reutilizáveis que abstraem integrações co
 - O serviço deve integrar com o Quota Service para comparar gasto realizado vs limite configurado
 
 ##### 4.4.2 Quota Service
+
+Controla os limites de uso da plataforma por usuário, time e área, evitando que um único agente, orquestração ou equipe consuma recursos de forma descontrolada. Cada regra define uma métrica (tokens, requests, custo, execuções, CPU, GPU·hours), um escopo (quem está sujeito ao limite), um período de apuração e uma ação ao ultrapassar o teto (block, warn ou throttle). Além das quotas por volume, suporta rate limits para controlar a velocidade de consumo (requisições por segundo, conexões concorrentes). É a camada que transforma a política de uso da organização em controle técnico automatizado, sem depender de intervenção manual para cada violação.
 
 - O serviço deve criar e gerenciar quotas por escopo: usuário, time e área; com seleção de scope e target específico (ex: time "Customer AI", agente "Researcher", LLM "GPT-5")
 - O serviço deve suportar métricas de quota: tokens, requests, cost_usd, executions, concurrent_runs, storage_gb, cpu_cores, memory_gb e gpu_hours
@@ -310,6 +348,8 @@ Catálogo de conectores de negócio reutilizáveis que abstraem integrações co
 - O serviço deve permitir habilitar/desabilitar regras individualmente via switch
 
 ##### 4.4.3 Alert Service
+
+Sistema de alertas baseado em regras que monitora métricas de infraestrutura, aplicação, custo e segurança e notifica os responsáveis quando condições de interesse são detectadas. Cada regra define uma métrica a observar, um operador de comparação, um threshold, uma janela de avaliação, um escopo (global, namespace, flow, agent ou team) e os canais de notificação (e-mail, Slack, Teams, PagerDuty, webhook). Quando uma condição é atendida, um evento é disparado e percorre o ciclo de vida firing → acknowledged → resolved, com registro de quem atuou e quando. É o serviço que mantém a equipe informada proativamente, sem que precisem monitorar dashboards manualmente.
 
 - O serviço deve criar, editar e remover regras de alerta com condição, severidade, escopo e janela de avaliação
 - O serviço deve suportar métricas: cpu, memory, disk, pods, gpu, tokens, cost, latency, error_rate, queue_depth, human_task_backlog, rag_freshness e auth_failures
@@ -324,6 +364,8 @@ Catálogo de conectores de negócio reutilizáveis que abstraem integrações co
 - O serviço deve expor KPIs: alertas firing, acknowledged, critical abertos e total de regras ativas
 
 ##### 4.4.4 Watch Service
+
+Provê observabilidade em tempo real e histórica dos fluxos de IA em execução. Coleta e expõe métricas de performance (requests/min, latência p50/p99, taxa de erro, throughput), métricas de custo (tokens in/out, gasto em 24h) e métricas de infraestrutura Kubernetes (réplicas, CPU, memória, saúde por ambiente). Além das séries temporais, mantém os traces das execuções recentes com timeline por estágio — incluindo input e output de cada etapa — e logs estruturados por nível e fonte. É a ferramenta de diagnóstico do dia a dia: quando algo está lento, caro ou falhando, o Watch Service é o primeiro lugar para investigar.
 
 - O serviço deve coletar e expor métricas em tempo real: requests/min, latência p50/p99, taxa de erro, taxa de sucesso, throughput e custo de tokens em 24h
 - O serviço deve armazenar série histórica de latência (p50 vs p99), taxa de erro, taxa de sucesso, throughput e consumo de tokens (input vs output) por dia para os últimos 12 dias
@@ -356,7 +398,11 @@ O Guardrail Service é a camada de proteção de conteúdo e conformidade da pla
 
 #### 4.5 Test Services
 
+Os Test Services fecham o ciclo de qualidade da plataforma. Antes de um agente ou orquestração ir para produção — ou permanecer lá — é preciso ter confiança de que ele se comporta como esperado em diferentes cenários: responde corretamente às perguntas do domínio, não produz conteúdo inadequado, resiste a tentativas de manipulação e opera dentro dos limites de latência e throughput definidos. O Suite Cases Service oferece a infraestrutura para definir, executar e rastrear esses testes de forma sistemática e repetível. O Playground Service complementa com experimentação interativa, permitindo comparar modelos, testar pipelines RAG e validar modelos de ML antes de integrá-los em produção.
+
 ##### 4.5.1 Suite Cases Service
+
+Infraestrutura de testes automatizados para agentes, orquestrações e bases RAG. Organiza os testes em suites com alvo definido, ambiente de execução e agendamento, e suporta quatro tipos de caso: **functional** (validação de comportamento esperado), **quality** (avaliação por LLM-judge com métricas como faithfulness e relevância), **guardrails** (verificação de conformidade com políticas de conteúdo, PII e segurança) e **performance** (latência, throughput e concorrência). A separação por tipo permite que equipes diferentes — QA, segurança, engenharia — contribuam com casos no mesmo conjunto de testes. Os resultados são rastreados historicamente, tornando visível a evolução da qualidade do agente ao longo do tempo.
 
 - O serviço deve criar e gerenciar suites de testes com alvo (orchestration / agent / rag), ambiente e agendamento
 - O serviço deve suportar casos de teste do tipo: functional, quality (LLM-judge), guardrails e performance
@@ -368,6 +414,8 @@ O Guardrail Service é a camada de proteção de conteúdo e conformidade da pla
 - O serviço deve expor histórico de execuções por suite e por caso de teste
 
 ##### 4.5.2 Playground Service
+
+Ambiente de experimentação interativa que permite testar e comparar recursos da plataforma antes de integrá-los em agentes ou orquestrações. Opera em três modos independentes: **LLM** (compara até 4 modelos lado a lado com o mesmo prompt, exibindo latência, tokens e custo por resposta), **Machine Learning** (executa inferência single com explicabilidade via contribuições SHAP ou inferência batch a partir de CSV) e **RAG** (testa pipelines de retrieval com controle de estratégia, top-k e reranking, exibindo chunks recuperados e a resposta fundamentada). O resultado de cada sessão é registrado como conversa, criando histórico de experimentos e base para decisões de arquitetura.
 
 - O serviço deve permitir experimentação de modelos LLM (catálogo + fine-tunes) com comparação lado a lado de até 4 modelos simultâneos, com system prompt compartilhado e parâmetros independentes (temperatura, top-p, max tokens)
 - O serviço deve registrar latência, tokens consumidos e custo por resposta no playground LLM
