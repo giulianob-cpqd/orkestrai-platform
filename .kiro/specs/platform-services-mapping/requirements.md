@@ -10,6 +10,8 @@ Mapeamento completo dos recursos implementados na plataforma de IA para os servi
 
 ### 1. Access Layer
 
+O Access Layer é o ponto de entrada humano da plataforma. É por aqui que engenheiros, admins e operadores interagem com os serviços — seja via interface visual, linha de comando ou integração programática. Seu papel é tornar toda a capacidade da plataforma acessível de forma consistente, independentemente do canal escolhido. A Console UI cobre o uso cotidiano guiado; o CLI atende automação e scripting em pipelines externos; o SDK/API viabiliza integração com sistemas corporativos. Juntos, esses três canais garantem que nenhum perfil de usuário precise escalar para camadas mais baixas da arquitetura para operar a plataforma.
+
 #### 1.1 Console UI (Aplicação Web)
 
 - O sistema deve exibir um dashboard principal com métricas globais da plataforma
@@ -35,6 +37,8 @@ Mapeamento completo dos recursos implementados na plataforma de IA para os servi
 ---
 
 ### 2. Gateway Layer
+
+O Gateway Layer é a camada de abstração entre os consumidores externos e os serviços internos da plataforma. Cada gateway atua como um ponto de entrada especializado — para agentes, modelos, RAGs, MCP Servers ou orquestrações — aplicando autenticação, autorização, roteamento por versão e ambiente, controle de quota e coleta de telemetria antes de encaminhar a requisição ao serviço correspondente. Sem essa camada, cada consumidor precisaria conhecer a topologia interna da plataforma. Com ela, a superfície de exposição é uniforme, segura e observável independentemente de quantos provedores ou implementações existam por trás.
 
 #### 2.1 Agent Gateway
 
@@ -73,6 +77,8 @@ Mapeamento completo dos recursos implementados na plataforma de IA para os servi
 
 ### 3. Security Layer
 
+O Security Layer é o guardião transversal da plataforma. Toda requisição que atravessa o Access Layer ou o Gateway Layer passa primeiro pelo controle de identidade e permissão desta camada. Seu papel vai além de autenticar usuários: ele garante que cada ação — invocar um agente, consultar uma execução, alterar um catálogo, configurar um alerta — só aconteça se o principal tiver a permissão correspondente. Em uma plataforma de IA onde agentes operam com autonomia e acessam dados sensíveis, a Security Layer é o que torna possível conceder poder sem perder controle.
+
 #### 3.1 Authentication & Authorization
 
 - O sistema deve oferecer autenticação via página de login com suporte a identity providers
@@ -83,6 +89,8 @@ Mapeamento completo dos recursos implementados na plataforma de IA para os servi
 ---
 
 ### 4. Service Layer
+
+O Service Layer é onde a lógica de negócio da plataforma vive. É aqui que agentes e orquestrações são criados, versionados e publicados; onde execuções são registradas e conversas são conduzidas; onde catálogos de modelos, APIs, RAGs e datasets são mantidos; e onde governança — custos, quotas, alertas e observabilidade — é exercida. Enquanto as camadas anteriores cuidam de acesso, roteamento e segurança, o Service Layer é o coração funcional da plataforma: cada sub-serviço tem uma responsabilidade clara e delimitada, e a soma deles cobre o ciclo de vida completo de uma aplicação de IA — do design ao monitoramento em produção.
 
 #### 4.1 Build Services
 
