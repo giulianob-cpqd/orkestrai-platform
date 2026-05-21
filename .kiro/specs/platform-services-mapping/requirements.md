@@ -1,8 +1,8 @@
-# Platform Services Mapping — Requisitos
+# Platform Services Mapping
 
 ## Visão Geral
 
-Mapeamento completo dos recursos implementados na plataforma OrkestrAI para os serviços definidos na arquitetura de longo prazo (`estrutura-longo-prazo.md`). O documento organiza os requisitos por camada arquitetural — Access, Gateway, Security e Service — detalhando o que cada serviço deve oferecer com base no que já está implementado na Console UI.
+Mapeamento completo dos recursos implementados na plataforma de IA para os serviços definidos na arquitetura de longo prazo. O documento organiza os requisitos por camada arquitetural — Access, Gateway, Security e Service (Build, Test, Use, Catalog e Governance).
 
 ---
 
@@ -24,7 +24,7 @@ Mapeamento completo dos recursos implementados na plataforma OrkestrAI para os s
 - O sistema deve exibir detalhe de orquestração com: metadados (nome, descrição, versão, time, responsável, tags), diagrama fan-in/fan-out, lista de agentes referenciados, aba Pipeline & Deploy, aba Observability e aba **Prompt Versions**
 - O sistema deve exibir lista de agentes com nome, versão, status, time e quantidade de RAGs vinculados
 - O sistema deve exibir detalhe de agente com: metadados, diagrama fan-in/fan-out, lista de RAGs vinculados, aba Pipeline & Deploy, aba Observability e aba **Prompt Versions**
-- O sistema deve oferecer editor visual drag-and-drop (FlowBuilder) para criar e editar orquestrações e agentes com paleta de componentes, canvas, mini-map, zoom/pan e salvamento automático de versão por ambiente
+- O sistema deve oferecer editor visual drag-and-drop para criar e editar orquestrações e agentes com paleta de componentes, canvas, mini-map, zoom/pan e salvamento automático de versão por ambiente
 - O editor deve oferecer painel de propriedades lateral para configuração de cada nó selecionado
 - O editor deve oferecer assistente de IA integrado para geração de fluxos a partir de linguagem natural
 - O editor deve suportar botão de validação, teste e deploy do fluxo
@@ -81,7 +81,7 @@ Mapeamento completo dos recursos implementados na plataforma OrkestrAI para os s
 **Governance**
 - O sistema deve exibir análise de custos (FinOps) com breakdown por área, equipe, orquestração, agente, treinamento, LLM e infraestrutura Kubernetes, com filtro por período (7d / 30d / 90d) e área
 - O sistema deve exibir detalhe de custo por orquestração: K8s, agentes utilizados, APIs externas e custo por agente
-- O sistema deve exibir detalhe de custo por agente: K8s, LLM, invocações, tokens in/out e modelos utilizados
+- O sistema deve exibir detalhe de custo por agente: K8s, LLM, ML, invocações, tokens in/out e modelos utilizados
 - O sistema deve exibir e gerenciar quotas por escopo (usuário, time, área) com métricas de consumo atual vs limite
 - O sistema deve exibir e gerenciar rate limits por escopo e tipo (requests/s, requests/min, concurrent connections, bandwidth)
 - O sistema deve exibir e gerenciar regras de alerta com severidade, condição, escopo, janela de avaliação e canais de notificação
@@ -91,7 +91,7 @@ Mapeamento completo dos recursos implementados na plataforma OrkestrAI para os s
 
 - O sistema deve oferecer interface de linha de comando para criação e deploy de agentes e orquestrações
 - O sistema deve oferecer comandos para consulta de execuções, logs e status de ambientes
-- O sistema deve oferecer comandos para gerenciamento de catálogos (modelos, APIs, MCPs, RAGs, datasets)
+- O sistema deve oferecer comandos para gerenciamento de catálogos (modelos LLM e ML, APIs, MCPs, RAGs, datasets)
 
 #### 1.3 SDK / API
 
@@ -157,7 +157,7 @@ Mapeamento completo dos recursos implementados na plataforma OrkestrAI para os s
 ##### 4.1.1 Agent Service
 
 - O serviço deve criar, versionar, publicar e remover agentes
-- O serviço deve armazenar a composição do agente como grafo de nós e arestas (JSON ReactFlow) com persistência por ambiente
+- O serviço deve armazenar a composição do agente como grafo de nós e arestas
 - O serviço deve manter diagrama fan-in / fan-out derivado dos nós de entrada e saída do fluxo salvo
 - O serviço deve disponibilizar agentes publicados para seleção no editor visual, nos catálogos de registro e como referências dentro de orquestrações
 - O serviço deve associar cada agente a um time, responsável e conjunto de tags
@@ -174,7 +174,7 @@ Mapeamento completo dos recursos implementados na plataforma OrkestrAI para os s
 - O serviço deve permitir rollback para uma versão anterior de prompt com registro da operação
 - O serviço deve expor o prompt ativo para uso pelo agente em tempo de execução via Agent Gateway
 
-**Paleta de nós do editor de agentes (agentNodeCatalog):**
+**Paleta de nós do editor de agentes (sugestão):**
 - **Input** — mensagem de entrada do usuário; propriedade: inputSchema (JSON)
 - **Prompt** — template com variáveis `{{input}}`, `{{memory}}`, `{{rag}}`, `{{tools}}`; conectores tipados: in, memory, tools, rag
 - **Task** — capacidade nomeada do agente com taskId e descrição; permite múltiplas tasks selecionáveis ao referenciar o agente em orquestrações
@@ -203,37 +203,39 @@ Mapeamento completo dos recursos implementados na plataforma OrkestrAI para os s
 - O serviço deve permitir rollback para versão anterior de qualquer prompt com registro da operação
 - O serviço deve expor os prompts ativos para uso em tempo de execução via Orchestration Gateway
 
+**Paleta de nós do editor de orquestração (sugestão):**
+
 *Message / Communication:*
-- **REST Request** (endpoint) — propriedades: protocolo (REST/GraphQL/gRPC/SSE/WebSocket), path
-- **REST Response** (output) — formato segue automaticamente o protocolo do Request conectado
-- **gRPC Request** (grpcreq) — proto · unary
-- **gRPC Response** (grpcres) — proto · stream
-- **WebSocket Request** (wsreq) — ws:// · wss://
-- **WebSocket Response** (wsres) — frames · json
-- **Message Consumer** (consumer) — propriedades: broker (Kafka/RabbitMQ/NATS/SQS/Pub-Sub/Redis Streams), topic/queue, consumer group
-- **Message Producer** (producer) — propriedades: broker, topic/queue
+- **REST Request** (endpoint) — ponto de entrada via HTTP. Recebe chamadas externas e inicia a orquestração. Configurável com protocolo (REST, GraphQL, SSE, WebSocket), path do endpoint e tipo de autenticação.
+- **REST Response** (output) — envia a resposta final ao chamador HTTP. O formato de saída (JSON, stream SSE, WebSocket frames) segue automaticamente o protocolo do REST Request conectado.
+- **gRPC Request** (grpcreq) — ponto de entrada via gRPC unary. Recebe chamadas de serviços internos usando Protocol Buffers, adequado para comunicação serviço-a-serviço de alta performance.
+- **gRPC Response** (grpcres) — envia a resposta ao chamador gRPC, suportando tanto resposta unary quanto streaming bidirecional via proto.
+- **WebSocket Request** (wsreq) — estabelece conexão WebSocket persistente (ws:// ou wss://). Permite comunicação bidirecional em tempo real entre cliente e orquestração.
+- **WebSocket Response** (wsres) — emite mensagens de volta ao cliente WebSocket conectado. Suporta envio de frames JSON ao longo de toda a execução da orquestração.
+- **Message Consumer** (consumer) — assina um tópico ou fila de mensageria e dispara a orquestração a cada mensagem recebida. Configurável com broker (Kafka, RabbitMQ, NATS, SQS, Pub/Sub, Redis Streams), nome do tópico/fila e consumer group.
+- **Message Producer** (producer) — publica uma mensagem em um tópico ou fila ao final de um passo da orquestração. Configurável com broker e nome do tópico/fila destino.
 
 *Triggers:*
-- **Cron Job** (cron) — propriedades: expressão cron (texto livre) e presets pré-definidos
+- **Cron Job** (cron) — dispara a orquestração em intervalos programados sem payload externo. Configurável via expressão cron (ex: `0 2 * * *`) ou presets pré-definidos (diário, horário, semanal, mensal).
 
 *Tasks:*
-- **Agent Task** (agentref) — propriedades: agentId (seleção do catálogo), taskId (se agente expõe múltiplas tasks), agentInputData (JSON)
-- **Script Task** (scripttask) — propriedades: linguagem (JavaScript / Python), script (editor modal)
-- **Human Task** (humantask) — propriedades: assignedTo (email), taskFields (JSON com campos do formulário e suporte a parâmetros `{{param}}`)
+- **Agent Task** (agentref) — invoca um agente publicado no catálogo. Permite selecionar o agente, a task específica a executar (quando o agente expõe múltiplas tasks) e o payload de entrada via editor JSON. O resultado do agente flui para o próximo nó da orquestração.
+- **Script Task** (scripttask) — executa código customizado embutido na orquestração, em JavaScript ou Python. Útil para transformações de dados, cálculos ou lógicas simples que não justificam um agente dedicado. O script é editado em modal com syntax highlighting.
+- **Human Task** (humantask) — pausa a execução e aguarda interação manual de um operador. Define um formulário dinâmico (campos text, textarea, select, checkbox, checkbox-group) e o e-mail do responsável pela tarefa. Suporta parâmetros dinâmicos `{{param}}` nos campos.
 
 *Coordination:*
-- **Router** (router) — branching condicional: if / switch / intent
-- **Loop** (loop) — repetição: for / while / retry
-- **Validator** (validator) — verificação de qualidade: modo AI (LLM + prompt de validação) ou Template (JSON Schema)
-- **Wait / Merge** (merge) — aguarda branches paralelas: all / any / first
+- **Router** (router) — avalia condições e encaminha o fluxo para uma ou mais branches específicas. Suporta roteamento condicional por regras (if/switch) ou por classificação de intenção via LLM, permitindo despacho inteligente entre agentes especializados.
+- **Loop** (loop) — repete um bloco da orquestração até que uma condição seja satisfeita. Suporta padrões de iteração (for, while) e de retry com backoff, útil para polling e tentativas com tolerância a falha.
+- **Validator** (validator) — verifica a qualidade ou conformidade do output de um nó anterior antes de prosseguir o fluxo. Opera em dois modos: **AI** (envia o output a um LLM com um prompt de validação e aguarda `{ valid, reason }`) ou **Template** (valida contra um JSON Schema).
+- **Wait / Merge** (merge) — sincroniza múltiplas branches paralelas antes de continuar. Configurável com política de convergência: **all** (aguarda todas), **any** (avança com a primeira) ou **first** (descarta as demais ao receber a primeira resposta).
 
 *Tools:*
-- **Database** (db) — propriedades: dbCatalogId (PostgreSQL/MySQL/MongoDB/Redis/etc.), dbInstructions (SQL/DSL)
-- **Cloud Service** (cloud) — S3 / Lambda / BigQuery; AWS, GCP, Azure
-- **API** (tool) — chamada REST third-party; propriedade: apiId (seleção do catálogo)
+- **Database** (db) — executa operações em um banco de dados registrado no catálogo (PostgreSQL, MySQL, MongoDB, Redis, etc.). Configurável com seleção do banco e instruções SQL/DSL editadas em modal, suportando operações insert, update, upsert, delete e search.
+- **Cloud Service** (cloud) — acessa serviços de nuvem como S3 (leitura/escrita de objetos), Lambda (invocação de função), BigQuery (queries analíticas) e equivalentes nos provedores AWS, GCP e Azure.
+- **API** (tool) — realiza chamadas a APIs externas cadastradas no catálogo. Permite invocar qualquer endpoint registrado (REST), com método HTTP, payload e autenticação já configurados no catálogo.
 
 *Information:*
-- **Human Info** (humaninfo) — propriedades: infoTemplate (Markdown com parâmetros `{{param}}`)
+- **Human Info** (humaninfo) — emite uma mensagem informativa para o operador humano durante a execução, sem interromper o fluxo. O conteúdo é um template Markdown com suporte a parâmetros dinâmicos `{{param}}` substituídos em tempo de execução. Suporta níveis info, success e warning.
 
 ##### 4.1.3 Template Service
 
@@ -263,20 +265,13 @@ Mapeamento completo dos recursos implementados na plataforma OrkestrAI para os s
 - O serviço deve publicar artefatos treinados no registry de modelos (artifactRegistry)
 - O serviço deve gerenciar tipos de GPU disponíveis (gpuTypes) para seleção ao criar um job
 
-##### 4.1.6 Pipeline & Deploy Service
+##### 4.1.5 Dataset Builder Service
 
-- O serviço deve gerenciar pipelines CI/CD por fluxo (orquestração / agente) e ambiente com estágios: Build → Test → Push → Deploy
-- O serviço deve exibir pipelines ativas com status (running / success / failed / pending), cluster, namespace, branch, réplicas e imagem Docker
-- O serviço deve exibir histórico de runs de pipeline com trigger (git push / manual / schedule / webhook), commit, mensagem, autor, duração e status
-- O serviço deve expor KPIs de pipeline por ambiente: pipelines ativas, runs em 24h, taxa de sucesso e duração média
-- O serviço deve gerenciar ambientes de deploy com configuração Kubernetes detalhada: cluster, namespace, região, imagem, réplicas (prontas/desejadas), uso de CPU, memória, status de saúde (healthy/degraded/down) e timestamp do último deploy
-- O serviço deve expor gráficos históricos de uso de CPU, memória e pods ativos por ambiente (últimas 24h)
-- O serviço deve expor variáveis de ambiente configuradas por ambiente (envVars)
-- O serviço deve suportar ação de redeploy por ambiente
-- O serviço deve suportar ação de promoção entre ambientes (dev → staging → production)
-- O serviço deve suportar conexão de repositório Git ao fluxo
-- O serviço deve executar pipeline de deploy animado com progresso por estágio (Checkout → Build → Test → Push image → Deploy) ao salvar e fazer deploy via editor visual
-- O serviço deve atualizar o status e versão do fluxo ao concluir o deploy
+- O serviço deve oferecer capacidade de construção de datasets a partir de fontes de dados da plataforma (execuções, conversas, logs, bases RAG, APIs externas e bancos registrados)
+- O serviço deve permitir definir pipelines de coleta, transformação e limpeza de dados (filtros, deduplicação, anotação e splitting em train/validation/test)
+- O serviço deve suportar geração de datasets sintéticos a partir de LLMs cadastrados no catálogo
+- O serviço deve versionar datasets construídos, registrando origem, transformações aplicadas, autor e timestamp
+- O serviço deve expor datasets construídos para seleção em jobs de treinamento, suites de testes e na Feature Store
 
 ---
 
@@ -336,27 +331,12 @@ Mapeamento completo dos recursos implementados na plataforma OrkestrAI para os s
 - O serviço deve permitir configuração independente por ambiente (dev / staging / production)
 - O serviço deve disponibilizar RAGs ativos para seleção no editor visual de agentes
 
-##### 4.3.6 Dataset Service
+##### 4.3.6 Dataset Catalog Service
 
 - O serviço deve registrar datasets com nome, descrição, path (local ou cloud: S3, GCS, etc.), formato (CSV, JSON, JSONL, Parquet, Delta Lake, Avro, ORC, HDF5, Arrow, TFRecord, Protobuf, XML, Excel, SQLite), tamanho e número de linhas
 - O serviço deve suportar tags para categorização
 - O serviço deve expor datasets ativos para seleção em jobs de treinamento e suites de testes
 - O serviço deve permitir registrar, editar e remover datasets; campos de tamanho e número de linhas são somente leitura após criação
-
-**Build Dataset:**
-- O serviço deve oferecer capacidade de construção de datasets a partir de fontes de dados da plataforma (execuções, conversas, logs, bases RAG, APIs externas e bancos registrados)
-- O serviço deve permitir definir pipelines de coleta, transformação e limpeza de dados (filtros, deduplicação, anotação e splitting em train/validation/test)
-- O serviço deve suportar geração de datasets sintéticos a partir de LLMs cadastrados no catálogo
-- O serviço deve versionar datasets construídos, registrando origem, transformações aplicadas, autor e timestamp
-- O serviço deve expor datasets construídos para seleção em jobs de treinamento, suites de testes e na Feature Store
-
-**Feature Store:**
-- O serviço deve gerenciar uma Feature Store centralizada para armazenar, versionar e servir features calculadas para projetos de Machine Learning
-- O serviço deve suportar definição de features com nome, tipo (numérico, categórico, embedding, texto), fonte de dados de origem e lógica de transformação
-- O serviço deve suportar feature groups (grupos de features relacionadas a uma entidade: usuário, agente, orquestração, etc.)
-- O serviço deve disponibilizar features em dois modos: **offline** (batch, para treinamento) e **online** (baixa latência, para inferência em tempo real)
-- O serviço deve versionar feature groups e rastrear linhagem (quais datasets e transformações geraram cada feature)
-- O serviço deve expor features para seleção em jobs de treinamento do Training Service e para consumo pelo Model Gateway em tempo de inferência
 
 ---
 
@@ -445,7 +425,7 @@ Mapeamento completo dos recursos implementados na plataforma OrkestrAI para os s
 - O assistente deve oferecer sugestões contextuais pré-definidas por modo (3 sugestões para agent, 3 para orchestration)
 - O assistente deve permitir refinamento iterativo do fluxo gerado via mensagens de acompanhamento
 
-#### 5.1 Flow Store (Persistência de Fluxos)
+#### 5.1 Flow Engine (Persistência e execução de Fluxos)
 
 - O serviço deve persistir grafos de fluxo (nós e arestas) por ID de aplicação e ambiente (chave: `appId:environment`)
 - O serviço deve controlar versionamento semântico com histórico de versões por chave
@@ -454,7 +434,7 @@ Mapeamento completo dos recursos implementados na plataforma OrkestrAI para os s
 - O serviço deve derivar RAGs vinculados a um agente a partir dos nós do tipo "rag" salvos no fluxo
 - O serviço deve armazenar parâmetros de configuração associados ao fluxo por ambiente
 
-#### 5.2 Registry (Catálogos de Referência para o Editor)
+#### 5.2 Repositories (Catálogos de Referência para o Editor)
 
 - O serviço deve expor listas de referência para população dos selects no painel de propriedades do editor visual:
   - RAGs disponíveis (registeredRags)
@@ -469,7 +449,7 @@ Mapeamento completo dos recursos implementados na plataforma OrkestrAI para os s
   - Operações de banco (dbOperations): insert, update, upsert, delete, search
   - Presets de expressão Cron (cronPresets)
 
-#### 5.3 Authentication Context
+#### 5.3 User Profile
 
 - O serviço deve prover contexto de autenticação com perfil do usuário: nome, e-mail, telefone, gerente, área, time e papel (role)
 - O serviço deve persistir sessão de autenticação no localStorage
@@ -490,3 +470,18 @@ Mapeamento completo dos recursos implementados na plataforma OrkestrAI para os s
 - O diálogo deve exibir log de execução linha a linha com resultado do teste
 - O diálogo deve gerar snippets de código prontos para uso em quatro formatos: Interface (UI), **cURL**, **Python** (requests) e **JavaScript** (fetch) com autenticação Bearer via API key
 - Os snippets devem ser copiáveis para área de transferência
+
+#### 5.6 Pipeline & Deploy
+
+- O serviço deve gerenciar pipelines CI/CD por fluxo (orquestração / agente) e ambiente com estágios: Build → Test → Push → Deploy
+- O serviço deve exibir pipelines ativas com status (running / success / failed / pending), cluster, namespace, branch, réplicas e imagem Docker
+- O serviço deve exibir histórico de runs de pipeline com trigger (git push / manual / schedule / webhook), commit, mensagem, autor, duração e status
+- O serviço deve expor KPIs de pipeline por ambiente: pipelines ativas, runs em 24h, taxa de sucesso e duração média
+- O serviço deve gerenciar ambientes de deploy com configuração Kubernetes detalhada: cluster, namespace, região, imagem, réplicas (prontas/desejadas), uso de CPU, memória, status de saúde (healthy/degraded/down) e timestamp do último deploy
+- O serviço deve expor gráficos históricos de uso de CPU, memória e pods ativos por ambiente (últimas 24h)
+- O serviço deve expor variáveis de ambiente configuradas por ambiente (envVars)
+- O serviço deve suportar ação de redeploy por ambiente
+- O serviço deve suportar ação de promoção entre ambientes (dev → staging → production)
+- O serviço deve suportar conexão de repositório Git ao fluxo
+- O serviço deve executar pipeline de deploy animado com progresso por estágio (Checkout → Build → Test → Push image → Deploy) ao salvar e fazer deploy via editor visual
+- O serviço deve atualizar o status e versão do fluxo ao concluir o deploy
