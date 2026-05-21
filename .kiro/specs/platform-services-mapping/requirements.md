@@ -414,7 +414,7 @@ Mapeamento completo dos recursos implementados na plataforma de IA para os servi
 
 ### 5. Componentes Transversais
 
-#### 5.0 AI Assistant (Editor Visual)
+#### 5.1 AI Assistant
 
 - O assistente deve estar disponível como painel lateral retrátil no editor visual (FlowBuilder)
 - O assistente deve operar em dois modos: **agent** (gera topologia hub-and-spoke: inputs → Prompt → LLM → Output) e **orchestration** (gera cadeia linear com nós de ingresso, agentes, coordenação e egresso)
@@ -425,7 +425,7 @@ Mapeamento completo dos recursos implementados na plataforma de IA para os servi
 - O assistente deve oferecer sugestões contextuais pré-definidas por modo (3 sugestões para agent, 3 para orchestration)
 - O assistente deve permitir refinamento iterativo do fluxo gerado via mensagens de acompanhamento
 
-#### 5.1 Flow Engine (Persistência e execução de Fluxos)
+#### 5.2 Flow Engine
 
 - O serviço deve persistir grafos de fluxo (nós e arestas) por ID de aplicação e ambiente (chave: `appId:environment`)
 - O serviço deve controlar versionamento semântico com histórico de versões por chave
@@ -433,21 +433,6 @@ Mapeamento completo dos recursos implementados na plataforma de IA para os servi
 - O serviço deve derivar itens fan-out (producer, humantask, db, cloud, tool para orquestrações; llm, memory, tool, mcp para agentes) a partir dos nós salvos
 - O serviço deve derivar RAGs vinculados a um agente a partir dos nós do tipo "rag" salvos no fluxo
 - O serviço deve armazenar parâmetros de configuração associados ao fluxo por ambiente
-
-#### 5.2 Repositories (Catálogos de Referência para o Editor)
-
-- O serviço deve expor listas de referência para população dos selects no painel de propriedades do editor visual:
-  - RAGs disponíveis (registeredRags)
-  - APIs disponíveis (registeredApis)
-  - MCP Servers disponíveis (registeredMcpServers)
-  - Agentes publicados (registeredAgents) com suas tasks disponíveis (agentTasks)
-  - Modelos LLM disponíveis (registeredLlms)
-  - Tipos de banco de dados (databaseTypes)
-  - Protocolos de request (requestProtocols)
-  - Estratégias de coordenação (coordinationStrategies)
-  - Brokers de mensageria (messagingBrokers): Kafka, RabbitMQ, NATS, SQS, Pub/Sub, Redis Streams
-  - Operações de banco (dbOperations): insert, update, upsert, delete, search
-  - Presets de expressão Cron (cronPresets)
 
 #### 5.3 User Profile
 
@@ -462,7 +447,7 @@ Mapeamento completo dos recursos implementados na plataforma de IA para os servi
 - O ambiente ativo deve influenciar dados exibidos no dashboard, detalhe de orquestração/agente, pipeline, observabilidade, finops, quotas e editor visual
 - O sistema deve exibir seletor de ambiente persistente no header da aplicação
 
-#### 5.5 Test Flow Dialog (Teste do Editor)
+#### 5.5 Test Flow
 
 - O editor visual deve oferecer diálogo de teste que detecta automaticamente os inbounds do fluxo: endpoint (REST/gRPC/WebSocket), consumer (mensageria) e cron (agendamento) para orquestrações; input para agentes
 - O diálogo deve classificar inbounds como **sync** (endpoint) ou **async** (consumer / cron) e exibir detalhes do protocolo, path, broker, topic e expressão cron
@@ -485,3 +470,20 @@ Mapeamento completo dos recursos implementados na plataforma de IA para os servi
 - O serviço deve suportar conexão de repositório Git ao fluxo
 - O serviço deve executar pipeline de deploy animado com progresso por estágio (Checkout → Build → Test → Push image → Deploy) ao salvar e fazer deploy via editor visual
 - O serviço deve atualizar o status e versão do fluxo ao concluir o deploy
+
+#### 5.7 Repository (Git)
+
+O repositório Git é a fonte de verdade da plataforma. Toda a lógica de agentes, orquestrações e templates — seja lowcode (grafo de nós serializado em JSON) ou highcode (código Python, TypeScript, YAML) — precisa ser rastreada, versionada e auditável. Sem um repositório conectado, não há como garantir reprodutibilidade de deploys, rastrear quem alterou o quê, reverter regressões nem aplicar práticas de revisão de código sobre os fluxos de IA.
+
+A dependência do Git é estrutural: o Pipeline & Deploy (5.6) só consegue executar os estágios Build → Test → Push → Deploy porque parte de um commit específico. O histórico de versões semânticas (v1.0.0 → v1.0.1) dos agentes e orquestrações mapeia diretamente para tags ou branches no repositório. Templates highcode são, por definição, repositórios Git — a URL do repo é o próprio artefato.
+
+- O serviço deve permitir conectar um repositório Git externo (GitHub, GitLab, Bitbucket, Azure DevOps) a cada agente, orquestração ou template da plataforma
+- O serviço deve armazenar credenciais de acesso ao repositório (PAT, SSH key, OAuth) de forma segura, por ambiente
+- O serviço deve sincronizar automaticamente o grafo de fluxo (JSON) para o repositório ao salvar uma versão no editor visual, realizando commit com mensagem padronizada (ex: `feat(agent/researcher): bump v1.0.2`)
+- O serviço deve suportar o fluxo inverso: ao receber um push no repositório (webhook), disparar automaticamente o pipeline de CI/CD da plataforma
+- O serviço deve registrar, em cada versão de agente ou orquestração, o commit SHA de origem, branch, autor e mensagem de commit correspondentes
+- O serviço deve permitir navegar pelo histórico de commits do repositório vinculado diretamente na tela de detalhe do agente ou orquestração, com link para diff no provedor Git
+- O serviço deve suportar estratégias de branching alinhadas aos ambientes da plataforma: branch `develop` → ambiente dev, `staging` → staging, `main` → production
+- O serviço deve expor o status de sincronização entre a versão ativa na plataforma e o HEAD do repositório, alertando quando houver divergência
+- Templates highcode devem ter o repositório Git como artefato principal, com a URL do repo sendo o identificador do template; a plataforma clona o repositório no momento de instanciação
+- O serviço deve garantir que todo deploy em produção seja rastreável a um commit imutável, garantindo reprodutibilidade e auditabilidade completa do ciclo de vida dos fluxos de IA
