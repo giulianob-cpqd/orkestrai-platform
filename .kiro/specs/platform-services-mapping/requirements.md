@@ -14,15 +14,16 @@ Mapeamento completo dos recursos implementados na plataforma OrkestrAI para os s
 
 - O sistema deve exibir um dashboard principal com métricas globais da plataforma
 - O sistema deve oferecer navegação lateral colapsável organizada nas seções: Overview, Build, Tests, Uses, Catalog e Governance
+- Na seção **Catalog**, o sistema deve incluir os itens: Models, APIs, MCP Servers, Databases, RAGs, Datasets, **Build Dataset** e **Feature Store**
 - O sistema deve suportar seleção de ambiente (dev / staging / production) de forma global e persistente
 - O sistema deve exibir menu de notificações com eventos e alertas recentes
 - O sistema deve oferecer perfil do usuário e configurações da conta
 
 **Build**
 - O sistema deve exibir lista de orquestrações com nome, versão, status, time e quantidade de agentes referenciados
-- O sistema deve exibir detalhe de orquestração com: metadados (nome, descrição, versão, time, responsável, tags), diagrama fan-in/fan-out, lista de agentes referenciados, aba Pipeline & Deploy e aba Observability
+- O sistema deve exibir detalhe de orquestração com: metadados (nome, descrição, versão, time, responsável, tags), diagrama fan-in/fan-out, lista de agentes referenciados, aba Pipeline & Deploy, aba Observability e aba **Prompt Versions**
 - O sistema deve exibir lista de agentes com nome, versão, status, time e quantidade de RAGs vinculados
-- O sistema deve exibir detalhe de agente com: metadados, diagrama fan-in/fan-out, lista de RAGs vinculados, aba Pipeline & Deploy e aba Observability
+- O sistema deve exibir detalhe de agente com: metadados, diagrama fan-in/fan-out, lista de RAGs vinculados, aba Pipeline & Deploy, aba Observability e aba **Prompt Versions**
 - O sistema deve oferecer editor visual drag-and-drop (FlowBuilder) para criar e editar orquestrações e agentes com paleta de componentes, canvas, mini-map, zoom/pan e salvamento automático de versão por ambiente
 - O editor deve oferecer painel de propriedades lateral para configuração de cada nó selecionado
 - O editor deve oferecer assistente de IA integrado para geração de fluxos a partir de linguagem natural
@@ -40,6 +41,14 @@ Mapeamento completo dos recursos implementados na plataforma OrkestrAI para os s
 - O sistema deve permitir criar job de treinamento com seleção de tipo, framework, modelo base, dataset, hiperparâmetros e hardware (GPU/nodes)
 - O sistema deve permitir iniciar, pausar e remover jobs de treinamento
 - O sistema deve exibir KPIs de treinamento: total de runs, runs em execução, runs com sucesso, gasto total e GPU·hours
+
+**Prompt Versions (aba nas telas de detalhe de agente e orquestração):**
+- O sistema deve exibir histórico de versões de cada prompt da aplicação com conteúdo, autor, timestamp e nota
+- O sistema deve permitir criar nova versão de prompt a partir de editor de texto inline, sem abrir o editor visual
+- O sistema deve exibir o prompt atualmente ativo destacado no histórico
+- O sistema deve permitir ativar qualquer versão anterior com confirmação
+- O sistema deve permitir comparar duas versões de prompt em visualização diff lado a lado
+- O sistema deve exibir, para orquestrações, a lista de nós que possuem prompts (identificados por ID e label do nó) para seleção antes de editar
 
 **Tests**
 - O sistema deve exibir suites de testes com alvo (orchestration / agent / rag), ambiente, agendamento e resultado da última execução
@@ -66,6 +75,8 @@ Mapeamento completo dos recursos implementados na plataforma OrkestrAI para os s
 - O sistema deve exibir catálogo de RAGs mostrando índices internos (vinculados a grupos de conhecimento, somente leitura) e externos (editáveis), com store vetorial, modelo de embedding e configuração por ambiente
 - O sistema deve exibir catálogo de datasets com nome, formato (CSV, JSONL, Parquet, etc.), path, tamanho, número de linhas, tags e status
 - O sistema deve permitir registrar, editar e remover datasets
+- O sistema deve oferecer capacidade de **Build Dataset**: construção de datasets a partir de fontes da plataforma com pipelines de coleta, transformação, limpeza e splitting
+- O sistema deve exibir e gerenciar a **Feature Store**: grupos de features com definição, versionamento e linhagem, acessíveis em modo offline (treinamento) e online (inferência)
 
 **Governance**
 - O sistema deve exibir análise de custos (FinOps) com breakdown por área, equipe, orquestração, agente, treinamento, LLM e infraestrutura Kubernetes, com filtro por período (7d / 30d / 90d) e área
@@ -155,6 +166,14 @@ Mapeamento completo dos recursos implementados na plataforma OrkestrAI para os s
 - O serviço deve armazenar parâmetros de configuração por ambiente (dev / staging / production)
 - O serviço deve indicar se o agente suporta rota de conversação (hasConversation)
 
+**Versionamento de Prompts:**
+- O serviço deve armazenar e versionar os prompts (system template e instruções) de cada agente de forma independente do grafo de fluxo
+- O serviço deve permitir criar, editar e ativar versões de prompt sem necessidade de abrir ou salvar o editor visual
+- Cada versão de prompt deve registrar: conteúdo do template, autor, timestamp e nota de alteração
+- O serviço deve permitir comparar versões de prompt lado a lado (diff)
+- O serviço deve permitir rollback para uma versão anterior de prompt com registro da operação
+- O serviço deve expor o prompt ativo para uso pelo agente em tempo de execução via Agent Gateway
+
 **Paleta de nós do editor de agentes (agentNodeCatalog):**
 - **Input** — mensagem de entrada do usuário; propriedade: inputSchema (JSON)
 - **Prompt** — template com variáveis `{{input}}`, `{{memory}}`, `{{rag}}`, `{{tools}}`; conectores tipados: in, memory, tools, rag
@@ -177,7 +196,12 @@ Mapeamento completo dos recursos implementados na plataforma OrkestrAI para os s
 - O serviço deve gerenciar status de ciclo de vida: draft → active → deploying → error
 - O serviço deve controlar versionamento semântico com histórico de versões por ambiente
 
-**Paleta de nós do editor de orquestrações (orchestrationNodeGroups):**
+**Versionamento de Prompts:**
+- O serviço deve armazenar e versionar os prompts de nós críticos da orquestração (ex: instruções de coordenação, templates de mensagem para Human Task/Human Info) de forma independente do grafo de fluxo
+- O serviço deve permitir editar e ativar versões de prompt diretamente na tela de detalhe da orquestração, sem necessidade de abrir o editor visual
+- Cada versão de prompt deve registrar: conteúdo, escopo (ID do nó ao qual pertence), autor, timestamp e nota de alteração
+- O serviço deve permitir rollback para versão anterior de qualquer prompt com registro da operação
+- O serviço deve expor os prompts ativos para uso em tempo de execução via Orchestration Gateway
 
 *Message / Communication:*
 - **REST Request** (endpoint) — propriedades: protocolo (REST/GraphQL/gRPC/SSE/WebSocket), path
@@ -318,6 +342,21 @@ Mapeamento completo dos recursos implementados na plataforma OrkestrAI para os s
 - O serviço deve suportar tags para categorização
 - O serviço deve expor datasets ativos para seleção em jobs de treinamento e suites de testes
 - O serviço deve permitir registrar, editar e remover datasets; campos de tamanho e número de linhas são somente leitura após criação
+
+**Build Dataset:**
+- O serviço deve oferecer capacidade de construção de datasets a partir de fontes de dados da plataforma (execuções, conversas, logs, bases RAG, APIs externas e bancos registrados)
+- O serviço deve permitir definir pipelines de coleta, transformação e limpeza de dados (filtros, deduplicação, anotação e splitting em train/validation/test)
+- O serviço deve suportar geração de datasets sintéticos a partir de LLMs cadastrados no catálogo
+- O serviço deve versionar datasets construídos, registrando origem, transformações aplicadas, autor e timestamp
+- O serviço deve expor datasets construídos para seleção em jobs de treinamento, suites de testes e na Feature Store
+
+**Feature Store:**
+- O serviço deve gerenciar uma Feature Store centralizada para armazenar, versionar e servir features calculadas para projetos de Machine Learning
+- O serviço deve suportar definição de features com nome, tipo (numérico, categórico, embedding, texto), fonte de dados de origem e lógica de transformação
+- O serviço deve suportar feature groups (grupos de features relacionadas a uma entidade: usuário, agente, orquestração, etc.)
+- O serviço deve disponibilizar features em dois modos: **offline** (batch, para treinamento) e **online** (baixa latência, para inferência em tempo real)
+- O serviço deve versionar feature groups e rastrear linhagem (quais datasets e transformações geraram cada feature)
+- O serviço deve expor features para seleção em jobs de treinamento do Training Service e para consumo pelo Model Gateway em tempo de inferência
 
 ---
 
