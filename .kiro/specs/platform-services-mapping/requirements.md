@@ -16,7 +16,7 @@ O Access Layer é o ponto de entrada humano da plataforma. É por aqui que engen
 
 - O sistema deve exibir um dashboard principal com métricas globais da plataforma
 - O sistema deve oferecer navegação lateral colapsável organizada nas seções: Overview, Build, Tests, Uses, Catalog e Governance
-- Na seção **Catalog**, o sistema deve incluir os itens: Models, APIs, MCP Servers, Databases, RAGs, Datasets, **Build Dataset** e **Feature Store**
+- Na seção **Catalog**, o sistema deve incluir os itens: Models, APIs, MCP Servers, Databases, RAGs, Datasets, **Connectors**, **Build Dataset** e **Feature Store**
 - O sistema deve suportar seleção de ambiente (dev / staging / production) de forma global e persistente
 - O sistema deve exibir menu de notificações com eventos e alertas recentes
 - O sistema deve oferecer perfil do usuário e configurações da conta
@@ -119,7 +119,7 @@ O Service Layer é onde a lógica de negócio da plataforma vive. É aqui que ag
 - **Prompt** — template com variáveis `{{input}}`, `{{memory}}`, `{{rag}}`, `{{tools}}`; conectores tipados: in, memory, tools, rag
 - **Task** — capacidade nomeada do agente com taskId e descrição; permite múltiplas tasks selecionáveis ao referenciar o agente em orquestrações
 - **Conversation** — habilita interface de chat multi-turn stateful
-- **LLM Model** — núcleo de raciocínio; propriedade: llmId (seleção do catálogo)
+- **Model** — núcleo de raciocínio; propriedade: modelId (seleção do catálogo)
 - **Memory** — buffer / summary / vector; propriedade: tipo de memória e janela de contexto
 - **RAG Retriever** — lookup na base de conhecimento; propriedade: ragId (seleção do catálogo)
 - **Tool / API** — capacidade externa REST/GraphQL; propriedade: apiId (seleção do catálogo)
@@ -185,7 +185,7 @@ O Service Layer é onde a lógica de negócio da plataforma vive. É aqui que ag
 - O serviço deve expor os parâmetros configuráveis de cada template para preenchimento no wizard de instanciação
 - O serviço deve criar um novo agente ou orquestração a partir de um template instanciado, substituindo os parâmetros nos nós do fluxo
 
-##### 4.1.4 Knowledge Service
+##### 4.1.4 Documents Service
 
 - O serviço deve criar e gerenciar grupos de documentos com estratégia de indexação, modelo de embedding, chunk size, chunk overlap e vector store configuráveis
 - O serviço deve suportar documentos nos formatos PDF, Markdown, HTML, DOCX e TXT
@@ -205,11 +205,10 @@ O Service Layer é onde a lógica de negócio da plataforma vive. É aqui que ag
 - O serviço deve publicar artefatos treinados no registry de modelos (artifactRegistry)
 - O serviço deve gerenciar tipos de GPU disponíveis (gpuTypes) para seleção ao criar um job
 
-##### 4.1.5 Dataset Builder Service
+##### 4.1.5 Dataset Service
 
 - O serviço deve oferecer capacidade de construção de datasets a partir de fontes de dados da plataforma (execuções, conversas, logs, bases RAG, APIs externas e bancos registrados)
 - O serviço deve permitir definir pipelines de coleta, transformação e limpeza de dados (filtros, deduplicação, anotação e splitting em train/validation/test)
-- O serviço deve suportar geração de datasets sintéticos a partir de LLMs cadastrados no catálogo
 - O serviço deve versionar datasets construídos, registrando origem, transformações aplicadas, autor e timestamp
 - O serviço deve expor datasets construídos para seleção em jobs de treinamento, suites de testes e na Feature Store
 
@@ -264,19 +263,26 @@ O Service Layer é onde a lógica de negócio da plataforma vive. É aqui que ag
 - O serviço deve registrar bancos de dados externos com tipo (PostgreSQL, MySQL, MongoDB, Redis, BigQuery, Elasticsearch), operação e credenciais
 - O serviço deve disponibilizar bancos registrados para seleção no editor visual
 
-##### 4.3.5 RAGs DB Service
+##### 4.3.5 Knowledge Service
 
-- O serviço deve registrar bases RAG externas com store vetorial, endpoint, índice e modelo de embedding
+- O serviço deve registrar bases de conhecimento  store vetorial/graph, endpoint, índice e modelo de embedding
 - O serviço deve suportar stores: pgvector, Pinecone, Qdrant, Weaviate e Neo4j
 - O serviço deve permitir configuração independente por ambiente (dev / staging / production)
 - O serviço deve disponibilizar RAGs ativos para seleção no editor visual de agentes
 
-##### 4.3.6 Dataset Catalog Service
+##### 4.3.6 Connector Service
 
-- O serviço deve registrar datasets com nome, descrição, path (local ou cloud: S3, GCS, etc.), formato (CSV, JSON, JSONL, Parquet, Delta Lake, Avro, ORC, HDF5, Arrow, TFRecord, Protobuf, XML, Excel, SQLite), tamanho e número de linhas
-- O serviço deve suportar tags para categorização
-- O serviço deve expor datasets ativos para seleção em jobs de treinamento e suites de testes
-- O serviço deve permitir registrar, editar e remover datasets; campos de tamanho e número de linhas são somente leitura após criação
+Catálogo de conectores de negócio reutilizáveis que abstraem integrações com sistemas corporativos. Diferentemente de uma API simples (que expõe um único endpoint HTTP), um conector encapsula todo o protocolo de integração com um sistema de negócio — autenticação multi-step, descoberta de schema, mapeamento de entidades, paginação, retry com backoff e normalização de resposta — em uma unidade reutilizável e parametrizável. Um conector SAP, por exemplo, sabe como autenticar via OAuth2 com o sistema, descobrir os módulos disponíveis, mapear objetos de negócio (pedido, fornecedor, material) e lidar com as particularidades do protocolo OData — tudo isso transparente para o agente ou orquestração que o utiliza.
+
+- O serviço deve registrar conectores de negócio com nome, sistema-alvo (SAP, Salesforce, ServiceNow, HubSpot, Oracle, etc.), descrição, versão e status
+- O serviço deve armazenar o fluxo de autenticação do conector (OAuth2, SAML, API key, Basic Auth, token exchange) com credenciais por ambiente (dev / staging / production)
+- O serviço deve suportar operações multi-step: authenticate → discover schema → map entities → execute operation → handle pagination → normalize response → retry on failure
+- O serviço deve expor um catálogo de operações de alto nível por conector (ex: para Salesforce: `list_leads`, `create_opportunity`, `update_account`; para SAP: `get_purchase_orders`, `create_goods_receipt`)
+- O serviço deve permitir parametrizar operações com inputs tipados (filtros, campos, datas, IDs de entidade)
+- O serviço deve tratar automaticamente paginação, timeouts e retry com backoff exponencial, abstraindo esses detalhes do consumidor
+- O serviço deve normalizar respostas para um schema canônico da plataforma, independentemente do formato proprietário do sistema-alvo
+- O serviço deve disponibilizar conectores ativos para seleção no editor visual (como nó Tool/API especializado) e nas orquestrações via Agent Task
+- O serviço deve permitir testar a conectividade e autenticação de um conector diretamente na Console UI antes de usá-lo em produção
 
 ---
 
@@ -326,6 +332,25 @@ O Service Layer é onde a lógica de negócio da plataforma vive. É aqui que ag
 - O serviço deve suportar auto-refresh de traces a cada 5 segundos na Console UI
 - O serviço deve expor métricas de infraestrutura Kubernetes: réplicas ativas/desejadas, CPU, memória, pods e status de saúde por ambiente (healthy/degraded/down)
 - O serviço deve expor estatísticas de tempo médio por componente/estágio da orquestração para identificação de gargalos
+
+##### 4.4.5 Guardrail Service
+
+O Guardrail Service é a camada de proteção de conteúdo e conformidade da plataforma. Ele opera de forma transversal ao ciclo de execução dos agentes e orquestrações — inspecionando entradas antes de chegarem ao LLM, saídas antes de serem entregues ao usuário, e dados em trânsito entre componentes. Enquanto o Alert Service monitora métricas de infraestrutura e custo, o Guardrail Service monitora o *conteúdo* e o *comportamento* dos fluxos de IA, garantindo que as respostas produzidas estejam dentro dos limites de segurança, privacidade e conformidade definidos pela organização. Em contextos regulados (saúde, finanças, governo), essa camada é o que torna viável operar agentes autônomos em produção.
+
+- O serviço deve avaliar entradas (prompts) e saídas (respostas) de agentes e orquestrações em tempo real antes da entrega ao usuário ou ao próximo componente do fluxo
+- O serviço deve suportar detecção e bloqueio de **prompt injection**: tentativas de manipular o comportamento do agente via instruções embutidas no input do usuário
+- O serviço deve suportar detecção e bloqueio de **jailbreak**: tentativas de contornar as instruções de sistema e forçar o agente a operar fora das diretrizes configuradas
+- O serviço deve suportar **PII masking**: identificação e mascaramento automático de dados pessoais (CPF, e-mail, telefone, nome completo, número de cartão) em entradas e saídas
+- O serviço deve suportar detecção de **toxicidade**: classificação de conteúdo ofensivo, discriminatório ou inadequado com limiar configurável por aplicação
+- O serviço deve suportar detecção de **alucinação**: verificação de aderência da resposta ao contexto fornecido (RAG, prompt, histórico), com score de groundedness
+- O serviço deve suportar **blocked terms**: listas de termos ou padrões proibidos configuráveis por organização, time ou aplicação
+- O serviço deve suportar **off-topic detection**: verificação de que a resposta está dentro do escopo temático definido para o agente
+- O serviço deve suportar **max tokens enforcement**: truncamento ou bloqueio de respostas que ultrapassem o limite de tokens configurado
+- O serviço deve suportar **compliance policies**: regras de conformidade customizáveis por setor (ex: não citar concorrentes, não dar conselhos médicos, não recomendar investimentos)
+- O serviço deve registrar cada avaliação de guardrail com: tipo de regra, resultado (pass/fail), score, fragmento ofensivo (quando aplicável), ID da execução e timestamp
+- O serviço deve permitir configurar a ação ao detectar violação: **block** (bloqueia a resposta e retorna erro), **redact** (remove ou mascara o trecho problemático) ou **warn** (permite passar mas registra e alerta)
+- O serviço deve expor métricas de guardrail na observabilidade: taxa de violações por tipo de regra, por agente e por período
+- O serviço deve integrar com o Suite Cases Service, permitindo que testes de guardrail executem as mesmas políticas definidas para produção
 
 ---
 
