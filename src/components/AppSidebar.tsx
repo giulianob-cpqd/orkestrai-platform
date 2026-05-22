@@ -41,7 +41,7 @@ const catalogItems = [
   { title: "APIs", url: "/apis", icon: Plug },
   { title: "MCP Servers", url: "/mcp", icon: Server },
   { title: "Databases", url: "/databases", icon: Database },
-  { title: "RAGs", url: "/rags", icon: Library },
+  { title: "Knowledge", url: "/rags", icon: Library },
 ];
 
 const governanceItems = [

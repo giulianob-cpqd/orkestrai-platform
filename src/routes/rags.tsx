@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/rags")({
-  head: () => ({ meta: [{ title: "RAGs · OrkestrAI" }] }),
+  head: () => ({ meta: [{ title: "Knowledge · OrkestrAI" }] }),
   component: RAGsPage,
 });
 
@@ -56,7 +56,7 @@ function RAGsPage() {
 
   return (
     <CatalogManager
-      title="RAGs"
+      title="Knowledge"
       subtitle="Retrieval-augmented generation indexes"
       description="Vector and hybrid stores wired into agents. 3 internal (linked to knowledge bases) + 3 external."
       newButtonLabel="New index"
