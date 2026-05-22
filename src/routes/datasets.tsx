@@ -708,11 +708,12 @@ function DatasetsPage() {
             <WizardStep1Panel
               state={step1}
               onChange={setStep1}
-              onNext={() => {
-                if (!step1.name.trim()) {
+              onNext={(s) => {
+                if (!s.name.trim()) {
                   toast.error("Name is required");
                   return;
                 }
+                setStep1(s);
                 setWizardStep(2);
               }}
               onCancel={() => setWizardOpen(false)}
@@ -757,9 +758,18 @@ function WizardStep1Panel({
 }: {
   state: WizardStep1;
   onChange: (s: WizardStep1) => void;
-  onNext: () => void;
+  onNext: (s: WizardStep1) => void;
   onCancel: () => void;
 }) {
+  // Keep local copy so Next always gets the latest values
+  const [local, setLocal] = useState<WizardStep1>(state);
+
+  const update = (patch: Partial<WizardStep1>) => {
+    const next = { ...local, ...patch };
+    setLocal(next);
+    onChange(next);
+  };
+
   return (
     <>
       <div className="space-y-5">
@@ -788,9 +798,9 @@ function WizardStep1Panel({
               <button
                 key={value}
                 type="button"
-                onClick={() => onChange({ ...state, type: value })}
+                onClick={() => update({ type: value })}
                 className={`flex flex-col items-start gap-2 rounded-lg border p-4 text-left transition-all focus:outline-none ${
-                  state.type === value
+                  local.type === value
                     ? "border-primary bg-primary/5 shadow-[var(--shadow-glow)]"
                     : "border-border hover:border-primary/40"
                 }`}
@@ -807,8 +817,8 @@ function WizardStep1Panel({
         <div>
           <Label className="text-xs uppercase tracking-widest">Name</Label>
           <Input
-            value={state.name}
-            onChange={(e) => onChange({ ...state, name: e.target.value })}
+            value={local.name}
+            onChange={(e) => update({ name: e.target.value })}
             placeholder="e.g. Customer Support Tickets"
             className="mt-1"
           />
@@ -818,8 +828,8 @@ function WizardStep1Panel({
         <div>
           <Label className="text-xs uppercase tracking-widest">Description</Label>
           <Textarea
-            value={state.description}
-            onChange={(e) => onChange({ ...state, description: e.target.value })}
+            value={local.description}
+            onChange={(e) => update({ description: e.target.value })}
             placeholder="What does this dataset contain?"
             rows={3}
             className="mt-1"
@@ -832,8 +842,8 @@ function WizardStep1Panel({
             Tags (comma-separated)
           </Label>
           <Input
-            value={state.tags}
-            onChange={(e) => onChange({ ...state, tags: e.target.value })}
+            value={local.tags}
+            onChange={(e) => update({ tags: e.target.value })}
             placeholder="e.g. production, labeled, balanced"
             className="mt-1"
           />
@@ -844,7 +854,7 @@ function WizardStep1Panel({
         <Button variant="outline" type="button" onClick={onCancel}>
           Cancel
         </Button>
-        <Button type="button" onClick={onNext}>
+        <Button type="button" onClick={() => onNext(local)}>
           Next →
         </Button>
       </DialogFooter>
