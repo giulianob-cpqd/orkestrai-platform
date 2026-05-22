@@ -30,15 +30,18 @@ import {
   CheckCircle2,
   AlertTriangle,
   Info,
+  ExternalLink,
 } from "lucide-react";
 import {
   defaultGuardrails,
   defaultGuardrailEvents,
   ALL_KINDS,
   KIND_LABEL,
+  KIND_DESCRIPTION,
   SCOPE_LABEL,
   ACTION_LABEL,
   type GuardrailRule,
+  type GuardrailEvent,
   type GuardrailAction,
   type GuardrailSeverity,
 } from "@/data/guardrails";
@@ -88,6 +91,7 @@ function GuardrailsPage() {
   const [violSev, setViolSev]           = useState("all");
   const [violKind, setViolKind]         = useState("all");
   const [violAction, setViolAction]     = useState("all");
+  const [selectedEvent, setSelectedEvent] = useState<GuardrailEvent | null>(null);
 
   const filteredRules = useMemo(() =>
     rules.filter((r) => {
@@ -222,7 +226,11 @@ function GuardrailsPage() {
                   </TableHeader>
                   <TableBody>
                     {filteredEvents.map((e) => (
-                      <TableRow key={e.id}>
+                      <TableRow
+                        key={e.id}
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => setSelectedEvent(e)}
+                      >
                         <TableCell>
                           <Badge variant="outline" className={sevColor[e.severity]}>
                             {e.severity}

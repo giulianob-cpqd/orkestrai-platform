@@ -44,6 +44,7 @@ import {
   Clock,
   Plus,
   Search,
+  ExternalLink,
 } from "lucide-react";
 import {
   defaultRules,
@@ -104,6 +105,7 @@ function AlertsPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [editing, setEditing] = useState<AlertRule | null>(null);
   const [creating, setCreating] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<AlertEvent | null>(null);
 
   const summary = useMemo(() => {
     const firing = events.filter((e) => e.status === "firing").length;
@@ -233,7 +235,11 @@ function AlertsPage() {
                     {filteredEvents.map((e) => {
                       const Icon = categoryIcon[e.category];
                       return (
-                        <TableRow key={e.id}>
+                        <TableRow
+                          key={e.id}
+                          className="cursor-pointer hover:bg-muted/50"
+                          onClick={() => setSelectedEvent(e)}
+                        >
                           <TableCell>
                             <Badge variant="outline" className={sevColor[e.severity]}>{e.severity}</Badge>
                           </TableCell>
@@ -258,13 +264,13 @@ function AlertsPage() {
                           </TableCell>
                           <TableCell className="text-right space-x-1">
                             {e.status === "firing" && (
-                              <Button size="sm" variant="outline" onClick={() => setEventStatus(e.id, "acknowledged")}>Ack</Button>
+                              <Button size="sm" variant="outline" onClick={(ev) => { ev.stopPropagation(); setEventStatus(e.id, "acknowledged"); }}>Ack</Button>
                             )}
                             {e.status !== "resolved" && (
-                              <Button size="sm" variant="outline" onClick={() => setEventStatus(e.id, "resolved")}>Resolve</Button>
+                              <Button size="sm" variant="outline" onClick={(ev) => { ev.stopPropagation(); setEventStatus(e.id, "resolved"); }}>Resolve</Button>
                             )}
                             {e.status !== "silenced" && e.status !== "resolved" && (
-                              <Button size="sm" variant="ghost" onClick={() => setEventStatus(e.id, "silenced")}>Silence</Button>
+                              <Button size="sm" variant="ghost" onClick={(ev) => { ev.stopPropagation(); setEventStatus(e.id, "silenced"); }}>Silence</Button>
                             )}
                           </TableCell>
                         </TableRow>
@@ -349,12 +355,144 @@ function AlertsPage() {
             onSave={saveRule}
           />
         )}
+
+        <AlertEventDetail
+          event={selectedEvent}
+          rule={selectedEvent ? rules.find((r) => r.id === selectedEvent.ruleId) ?? null : null}
+          onClose={() => setSelectedEvent(null)}
+          onStatusChange={(id, status) => { setEventStatus(id, status); setSelectedEvent(null); }}
+        />
       </div>
     </AppLayout>
   );
 }
 
-function KpiCard({
+// ─── Alert Event Detail Modal ─────────────────────────────────────────────────
+
+function AlertEventDetail({
+  event,
+  rule,
+  onClose,
+  onStatusChange,
+}: {
+  event: AlertEvent | null;
+  rule: AlertRule | null;
+  onClose: () => void;
+  onStatusChange: (id: string, status: AlertStatus) => void;
+}) {
+  if (!event) return null;
+  const Icon = categoryIcon[event.category];
+
+  return (
+    <Dialog open={!!event} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Badge variant="outline" className={sevColor[event.severity]}>{event.severity}</Badge>
+            <span>{event.ruleName}</span>
+            <Badge variant="outline" className={statusColor[event.status]}>{event.status}</Badge>
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-5">
+          {/* Main info grid */}
+          <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
+            <div>
+              <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-1">Category</p>
+              <div className="flex items-center gap-1.5">
+                <Icon className="h-4 w-4 text-muted-foreground" />
+                <span>{CATEGORY_LABEL[event.category]}</span>
+              </div>
+            </div>
+            <div>
+              <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-1">Source</p>
+              <p className="font-medium">{event.source}</p>
+            </div>
+            <div>
+              <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-1">Value / Threshold</p>
+              <p className="font-mono font-semibold">
+                {event.value.toLocaleString()} {event.unit}
+                <span className="text-muted-foreground font-normal"> / {event.threshold.toLocaleString()}</span>
+              </p>
+            </div>
+            <div>
+              <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-1">Started at</p>
+              <p className="font-mono">{fmt(event.startedAt)}</p>
+            </div>
+            {event.ackBy && (
+              <div>
+                <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-1">Acknowledged by</p>
+                <p>{event.ackBy}</p>
+              </div>
+            )}
+            {event.resolvedAt && (
+              <div>
+                <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-1">Resolved at</p>
+                <p className="font-mono">{fmt(event.resolvedAt)}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Message */}
+          <div>
+            <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-1">Message</p>
+            <div className="rounded-md border border-border bg-muted/30 px-4 py-3 text-sm">
+              {event.message}
+            </div>
+          </div>
+
+          {/* Rule details */}
+          {rule && (
+            <div>
+              <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">Rule definition</p>
+              <div className="rounded-md border border-border bg-muted/20 px-4 py-3 space-y-2 text-sm">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="font-semibold">{rule.name}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{rule.description}</p>
+                  </div>
+                  <Badge variant="outline" className={sevColor[rule.severity]}>{rule.severity}</Badge>
+                </div>
+                <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs text-muted-foreground pt-1 border-t border-border/50">
+                  <span><span className="font-mono">condition:</span> {rule.condition.op} {rule.condition.threshold} {rule.condition.unit} / {rule.condition.window}</span>
+                  <span><span className="font-mono">cooldown:</span> {rule.cooldown}</span>
+                  <span><span className="font-mono">scope:</span> {rule.scope.type}{rule.scope.value ? ` · ${rule.scope.value}` : ""}</span>
+                  <span><span className="font-mono">channels:</span> {rule.channels.join(", ")}</span>
+                </div>
+                {rule.runbook && (
+                  <a
+                    href={rule.runbook}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <ExternalLink className="h-3 w-3" /> View runbook
+                  </a>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <DialogFooter className="gap-2 flex-wrap">
+          {event.status === "firing" && (
+            <Button variant="outline" onClick={() => onStatusChange(event.id, "acknowledged")}>Acknowledge</Button>
+          )}
+          {event.status !== "resolved" && (
+            <Button variant="outline" onClick={() => onStatusChange(event.id, "resolved")}>Mark resolved</Button>
+          )}
+          {event.status !== "silenced" && event.status !== "resolved" && (
+            <Button variant="ghost" onClick={() => onStatusChange(event.id, "silenced")}>Silence</Button>
+          )}
+          <Button variant="outline" onClick={onClose}>Close</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ─── KPI Card ─────────────────────────────────────────────────────────────────
   icon: Icon,
   label,
   value,
