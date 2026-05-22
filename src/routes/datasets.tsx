@@ -23,8 +23,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, Table2, Hammer, Play, Eye, Database, Server } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Plus, Pencil, Trash2, Table2, Hammer, Play, Eye,
+  Database, Server, ChevronRight,
+} from "lucide-react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import { datasets as initialDatasets } from "@/data/training";
 
 export const Route = createFileRoute("/datasets")({
@@ -319,6 +331,9 @@ function buildTransformLabel(t: TransformConfig): string {
 function DatasetsPage() {
   const [datasets, setDatasets] = useState<Dataset[]>(initialAllDatasets);
 
+  // Expanded row state
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
   // Wizard state
   const [wizardOpen, setWizardOpen] = useState(false);
   const [wizardStep, setWizardStep] = useState<1 | 2>(1);
@@ -482,34 +497,194 @@ function DatasetsPage() {
           </Button>
         </div>
 
-        {/* Unified list */}
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {datasets.map((ds) =>
-            ds.kind === "external" ? (
-              <ExternalCard
-                key={ds.id}
-                ds={ds}
-                onEdit={() => openEdit(ds)}
-                onDelete={() => handleDelete(ds.id)}
-              />
-            ) : (
-              <InternalCard
-                key={ds.id}
-                ds={ds}
-                onEdit={() => openEdit(ds)}
-                onDelete={() => handleDelete(ds.id)}
-                onRun={() => handleRun(ds.id)}
-              />
-            ),
-          )}
-        </div>
+        {/* Expandable table */}
+        <Card className="overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow className="border-b border-border/50 hover:bg-transparent">
+                <TableHead className="w-10" />
+                <TableHead>Dataset</TableHead>
+                <TableHead>Kind</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Format</TableHead>
+                <TableHead>Size / Rows</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {datasets.map((ds) => {
+                const isExpanded = expandedId === ds.id;
+                const Icon = ds.kind === "internal" ? Hammer : Table2;
+                return (
+                  <>
+                    <TableRow
+                      key={ds.id}
+                      className="cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() => setExpandedId(isExpanded ? null : ds.id)}
+                    >
+                      <TableCell className="w-10">
+                        <ChevronRight
+                          className={cn(
+                            "h-4 w-4 text-muted-foreground transition-transform",
+                            isExpanded && "rotate-90",
+                          )}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Icon className="h-4 w-4 text-primary shrink-0" />
+                          <div className="leading-tight">
+                            <p className="font-semibold text-sm">{ds.name}</p>
+                            <p className="font-mono text-[10px] text-muted-foreground">{ds.id}</p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {ds.kind === "internal" ? (
+                          <Badge variant="outline" className="border-primary/40 text-primary text-[10px]">internal</Badge>
+                        ) : (
+                          <Badge variant="outline" className="border-border text-muted-foreground text-[10px]">external</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={cn("gap-1.5 text-[10px]", statusColour[ds.status])}>
+                          <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                          {ds.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {ds.kind === "external" ? ds.format.toUpperCase() : ds.outputFormat}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {ds.kind === "external"
+                          ? ds.rows > 0 ? `${ds.size} · ${ds.rows.toLocaleString()} rows` : ds.size
+                          : ds.rowsGenerated !== undefined ? `${ds.rowsGenerated.toLocaleString()} rows` : "—"
+                        }
+                      </TableCell>
+                      <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-end gap-1">
+                          {ds.kind === "internal" && (ds.status === "draft" || ds.status === "failed") && (
+                            <Button size="sm" variant="ghost" className="h-7 gap-1 px-2 text-xs" onClick={() => handleRun(ds.id)}>
+                              <Play className="h-3 w-3" /> Run
+                            </Button>
+                          )}
+                          {ds.kind === "internal" && ds.status === "completed" && (
+                            <Button size="sm" variant="ghost" className="h-7 gap-1 px-2 text-xs" onClick={() => toast.info(`Viewing ${ds.outputName}`)}>
+                              <Eye className="h-3 w-3" /> View
+                            </Button>
+                          )}
+                          <Button size="sm" variant="ghost" className="h-7 gap-1 px-2 text-xs" onClick={() => openEdit(ds)}>
+                            <Pencil className="h-3 w-3" />
+                          </Button>
+                          <Button size="sm" variant="ghost" className="h-7 gap-1 px-2 text-xs text-destructive hover:text-destructive" onClick={() => handleDelete(ds.id)}>
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
 
-        {datasets.length === 0 && (
-          <div className="py-12 text-center">
-            <Database className="mx-auto mb-4 h-12 w-12 text-muted-foreground opacity-50" />
-            <p className="text-muted-foreground">No datasets yet</p>
-          </div>
-        )}
+                    {/* Expanded details row */}
+                    {isExpanded && (
+                      <TableRow className="hover:bg-transparent">
+                        <TableCell colSpan={7} className="p-0">
+                          <div className="border-t border-border/50 bg-muted/20 p-6">
+                            {ds.kind === "external" ? (
+                              <div className="space-y-4">
+                                <div className="grid grid-cols-2 gap-x-8 gap-y-3 md:grid-cols-4 text-sm">
+                                  <div>
+                                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Path</p>
+                                    <p className="mt-1 font-mono text-xs break-all">{ds.path}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Format</p>
+                                    <p className="mt-1 font-medium">{ds.format.toUpperCase()}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Size</p>
+                                    <p className="mt-1 font-medium">{ds.size}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Rows</p>
+                                    <p className="mt-1 font-medium">{ds.rows > 0 ? ds.rows.toLocaleString() : "—"}</p>
+                                  </div>
+                                </div>
+                                {ds.description && (
+                                  <div>
+                                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Description</p>
+                                    <p className="mt-1 text-sm text-muted-foreground">{ds.description}</p>
+                                  </div>
+                                )}
+                                {ds.tags.length > 0 && (
+                                  <div className="flex flex-wrap gap-1.5">
+                                    {ds.tags.map((tag) => (
+                                      <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="space-y-4">
+                                <div className="grid grid-cols-2 gap-x-8 gap-y-3 md:grid-cols-4 text-sm">
+                                  <div>
+                                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Source</p>
+                                    <p className="mt-1 font-mono text-xs">{ds.sourceLabel}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Transforms</p>
+                                    <p className="mt-1 text-xs">{ds.transformLabel}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Output</p>
+                                    <p className="mt-1 font-medium">{ds.outputFormat}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Rows generated</p>
+                                    <p className="mt-1 font-medium">{ds.rowsGenerated !== undefined ? ds.rowsGenerated.toLocaleString() : "—"}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Output name</p>
+                                    <p className="mt-1 font-mono text-xs">{ds.outputName}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Created</p>
+                                    <p className="mt-1 text-xs text-muted-foreground">
+                                      {new Date(ds.createdAt).toLocaleDateString("pt-BR")}
+                                    </p>
+                                  </div>
+                                </div>
+                                {ds.description && (
+                                  <div>
+                                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Description</p>
+                                    <p className="mt-1 text-sm text-muted-foreground">{ds.description}</p>
+                                  </div>
+                                )}
+                                {ds.tags.length > 0 && (
+                                  <div className="flex flex-wrap gap-1.5">
+                                    {ds.tags.map((tag) => (
+                                      <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </>
+                );
+              })}
+              {datasets.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={7} className="py-12 text-center text-muted-foreground">
+                    <Database className="mx-auto mb-3 h-10 w-10 opacity-40" />
+                    No datasets yet
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </Card>
       </div>
 
       {/* ── Wizard dialog ────────────────────────────────────────────────── */}
@@ -569,198 +744,6 @@ function DatasetsPage() {
         </DialogContent>
       </Dialog>
     </AppLayout>
-  );
-}
-
-// ─── Card sub-components ─────────────────────────────────────────────────────
-
-function ExternalCard({
-  ds,
-  onEdit,
-  onDelete,
-}: {
-  ds: ExternalDataset;
-  onEdit: () => void;
-  onDelete: () => void;
-}) {
-  return (
-    <Card className="group relative overflow-hidden border-border bg-card/80 p-5 backdrop-blur-md transition-all hover:border-primary/40 hover:shadow-[var(--shadow-glow)]">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-primary/0 text-primary">
-            <Table2 className="h-5 w-5" />
-          </div>
-          <div className="leading-tight">
-            <p className="font-display text-base font-semibold">{ds.name}</p>
-            <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-              {ds.id}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <Badge variant="outline" className="border-border text-muted-foreground">
-            external
-          </Badge>
-          <Badge
-            variant="outline"
-            className={`gap-1.5 ${statusColour[ds.status]}`}
-          >
-            <span className="h-1.5 w-1.5 rounded-full bg-current" />
-            {ds.status}
-          </Badge>
-        </div>
-      </div>
-
-      <p className="mt-3 text-sm text-muted-foreground">{ds.description}</p>
-      <p className="mt-2 truncate font-mono text-xs text-muted-foreground">{ds.path}</p>
-
-      <div className="mt-3 flex flex-wrap gap-1.5">
-        <Badge variant="secondary" className="text-[10px] font-normal">{ds.format}</Badge>
-        <Badge variant="secondary" className="text-[10px] font-normal">{ds.size}</Badge>
-        {ds.rows > 0 && (
-          <Badge variant="secondary" className="text-[10px] font-normal">
-            {ds.rows.toLocaleString()} rows
-          </Badge>
-        )}
-      </div>
-
-      {ds.tags.length > 0 && (
-        <div className="mt-2 flex flex-wrap gap-1">
-          {ds.tags.map((tag) => (
-            <Badge key={tag} variant="secondary" className="text-xs">
-              {tag}
-            </Badge>
-          ))}
-        </div>
-      )}
-
-      <div className="mt-4 flex items-center justify-end gap-2 border-t border-border/60 pt-3">
-        <Button
-          size="sm"
-          variant="ghost"
-          className="h-7 gap-1.5 px-2 text-xs"
-          onClick={onEdit}
-        >
-          <Pencil className="h-3.5 w-3.5" /> Edit
-        </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          className="h-7 gap-1.5 px-2 text-xs text-destructive hover:text-destructive"
-          onClick={onDelete}
-        >
-          <Trash2 className="h-3.5 w-3.5" /> Delete
-        </Button>
-      </div>
-    </Card>
-  );
-}
-
-function InternalCard({
-  ds,
-  onEdit,
-  onDelete,
-  onRun,
-}: {
-  ds: InternalDataset;
-  onEdit: () => void;
-  onDelete: () => void;
-  onRun: () => void;
-}) {
-  return (
-    <Card className="group relative overflow-hidden border-border bg-card/80 p-5 backdrop-blur-md transition-all hover:border-primary/40 hover:shadow-[var(--shadow-glow)]">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-primary/0 text-primary">
-            <Hammer className="h-5 w-5" />
-          </div>
-          <div className="leading-tight">
-            <p className="font-display text-base font-semibold">{ds.name}</p>
-            <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-              {ds.id}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <Badge variant="outline" className="border-primary/40 text-primary">
-            internal
-          </Badge>
-          <Badge
-            variant="outline"
-            className={`gap-1.5 ${statusColour[ds.status]}`}
-          >
-            <span className="h-1.5 w-1.5 rounded-full bg-current" />
-            {ds.status}
-          </Badge>
-        </div>
-      </div>
-
-      <p className="mt-3 text-sm text-muted-foreground">{ds.description}</p>
-      <p className="mt-2 font-mono text-xs text-muted-foreground">{ds.sourceLabel}</p>
-      <p className="mt-0.5 text-xs text-muted-foreground">{ds.transformLabel}</p>
-
-      <div className="mt-3 flex flex-wrap gap-1.5">
-        <Badge variant="secondary" className="text-[10px] font-normal">
-          {ds.outputFormat}
-        </Badge>
-        {ds.rowsGenerated !== undefined && (
-          <Badge variant="secondary" className="text-[10px] font-normal">
-            {ds.rowsGenerated.toLocaleString()} rows
-          </Badge>
-        )}
-      </div>
-
-      {ds.tags.length > 0 && (
-        <div className="mt-2 flex flex-wrap gap-1">
-          {ds.tags.map((tag) => (
-            <Badge key={tag} variant="secondary" className="text-xs">
-              {tag}
-            </Badge>
-          ))}
-        </div>
-      )}
-
-      <div className="mt-4 flex items-center gap-2 border-t border-border/60 pt-3">
-        {(ds.status === "draft" || ds.status === "failed") && (
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-7 gap-1.5 px-2 text-xs"
-            onClick={onRun}
-          >
-            <Play className="h-3.5 w-3.5" /> Run
-          </Button>
-        )}
-        {ds.status === "completed" && (
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-7 gap-1.5 px-2 text-xs"
-            onClick={() => toast.info(`Viewing ${ds.outputName}`)}
-          >
-            <Eye className="h-3.5 w-3.5" /> View
-          </Button>
-        )}
-        <div className="ml-auto flex items-center gap-2">
-          <Button
-            size="sm"
-            variant="ghost"
-            className="h-7 gap-1.5 px-2 text-xs"
-            onClick={onEdit}
-          >
-            <Pencil className="h-3.5 w-3.5" /> Edit
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            className="h-7 gap-1.5 px-2 text-xs text-destructive hover:text-destructive"
-            onClick={onDelete}
-          >
-            <Trash2 className="h-3.5 w-3.5" /> Delete
-          </Button>
-        </div>
-      </div>
-    </Card>
   );
 }
 
