@@ -23,6 +23,7 @@ const buildItems = [
   { title: "Templates", url: "/templates", icon: LayoutTemplate, match: (p: string) => p === "/templates" || p.startsWith("/templates/") },
   { title: "Knowledge", url: "/knowledge", icon: BookOpen, match: (p: string) => p === "/knowledge" },
   { title: "Training", url: "/training", icon: Activity, match: (p: string) => p === "/training" },
+  { title: "Datasets", url: "/datasets", icon: Table2, match: (p: string) => p === "/datasets" },
 ];
 
 const executionItems = [
@@ -41,7 +42,6 @@ const catalogItems = [
   { title: "MCP Servers", url: "/mcp", icon: Server },
   { title: "Databases", url: "/databases", icon: Database },
   { title: "RAGs", url: "/rags", icon: Library },
-  { title: "Datasets", url: "/datasets", icon: Table2 },
 ];
 
 const governanceItems = [
