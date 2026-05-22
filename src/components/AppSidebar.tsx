@@ -48,6 +48,7 @@ const governanceItems = [
   { title: "FinOps", url: "/finops", icon: DollarSign, match: (p: string) => p === "/finops" },
   { title: "Quotas", url: "/quotas", icon: PieChart, match: (p: string) => p === "/quotas" },
   { title: "Alerts", url: "/alerts", icon: AlertTriangle, match: (p: string) => p === "/alerts" },
+  { title: "Guardrails", url: "/guardrails", icon: Shield, match: (p: string) => p === "/guardrails" },
 ];
 
 export function AppSidebar() {
