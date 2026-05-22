@@ -33,6 +33,14 @@ import {
   ExternalLink,
 } from "lucide-react";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Separator } from "@/components/ui/separator";
+import {
   defaultGuardrails,
   defaultGuardrailEvents,
   ALL_KINDS,
@@ -403,7 +411,136 @@ function GuardrailsPage() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Violation detail modal */}
+      {selectedEvent && (
+        <GuardrailViolationDetail
+          event={selectedEvent}
+          rule={rules.find((r) => r.id === selectedEvent.ruleId) ?? null}
+          onClose={() => setSelectedEvent(null)}
+        />
+      )}
     </AppLayout>
+  );
+}
+
+// ─── Violation Detail Modal ───────────────────────────────────────────────────
+
+function GuardrailViolationDetail({
+  event,
+  rule,
+  onClose,
+}: {
+  event: GuardrailEvent;
+  rule: GuardrailRule | null;
+  onClose: () => void;
+}) {
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 flex-wrap">
+            <Badge variant="outline" className={sevColor[event.severity]}>{event.severity}</Badge>
+            <span>{event.ruleName}</span>
+            <Badge variant="secondary" className="whitespace-nowrap">{KIND_LABEL[event.kind]}</Badge>
+            <Badge variant="outline" className={actionColor[event.action]}>{ACTION_LABEL[event.action]}</Badge>
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-5">
+          {/* Main info */}
+          <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
+            <div>
+              <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-1">Scope</p>
+              <p className="font-medium">{SCOPE_LABEL[event.scope]}</p>
+            </div>
+            <div>
+              <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-1">Source</p>
+              <p className="font-medium">{event.source}</p>
+            </div>
+            <div>
+              <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-1">Execution ID</p>
+              <p className="font-mono text-primary">{event.executionId}</p>
+            </div>
+            <div>
+              <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-1">Detected at</p>
+              <p className="font-mono">{fmt(event.detectedAt)}</p>
+            </div>
+            {event.score !== undefined && (
+              <div>
+                <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-1">Score</p>
+                <p className="font-mono font-semibold">{event.score.toFixed(3)}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Offending fragment */}
+          {event.snippet && (
+            <div>
+              <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-1">Detected fragment</p>
+              <div className="rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm font-mono italic">
+                {event.snippet}
+              </div>
+            </div>
+          )}
+
+          {/* Rule details */}
+          {rule && (
+            <div>
+              <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">Guardrail rule</p>
+              <div className="rounded-md border border-border bg-muted/20 px-4 py-3 space-y-2 text-sm">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="font-semibold">{rule.name}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{rule.description}</p>
+                  </div>
+                  <div className="flex gap-1.5 flex-shrink-0">
+                    <Badge variant="outline" className={sevColor[rule.severity]}>{rule.severity}</Badge>
+                    <Badge variant="secondary">{KIND_LABEL[rule.kind]}</Badge>
+                  </div>
+                </div>
+                <Separator />
+                <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs text-muted-foreground">
+                  <span><span className="font-mono">scope:</span> {SCOPE_LABEL[rule.scope]}</span>
+                  <span><span className="font-mono">action:</span> {ACTION_LABEL[rule.action]}</span>
+                  <span><span className="font-mono">applies to:</span> {rule.applyTo === "all" ? "All" : `${rule.applyTo} · ${rule.targetLabel}`}</span>
+                  {rule.threshold !== undefined && (
+                    <span><span className="font-mono">threshold:</span> {rule.threshold}</span>
+                  )}
+                  {rule.maxTokens !== undefined && (
+                    <span><span className="font-mono">max tokens:</span> {rule.maxTokens.toLocaleString()}</span>
+                  )}
+                </div>
+                {rule.kind === "compliance" && rule.compliancePolicy && (
+                  <div className="rounded bg-muted/40 px-3 py-2 text-xs text-muted-foreground italic border border-border/50">
+                    "{rule.compliancePolicy}"
+                  </div>
+                )}
+                {rule.kind === "off_topic" && rule.topicDescription && (
+                  <div className="rounded bg-muted/40 px-3 py-2 text-xs text-muted-foreground italic border border-border/50">
+                    Allowed topics: "{rule.topicDescription}"
+                  </div>
+                )}
+                {rule.kind === "blocked_terms" && rule.blockedTerms && rule.blockedTerms.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {rule.blockedTerms.map((t) => (
+                      <Badge key={t.id} variant="secondary" className="font-mono text-[10px] gap-1">
+                        {t.regex && <span className="text-muted-foreground">regex:</span>}
+                        {t.value}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Close</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 

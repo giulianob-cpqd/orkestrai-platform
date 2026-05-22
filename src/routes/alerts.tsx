@@ -493,6 +493,8 @@ function AlertEventDetail({
 }
 
 // ─── KPI Card ─────────────────────────────────────────────────────────────────
+
+function KpiCard({
   icon: Icon,
   label,
   value,
