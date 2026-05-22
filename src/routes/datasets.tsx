@@ -550,6 +550,7 @@ function DatasetsPage() {
               onChange={setStep2Ext}
               isEdit={!!editId}
               onBack={() => setWizardStep(1)}
+              onCancel={() => setWizardOpen(false)}
               onSubmit={handleRegisterOrCreate}
             />
           )}
@@ -560,6 +561,7 @@ function DatasetsPage() {
               onChange={setStep2Int}
               isEdit={!!editId}
               onBack={() => setWizardStep(1)}
+              onCancel={() => setWizardOpen(false)}
               onSubmit={handleRegisterOrCreate}
               toggleExecStatus={toggleExecStatus}
             />
@@ -595,7 +597,7 @@ function ExternalCard({
             </p>
           </div>
         </div>
-        <div className="flex flex-col items-end gap-1.5">
+        <div className="flex items-center gap-1.5">
           <Badge variant="outline" className="border-border text-muted-foreground">
             external
           </Badge>
@@ -679,7 +681,7 @@ function InternalCard({
             </p>
           </div>
         </div>
-        <div className="flex flex-col items-end gap-1.5">
+        <div className="flex items-center gap-1.5">
           <Badge variant="outline" className="border-primary/40 text-primary">
             internal
           </Badge>
@@ -856,10 +858,10 @@ function WizardStep1Panel({
       </div>
 
       <DialogFooter className="mt-4">
-        <Button variant="outline" onClick={onCancel}>
+        <Button variant="outline" type="button" onClick={onCancel}>
           Cancel
         </Button>
-        <Button onClick={onNext}>
+        <Button type="button" onClick={onNext}>
           Next →
         </Button>
       </DialogFooter>
@@ -872,12 +874,14 @@ function WizardStep2ExternalPanel({
   onChange,
   isEdit,
   onBack,
+  onCancel,
   onSubmit,
 }: {
   state: WizardStep2External;
   onChange: (s: WizardStep2External) => void;
   isEdit: boolean;
   onBack: () => void;
+  onCancel: () => void;
   onSubmit: () => void;
 }) {
   return (
@@ -929,7 +933,7 @@ function WizardStep2ExternalPanel({
           </Button>
         )}
         {isEdit && (
-          <Button variant="outline" onClick={onBack}>
+          <Button variant="outline" onClick={onCancel}>
             Cancel
           </Button>
         )}
@@ -944,6 +948,7 @@ function WizardStep2InternalPanel({
   onChange,
   isEdit,
   onBack,
+  onCancel,
   onSubmit,
   toggleExecStatus,
 }: {
@@ -951,6 +956,7 @@ function WizardStep2InternalPanel({
   onChange: (s: WizardStep2Internal) => void;
   isEdit: boolean;
   onBack: () => void;
+  onCancel: () => void;
   onSubmit: () => void;
   toggleExecStatus: (s: string) => void;
 }) {
@@ -1357,7 +1363,7 @@ function WizardStep2InternalPanel({
           </Button>
         )}
         {isEdit && (
-          <Button variant="outline" onClick={onBack}>
+          <Button variant="outline" onClick={onCancel}>
             Cancel
           </Button>
         )}
