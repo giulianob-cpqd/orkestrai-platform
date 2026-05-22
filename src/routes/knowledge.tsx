@@ -73,7 +73,7 @@ import {
 export const Route = createFileRoute("/knowledge")({
   head: () => ({
     meta: [
-      { title: "Knowledge · OrkestrAI" },
+      { title: "Documents · OrkestrAI" },
       { name: "description", content: "Gestão e versionamento de documentos para indexação." },
     ],
   }),
@@ -278,9 +278,9 @@ function KnowledgePage() {
   }
 
   return (
-    <AppLayout title="Knowledge" subtitle="Documentos · Versionamento · Indexação">
+    <AppLayout title="Documents" subtitle="Documentos · Versionamento · Indexação">
       <div className="p-6 space-y-6">
-        <PageHeader title="Knowledge & Documentos" description="Cadastre grupos, escolha a estratégia de indexação e gerencie versões dos documentos.">
+        <PageHeader title="Documents" description="Cadastre grupos, escolha a estratégia de indexação e gerencie versões dos documentos.">
           <Button
             size="sm"
             onClick={() => {
@@ -298,7 +298,7 @@ function KnowledgePage() {
           <Card className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs uppercase tracking-wider text-muted-foreground">Knowledge Groups</p>
+                <p className="text-xs uppercase tracking-wider text-muted-foreground">Document Groups</p>
                 <p className="mt-1 text-2xl font-semibold">{groups.length}</p>
               </div>
               <FolderOpen className="h-5 w-5 text-muted-foreground" />

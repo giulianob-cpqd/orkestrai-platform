@@ -21,7 +21,7 @@ const buildItems = [
   { title: "Orchestrations", url: "/orchestrations", icon: Workflow, match: (p: string) => p === "/orchestrations" || p.startsWith("/orchestrations/") },
   { title: "Agents", url: "/agents", icon: Bot, match: (p: string) => p === "/agents" || p.startsWith("/agents/") },
   { title: "Templates", url: "/templates", icon: LayoutTemplate, match: (p: string) => p === "/templates" || p.startsWith("/templates/") },
-  { title: "Knowledge", url: "/knowledge", icon: BookOpen, match: (p: string) => p === "/knowledge" },
+  { title: "Documents", url: "/knowledge", icon: BookOpen, match: (p: string) => p === "/knowledge" },
   { title: "Training", url: "/training", icon: Activity, match: (p: string) => p === "/training" },
   { title: "Datasets", url: "/datasets", icon: Table2, match: (p: string) => p === "/datasets" },
 ];
