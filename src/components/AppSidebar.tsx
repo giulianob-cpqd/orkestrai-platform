@@ -1,5 +1,5 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { Workflow, Bot, Brain, Plug, Server, Database, LayoutTemplate, LayoutDashboard, Play, DollarSign, MessageSquare, BookOpen, AlertTriangle, Zap, Gamepad2, FlaskConical, Shield, Table2, Library, Activity, PieChart } from "lucide-react";
+import { Workflow, Bot, Brain, Plug, Server, Database, LayoutTemplate, LayoutDashboard, Play, DollarSign, MessageSquare, BookOpen, AlertTriangle, Zap, Gamepad2, FlaskConical, Shield, Table2, Library, Activity, PieChart, ClipboardCheck } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -49,6 +49,7 @@ const governanceItems = [
   { title: "Quotas", url: "/quotas", icon: PieChart, match: (p: string) => p === "/quotas" },
   { title: "Alerts", url: "/alerts", icon: AlertTriangle, match: (p: string) => p === "/alerts" },
   { title: "Guardrails", url: "/guardrails", icon: Shield, match: (p: string) => p === "/guardrails" },
+  { title: "Evaluation", url: "/evaluation", icon: ClipboardCheck, match: (p: string) => p === "/evaluation" },
 ];
 
 export function AppSidebar() {
