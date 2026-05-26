@@ -1,5 +1,5 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { Workflow, Bot, Brain, Plug, Server, Database, LayoutTemplate, LayoutDashboard, Play, DollarSign, MessageSquare, BookOpen, AlertTriangle, Zap, Gamepad2, FlaskConical, Shield, Table2, Library, Activity, PieChart, ClipboardCheck } from "lucide-react";
+import { Workflow, Bot, Brain, Plug, Server, Database, LayoutTemplate, LayoutDashboard, Play, DollarSign, MessageSquare, BookOpen, AlertTriangle, Zap, Gamepad2, FlaskConical, Shield, Table2, Library, Activity, PieChart, ClipboardCheck, Radio } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -41,6 +41,7 @@ const catalogItems = [
   { title: "APIs", url: "/apis", icon: Plug },
   { title: "MCP Servers", url: "/mcp", icon: Server },
   { title: "Databases", url: "/databases", icon: Database },
+  { title: "Brokers", url: "/brokers", icon: Radio },
   { title: "Knowledge", url: "/rags", icon: Library },
 ];
 
