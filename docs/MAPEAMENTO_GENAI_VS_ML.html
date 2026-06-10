@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mapeamento GenAI vs ML — OrkestrAI</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 40px 24px;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #f8fafc;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin-bottom: 48px;
+    }
+
+    /* ── Grid principal ─────────────────────────────────────────── */
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 700px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: #1e2330;
+      border: 1px solid #2d3748;
+      border-radius: 14px;
+      padding: 28px 24px;
+    }
+
+    .card-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #64748b;
+      margin-bottom: 20px;
+    }
+
+    /* ── Pizza container ────────────────────────────────────────── */
+    .chart-wrap {
+      position: relative;
+      height: 280px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ── Legenda customizada ────────────────────────────────────── */
+    .legend {
+      list-style: none;
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .legend li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.88rem;
+    }
+
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .legend-label { flex: 1; color: #cbd5e1; }
+    .legend-value { font-weight: 700; color: #f1f5f9; font-variant-numeric: tabular-nums; }
+    .legend-pct   { font-size: 0.78rem; color: #64748b; }
+
+    /* ── Breakdown table ────────────────────────────────────────── */
+    .breakdown { margin-top: 0; }
+
+    .breakdown-section {
+      margin-bottom: 20px;
+    }
+
+    .breakdown-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 10px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .tag {
+      font-size: 0.72rem;
+      padding: 3px 9px;
+      border-radius: 20px;
+      border: 1px solid transparent;
+      font-weight: 500;
+    }
+
+    .tag-genai   { background: rgba(139,92,246,.15); border-color: rgba(139,92,246,.4); color: #c4b5fd; }
+    .tag-ml      { background: rgba(251,146,60,.15);  border-color: rgba(251,146,60,.4);  color: #fdba74; }
+    .tag-both    { background: rgba(56,189,248,.15);  border-color: rgba(56,189,248,.4);  color: #7dd3fc; }
+
+    /* ── KPIs ───────────────────────────────────────────────────── */
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 24px;
+      max-width: 1100px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .kpi {
+      background: #1e2330;
+      border: 1px solid #2d3748;
+      border-radius: 12px;
+      padding: 18px 20px;
+      text-align: center;
+    }
+
+    .kpi-value {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .kpi-label {
+      font-size: 0.75rem;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+
+    .color-genai { color: #a78bfa; }
+    .color-ml    { color: #fb923c; }
+    .color-both  { color: #38bdf8; }
+
+    /* ── Bar horizontal ─────────────────────────────────────────── */
+    .bar-section { margin-top: 4px; }
+
+    .bar-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .bar-label {
+      font-size: 0.78rem;
+      color: #94a3b8;
+      width: 80px;
+      flex-shrink: 0;
+    }
+
+    .bar-track {
+      flex: 1;
+      height: 8px;
+      background: #2d3748;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.6s ease;
+    }
+
+    .bar-pct {
+      font-size: 0.78rem;
+      font-weight: 700;
+      width: 36px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 40px;
+      font-size: 0.72rem;
+      color: #475569;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>OrkestrAI — Mapeamento de Recursos</h1>
+  <p class="subtitle">Distribuição de componentes por domínio (excluindo infraestrutura)</p>
+
+  <!-- KPIs -->
+  <div class="kpis">
+    <div class="kpi">
+      <div class="kpi-value color-genai">87</div>
+      <div class="kpi-label">🟣 GenAI exclusivo</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-value color-ml">22</div>
+      <div class="kpi-label">🟠 ML exclusivo</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-value color-both">38</div>
+      <div class="kpi-label">🔵 Compartilhado</div>
+    </div>
+  </div>
+
+  <!-- Grid -->
+  <div class="grid">
+
+    <!-- Pizza -->
+    <div class="card">
+      <p class="card-title">Distribuição por domínio (147 componentes)</p>
+      <div class="chart-wrap">
+        <canvas id="pieChart"></canvas>
+      </div>
+      <ul class="legend" id="legend"></ul>
+    </div>
+
+    <!-- Barras por camada -->
+    <div class="card">
+      <p class="card-title">GenAI vs ML por camada da plataforma</p>
+      <div class="bar-section" id="bars"></div>
+    </div>
+
+    <!-- Breakdown GenAI -->
+    <div class="card">
+      <p class="card-title">Componentes GenAI exclusivos — por serviço</p>
+      <div class="breakdown" id="breakdown-genai"></div>
+    </div>
+
+    <!-- Breakdown ML + Compartilhado -->
+    <div class="card">
+      <p class="card-title">Componentes ML e Compartilhados — por serviço</p>
+      <div class="breakdown" id="breakdown-ml"></div>
+    </div>
+
+  </div>
+
+  <footer>OrkestrAI Platform — Análise gerada em Junho 2026</footer>
+
+<script>
+// ─── Dados ────────────────────────────────────────────────────────────────
+
+const COLORS = {
+  genai: { bg: 'rgba(139,92,246,0.85)',  border: '#8b5cf6', light: 'rgba(139,92,246,0.15)', text: '#c4b5fd' },
+  ml:    { bg: 'rgba(251,146,60,0.85)',   border: '#fb923c', light: 'rgba(251,146,60,0.15)',  text: '#fdba74' },
+  both:  { bg: 'rgba(56,189,248,0.85)',   border: '#38bdf8', light: 'rgba(56,189,248,0.15)',  text: '#7dd3fc' },
+};
+
+const PIE = [
+  { label: 'GenAI exclusivo', value: 87, color: COLORS.genai },
+  { label: 'ML exclusivo',    value: 22, color: COLORS.ml    },
+  { label: 'Compartilhado',   value: 38, color: COLORS.both  },
+];
+
+const LAYERS = [
+  { name: 'Access Layer',    genai: 4,  ml: 0,  both: 5  },
+  { name: 'Gateway Layer',   genai: 9,  ml: 2,  both: 3  },
+  { name: 'Build Services',  genai: 32, ml: 12, both: 11 },
+  { name: 'Use Services',    genai: 8,  ml: 0,  both: 2  },
+  { name: 'Catalog Services',genai: 6,  ml: 3,  both: 6  },
+  { name: 'Governance',      genai: 18, ml: 3,  both: 7  },
+  { name: 'Test Services',   genai: 10, ml: 2,  both: 4  },
+];
+
+const GENAI_BREAKDOWN = [
+  { service: 'Agent Service',        items: ['Grafo de fluxo','Prompt / Memory / RAG','MCP / Tool','Conversation','Versionamento de Prompts'] },
+  { service: 'Orchestration Service',items: ['HumanTask / HumanInfo','Router (intent via LLM)','Agent Task','REST/gRPC/WS nodes'] },
+  { service: 'Documents Service',    items: ['Grupos + estratégias RAG','Pipeline de indexação','RAG interna automática'] },
+  { service: 'Catalog (RAG/MCP/API)',items: ['Knowledge Service','MCP Server Service','Connector Service','Agent Gateway','RAG Gateway'] },
+  { service: 'Governance GenAI',     items: ['Guardrails (todos os 12 tipos)','Conversas','FinOps LLM tokens','Quotas: tokens / agent / rag'] },
+  { service: 'Test GenAI',           items: ['Quality (LLM-judge)','Guardrails tests','RAG metrics','Playground LLM + RAG','Evaluation LLM-judge'] },
+];
+
+const ML_BREAKDOWN = [
+  { service: 'Training ML', kind: 'ml', items: ['ml-classification','ml-regression','ml-forecasting','ml-clustering','sklearn / xgboost / lightgbm','Hardware CPU-only','Métricas: rmse, accuracy, f1'] },
+  { service: 'Training GenAI', kind: 'genai', items: ['llm-finetune / llm-lora / llm-rlhf','transformers / trl / peft / unsloth / axolotl','Métricas: perplexity, loss','GPU: A100/H100/H200'] },
+  { service: 'Dataset Service', kind: 'both', items: ['Split / Filter / Deduplicate','Source: External DB (ML)','Source: Conversations/RAG Chunks (GenAI)','Anonymize PII · Annotate (GenAI)','Formatos: tabular/timeseries (ML) · JSONL (GenAI)'] },
+  { service: 'Playground ML', kind: 'ml', items: ['Inferência single + SHAP','Inferência batch CSV → CSV','Artefatos do Training Service'] },
+  { service: 'Brokers / DB (compartilhados)', kind: 'both', items: ['Kafka / RabbitMQ / NATS / SQS','PostgreSQL / ClickHouse / BigQuery','Script Task · Loop · Validator'] },
+  { service: 'Evaluation', kind: 'both', items: ['Juiz heurístico: BLEU / ROUGE / F1','Juiz LLM (GenAI)','Bias detection (ambos)','Pipeline & Deploy (ambos)'] },
+];
+
+// ─── Pizza ────────────────────────────────────────────────────────────────
+
+const total = PIE.reduce((s, d) => s + d.value, 0);
+
+const pieCtx = document.getElementById('pieChart').getContext('2d');
+new Chart(pieCtx, {
+  type: 'doughnut',
+  data: {
+    labels: PIE.map(d => d.label),
+    datasets: [{
+      data: PIE.map(d => d.value),
+      backgroundColor: PIE.map(d => d.color.bg),
+      borderColor: PIE.map(d => d.color.border),
+      borderWidth: 2,
+      hoverOffset: 8,
+    }]
+  },
+  options: {
+    cutout: '62%',
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: (ctx) => ` ${ctx.label}: ${ctx.raw} componentes (${Math.round(ctx.raw / total * 100)}%)`
+        }
+      }
+    },
+    animation: { animateRotate: true, duration: 800 },
+  }
+});
+
+// Legenda
+const legend = document.getElementById('legend');
+PIE.forEach(d => {
+  const pct = Math.round(d.value / total * 100);
+  legend.innerHTML += `
+    <li>
+      <span class="legend-dot" style="background:${d.color.border}"></span>
+      <span class="legend-label">${d.label}</span>
+      <span class="legend-value">${d.value}</span>
+      <span class="legend-pct">${pct}%</span>
+    </li>`;
+});
+
+// ─── Barras por camada ────────────────────────────────────────────────────
+
+const barsEl = document.getElementById('bars');
+LAYERS.forEach(layer => {
+  const tot = layer.genai + layer.ml + layer.both;
+  const pGenai = Math.round(layer.genai / tot * 100);
+  const pMl    = Math.round(layer.ml    / tot * 100);
+  const pBoth  = Math.round(layer.both  / tot * 100);
+
+  barsEl.innerHTML += `
+    <div style="margin-bottom:16px">
+      <div style="font-size:.78rem;color:#94a3b8;margin-bottom:6px;font-weight:600">${layer.name} <span style="color:#475569;font-weight:400">(${tot})</span></div>
+      <div class="bar-row">
+        <div class="bar-label" style="color:${COLORS.genai.text}">GenAI</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${pGenai}%;background:${COLORS.genai.border}"></div></div>
+        <div class="bar-pct" style="color:${COLORS.genai.text}">${pGenai}%</div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label" style="color:${COLORS.ml.text}">ML</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${pMl}%;background:${COLORS.ml.border}"></div></div>
+        <div class="bar-pct" style="color:${COLORS.ml.text}">${pMl}%</div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label" style="color:${COLORS.both.text}">Ambos</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${pBoth}%;background:${COLORS.both.border}"></div></div>
+        <div class="bar-pct" style="color:${COLORS.both.text}">${pBoth}%</div>
+      </div>
+    </div>`;
+});
+
+// ─── Breakdown GenAI ──────────────────────────────────────────────────────
+
+const elGenai = document.getElementById('breakdown-genai');
+GENAI_BREAKDOWN.forEach(sec => {
+  elGenai.innerHTML += `
+    <div class="breakdown-section">
+      <div class="breakdown-header">
+        <span class="dot" style="background:${COLORS.genai.border}"></span>
+        <span style="color:${COLORS.genai.text}">${sec.service}</span>
+      </div>
+      <div class="tag-list">
+        ${sec.items.map(i => `<span class="tag tag-genai">${i}</span>`).join('')}
+      </div>
+    </div>`;
+});
+
+// ─── Breakdown ML + Compartilhado ────────────────────────────────────────
+
+const kindColor = { ml: 'tag-ml', genai: 'tag-genai', both: 'tag-both' };
+const kindDot   = { ml: COLORS.ml.border, genai: COLORS.genai.border, both: COLORS.both.border };
+const kindText  = { ml: COLORS.ml.text,   genai: COLORS.genai.text,   both: COLORS.both.text   };
+
+const elMl = document.getElementById('breakdown-ml');
+ML_BREAKDOWN.forEach(sec => {
+  elMl.innerHTML += `
+    <div class="breakdown-section">
+      <div class="breakdown-header">
+        <span class="dot" style="background:${kindDot[sec.kind]}"></span>
+        <span style="color:${kindText[sec.kind]}">${sec.service}</span>
+      </div>
+      <div class="tag-list">
+        ${sec.items.map(i => `<span class="tag ${kindColor[sec.kind]}">${i}</span>`).join('')}
+      </div>
+    </div>`;
+});
+</script>
+</body>
+</html>
