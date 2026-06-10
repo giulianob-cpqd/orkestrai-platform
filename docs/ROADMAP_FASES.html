@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Roadmap Faseado — OrkestrAI</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+      background:#0c0f1a; color:#e2e8f0; min-height:100vh; padding:40px 24px;
+    }
+
+    h1 { text-align:center; font-size:1.65rem; font-weight:800; letter-spacing:-.03em; color:#f8fafc; margin-bottom:6px; }
+    .subtitle { text-align:center; font-size:.85rem; color:#64748b; margin-bottom:48px; }
+
+    /* ── Progress bar global ── */
+    .global-bar-wrap {
+      max-width:900px; margin:0 auto 48px;
+      background:#161c28; border:1px solid #1f2d3d; border-radius:14px; padding:24px 28px;
+    }
+    .global-bar-title { font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:#475569; margin-bottom:16px; }
+    .global-bar-track { display:flex; height:14px; border-radius:7px; overflow:hidden; gap:2px; margin-bottom:12px; }
+    .global-bar-seg { height:100%; transition:width .6s ease; }
+    .global-bar-legend { display:flex; gap:20px; flex-wrap:wrap; }
+    .gbl-item { display:flex; align-items:center; gap:6px; font-size:.78rem; }
+    .gbl-dot { width:10px; height:10px; border-radius:50%; }
+
+    /* ── Timeline ── */
+    .timeline { max-width:900px; margin:0 auto; position:relative; }
+    .timeline::before {
+      content:''; position:absolute; left:28px; top:0; bottom:0;
+      width:2px; background:linear-gradient(to bottom,#3b4f73,#1f2d3d);
+    }
+
+    /* ── Phase card ── */
+    .phase-card {
+      position:relative; margin-bottom:40px; margin-left:72px;
+      background:#161c28; border:1px solid #1f2d3d;
+      border-radius:16px; overflow:hidden;
+    }
+    .phase-card::before {
+      content:''; position:absolute; left:-52px; top:28px;
+      width:14px; height:14px; border-radius:50%;
+      border:2px solid var(--phase-color);
+      background:#0c0f1a;
+      box-shadow: 0 0 0 4px color-mix(in srgb, var(--phase-color) 20%, transparent);
+    }
+
+    /* ── Phase header ── */
+    .phase-header {
+      display:grid; grid-template-columns:1fr auto;
+      align-items:start; gap:16px;
+      padding:24px 28px 20px;
+      border-bottom:1px solid #1f2d3d;
+      background:linear-gradient(135deg, color-mix(in srgb, var(--phase-color) 8%, transparent), transparent);
+    }
+    .phase-badge {
+      display:inline-flex; align-items:center; gap:6px;
+      font-size:.68rem; font-weight:800; text-transform:uppercase; letter-spacing:.12em;
+      padding:4px 10px; border-radius:20px; border:1px solid;
+      margin-bottom:8px;
+    }
+    .phase-title { font-size:1.15rem; font-weight:800; color:#f1f5f9; margin-bottom:4px; }
+    .phase-desc  { font-size:.82rem; color:#64748b; line-height:1.5; max-width:500px; }
+
+    /* ── Stats box ── */
+    .phase-stats {
+      display:flex; flex-direction:column; gap:10px; min-width:160px; align-items:flex-end;
+    }
+    .stat-pct {
+      font-size:2.6rem; font-weight:900; letter-spacing:-.06em;
+      line-height:1; color:var(--phase-color);
+    }
+    .stat-label { font-size:.7rem; color:#475569; text-align:right; }
+    .stat-counts { display:flex; gap:8px; margin-top:4px; }
+    .stat-count {
+      font-size:.72rem; padding:3px 8px; border-radius:6px;
+      background:rgba(255,255,255,.05); border:1px solid #2d3748;
+      color:#94a3b8;
+    }
+    .stat-count strong { color:#f1f5f9; }
+
+    /* ── Phase body ── */
+    .phase-body { padding:20px 28px; display:grid; grid-template-columns:1fr 220px; gap:20px; }
+    @media(max-width:700px){ .phase-body { grid-template-columns:1fr; } }
+
+    /* ── Component list ── */
+    .comp-list { display:flex; flex-direction:column; gap:12px; }
+
+    .comp-item {
+      background:#111827; border:1px solid #1f2d3d; border-radius:10px;
+      overflow:hidden; cursor:pointer; transition:border-color .18s;
+    }
+    .comp-item:hover { border-color:var(--phase-color); }
+    .comp-header {
+      display:flex; align-items:center; gap:10px; padding:10px 14px;
+      user-select:none;
+    }
+    .comp-icon { font-size:.9rem; flex-shrink:0; }
+    .comp-name { flex:1; font-size:.82rem; font-weight:600; color:#e2e8f0; }
+    .comp-layer { font-size:.65rem; color:#475569; }
+    .comp-status {
+      font-size:.62rem; font-weight:700; padding:2px 7px; border-radius:12px;
+      border:1px solid transparent;
+    }
+    .cs-done    { background:rgba(34,197,94,.12);  border-color:rgba(34,197,94,.3);  color:#86efac; }
+    .cs-partial { background:rgba(251,191,36,.12); border-color:rgba(251,191,36,.3); color:#fde68a; }
+    .cs-todo    { background:rgba(239,68,68,.12);  border-color:rgba(239,68,68,.3);  color:#fca5a5; }
+
+    .comp-arrow { font-size:.68rem; color:#475569; transition:transform .2s; flex-shrink:0; }
+    .comp-item.open .comp-arrow { transform:rotate(90deg); }
+
+    .comp-features { display:none; padding:0 14px 12px; }
+    .comp-item.open .comp-features { display:block; }
+
+    .feat-group { margin-bottom:8px; }
+    .feat-group-label {
+      font-size:.62rem; font-weight:700; text-transform:uppercase; letter-spacing:.09em;
+      margin-bottom:5px;
+    }
+    .feat-list { display:flex; flex-wrap:wrap; gap:4px; }
+    .feat-tag {
+      font-size:.68rem; padding:2px 8px; border-radius:16px; border:1px solid transparent;
+    }
+    .ft-genai { background:rgba(139,92,246,.13); border-color:rgba(139,92,246,.35); color:#c4b5fd; }
+    .ft-ml    { background:rgba(251,146,60,.13);  border-color:rgba(251,146,60,.35);  color:#fdba74; }
+    .ft-both  { background:rgba(56,189,248,.13);  border-color:rgba(56,189,248,.35);  color:#7dd3fc; }
+    .ft-infra { background:rgba(100,116,139,.13); border-color:rgba(100,116,139,.35); color:#94a3b8; }
+
+    /* ── Donut mini ── */
+    .phase-donut-wrap { display:flex; flex-direction:column; align-items:center; gap:12px; }
+    .phase-donut-wrap canvas { max-width:180px; }
+    .donut-legend { list-style:none; display:flex; flex-direction:column; gap:6px; width:100%; }
+    .donut-legend li { display:flex; align-items:center; gap:7px; font-size:.74rem; }
+    .dl-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+    .dl-label { flex:1; color:#94a3b8; }
+    .dl-val   { font-weight:700; color:#f1f5f9; font-size:.72rem; }
+
+    /* ── Cumulative bar inside phase ── */
+    .cum-bar-wrap { margin-top:16px; }
+    .cum-bar-label { font-size:.68rem; color:#475569; margin-bottom:5px; }
+    .cum-bar-track { height:8px; background:#1f2d3d; border-radius:4px; overflow:hidden; }
+    .cum-bar-fill  { height:100%; border-radius:4px; transition:width .8s ease; }
+
+    footer { text-align:center; margin-top:48px; font-size:.7rem; color:#334155; }
+
+    /* ── colors per phase ── */
+    .ph1 { --phase-color:#6366f1; }
+    .ph2 { --phase-color:#10b981; }
+    .ph3 { --phase-color:#f59e0b; }
+  </style>
+</head>
+<body>
+
+<h1>OrkestrAI — Roadmap Faseado</h1>
+<p class="subtitle">Entregas por fase: básico ao avançado · Clique num componente para ver as features</p>
+
+<!-- Global progress -->
+<div class="global-bar-wrap">
+  <div class="global-bar-title">Completude acumulada por fase (features implementadas vs planejadas)</div>
+  <div class="global-bar-track" id="globalBarTrack"></div>
+  <div class="global-bar-legend" id="globalBarLegend"></div>
+</div>
+
+<!-- Timeline -->
+<div class="timeline" id="timeline"></div>
+
+<footer>OrkestrAI Platform · Baseado nas rotas em src/routes/ · Junho 2026</footer>
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+// PALETA
+// ══════════════════════════════════════════════════════════════════
+const KIND_CLASS = { genai:'ft-genai', ml:'ft-ml', both:'ft-both', infra:'ft-infra' };
+const KIND_LABEL = { genai:'GenAI', ml:'ML', both:'Ambos', infra:'Infra' };
+const KIND_COLOR = {
+  genai: { bg:'rgba(139,92,246,.8)', border:'#8b5cf6' },
+  ml:    { bg:'rgba(251,146,60,.8)',  border:'#fb923c' },
+  both:  { bg:'rgba(56,189,248,.8)',  border:'#38bdf8' },
+  infra: { bg:'rgba(100,116,139,.7)', border:'#64748b' },
+};
+
+// ══════════════════════════════════════════════════════════════════
+// DADOS
+// ══════════════════════════════════════════════════════════════════
+// impl: 'done' | 'partial' | 'todo'
+// features: [{ text, kind, impl }]  — impl herdado do componente se omitido
+
+const PHASES = [
+  // ════════════════════════════════════════════════════════════════
+  {
+    phase: 1,
+    title: 'Core Operacional',
+    subtitle: 'O mínimo viável para criar, publicar e usar agentes GenAI e modelos ML em produção',
+    color: '#6366f1',
+    cssClass: 'ph1',
+    icon: '🚀',
+    components: [
+      // ── Access ──
+      {
+        name: 'Console UI',
+        layer: 'Access Layer',
+        icon: '🖥',
+        impl: 'done',
+        genai: 6, ml: 2, both: 3,
+        features: [
+          { text:'Dashboard com métricas globais e atividade recente', kind:'both' },
+          { text:'Navegação lateral colapsável com seções Build, Uses, Catalog', kind:'both' },
+          { text:'Seletor de ambiente (dev / staging / production)', kind:'both' },
+          { text:'Seção Build: Agents, Orchestrations, Templates', kind:'genai' },
+          { text:'Seção Catalog: Models, APIs, MCP Servers, Databases', kind:'both' },
+          { text:'Seção Uses: Executions, Conversations', kind:'genai' },
+          { text:'Editor visual drag-and-drop (FlowBuilder)', kind:'genai' },
+          { text:'Seção Build: Training, Datasets', kind:'ml' },
+          { text:'Perfil do usuário e configurações', kind:'infra' },
+          { text:'Menu de notificações', kind:'both' },
+          { text:'Fan Diagram (fan-in / fan-out)', kind:'genai' },
+        ],
+      },
+      {
+        name: 'Authentication & Authorization',
+        layer: 'Security Layer',
+        icon: '🔐',
+        impl: 'done',
+        genai: 0, ml: 0, both: 0, infra: 4,
+        features: [
+          { text:'Login com suporte a identity providers', kind:'infra' },
+          { text:'Persistência de sessão no localStorage', kind:'infra' },
+          { text:'Proteção de rotas com redirect para /login', kind:'infra' },
+          { text:'Perfil: nome, e-mail, área, time, role', kind:'infra' },
+        ],
+      },
+      // ── Build GenAI ──
+      {
+        name: 'Agent Service',
+        layer: 'Build Services',
+        icon: '🤖',
+        impl: 'done',
+        genai: 11, ml: 0, both: 0,
+        features: [
+          { text:'Listar, criar, editar e publicar agentes', kind:'genai' },
+          { text:'Editor visual: nós Input, Prompt, Model, Memory, RAG, Tool, MCP, Output', kind:'genai' },
+          { text:'Nós Task (multi-task) e Conversation (chat multi-turn)', kind:'genai' },
+          { text:'Diagrama fan-in / fan-out por ambiente', kind:'genai' },
+          { text:'Versionamento semântico por ambiente (v1.0.0 → v1.0.1)', kind:'genai' },
+          { text:'Pipeline & Deploy com estágios CI/CD', kind:'genai' },
+          { text:'Observability: métricas, traces, logs', kind:'genai' },
+          { text:'hasConversation — agentes com chat multi-turn', kind:'genai' },
+          { text:'Parâmetros de configuração por ambiente', kind:'genai' },
+          { text:'AI Assistant — geração de fluxos por linguagem natural', kind:'genai' },
+          { text:'Test Flow Dialog — snippets cURL/Python/JS', kind:'genai' },
+        ],
+      },
+      {
+        name: 'Orchestration Service',
+        layer: 'Build Services',
+        icon: '🔀',
+        impl: 'done',
+        genai: 13, ml: 0, both: 8,
+        features: [
+          { text:'Editor visual com paleta de 21 nós em 6 grupos', kind:'genai' },
+          { text:'Nós: REST, gRPC, WebSocket (Request/Response)', kind:'genai' },
+          { text:'Nós: Agent Task, Human Task, Human Info', kind:'genai' },
+          { text:'Nós: Router (intent via LLM), Wait/Merge', kind:'genai' },
+          { text:'Nós: Message Consumer / Producer (Kafka, RabbitMQ, NATS, SQS)', kind:'both' },
+          { text:'Nós: Cron Job, Script Task, Loop, Validator', kind:'both' },
+          { text:'Nós: Database, Cloud Service, API', kind:'both' },
+          { text:'Versionamento semântico + Pipeline & Deploy', kind:'genai' },
+          { text:'Diagrama fan-in / fan-out por ambiente', kind:'genai' },
+          { text:'Observability embutida (métricas, traces)', kind:'genai' },
+          { text:'Promote entre ambientes (dev→staging→production)', kind:'genai' },
+        ],
+      },
+      {
+        name: 'Template Service',
+        layer: 'Build Services',
+        icon: '📋',
+        impl: 'done',
+        genai: 4, ml: 0, both: 1,
+        features: [
+          { text:'Templates lowcode — snapshot de fluxo com parâmetros', kind:'genai' },
+          { text:'Templates highcode — link para repositório Git', kind:'both' },
+          { text:'Wizard de instanciação com preenchimento de parâmetros', kind:'genai' },
+          { text:'Filtro por tipo (agent/orchestration) e fonte', kind:'genai' },
+          { text:'Modal de detalhes com parâmetros configuráveis', kind:'genai' },
+        ],
+      },
+      // ── Catalog básico ──
+      {
+        name: 'Model Service',
+        layer: 'Catalog Services',
+        icon: '🧠',
+        impl: 'done',
+        genai: 4, ml: 3, both: 2,
+        features: [
+          { text:'Registro de LLMs: GPT-5, Gemini, Claude, Llama', kind:'genai' },
+          { text:'Provedores externos + self-hosted (vLLM)', kind:'genai' },
+          { text:'Disponível como nó Model no editor de agentes', kind:'genai' },
+          { text:'Registro de modelos ML: XGBoost, BERT, ResNet', kind:'ml' },
+          { text:'Servido via Model Gateway para inferência ML', kind:'ml' },
+          { text:'Hugging Face — BERT classificação, ResNet visão', kind:'ml' },
+          { text:'Tipo Embedding — OpenAI, BGE-M3, Cohere, Voyage AI', kind:'both' },
+          { text:'Disponível para seleção em training jobs', kind:'both' },
+          { text:'Credenciais e endpoint por ambiente', kind:'both' },
+        ],
+      },
+      {
+        name: 'External API Service',
+        layer: 'Catalog Services',
+        icon: '🔌',
+        impl: 'done',
+        genai: 3, ml: 0, both: 0,
+        features: [
+          { text:'Registro com URL base, endpoints e autenticação por ambiente', kind:'genai' },
+          { text:'Autenticações: API key, OAuth2, JWT, PAT', kind:'genai' },
+          { text:'Disponível como nó Tool/API no editor visual', kind:'genai' },
+        ],
+      },
+      {
+        name: 'MCP Server Service',
+        layer: 'Catalog Services',
+        icon: '🛠',
+        impl: 'done',
+        genai: 3, ml: 0, both: 0,
+        features: [
+          { text:'Registro com nome, transporte (stdio / HTTP)', kind:'genai' },
+          { text:'Verificação de conectividade ao cadastrar', kind:'genai' },
+          { text:'Disponível como nó MCP no editor de agentes', kind:'genai' },
+        ],
+      },
+      {
+        name: 'External DB Service',
+        layer: 'Catalog Services',
+        icon: '🗄',
+        impl: 'done',
+        genai: 2, ml: 2, both: 2,
+        features: [
+          { text:'PostgreSQL, MySQL — transacional', kind:'both' },
+          { text:'MongoDB, Redis — NoSQL e cache', kind:'both' },
+          { text:'DynamoDB, ClickHouse — serverless e analytics', kind:'both' },
+          { text:'Disponível como nó Database no editor', kind:'genai' },
+          { text:'Fonte de features SQL para training ML', kind:'ml' },
+          { text:'Configuração de conexão por ambiente', kind:'both' },
+        ],
+      },
+      // ── Use ──
+      {
+        name: 'Execution Service',
+        layer: 'Use Services',
+        icon: '▶️',
+        impl: 'done',
+        genai: 7, ml: 0, both: 3,
+        features: [
+          { text:'Registro com ID de correlação, trigger, status, duração', kind:'genai' },
+          { text:'Trace: AgentCall (input/output por agente)', kind:'genai' },
+          { text:'Trace: ExternalCall — API, MCP, RAG, DB', kind:'genai' },
+          { text:'Human Tasks — formulários dinâmicos interativos', kind:'genai' },
+          { text:'Human Infos — mensagens Markdown info/success/warning', kind:'genai' },
+          { text:'Parâmetros de entrada e saída final', kind:'genai' },
+          { text:'Modal com payload bruto e accordion por seção', kind:'genai' },
+          { text:'Trigger Kafka consumer (GenAI + ML batch)', kind:'both' },
+          { text:'Trigger Cron (agendamento periódico)', kind:'both' },
+          { text:'Filtros: ambiente, status, orquestração, período', kind:'both' },
+        ],
+      },
+      {
+        name: 'Conversation Service',
+        layer: 'Use Services',
+        icon: '💬',
+        impl: 'done',
+        genai: 5, ml: 0, both: 0,
+        features: [
+          { text:'Chat multi-turn com agentes (hasConversation)', kind:'genai' },
+          { text:'Múltiplas conversas por agente e por usuário', kind:'genai' },
+          { text:'Busca por título de conversa', kind:'genai' },
+          { text:'Respostas Markdown com syntax highlighting', kind:'genai' },
+          { text:'Seletor de agente com histórico de versão', kind:'genai' },
+        ],
+      },
+      // ── ML básico ──
+      {
+        name: 'Training Service',
+        layer: 'Build Services',
+        icon: '🏋',
+        impl: 'done',
+        genai: 7, ml: 8, both: 4,
+        features: [
+          { text:'llm-finetune, llm-lora, llm-rlhf', kind:'genai' },
+          { text:'Frameworks: trl, peft, unsloth, axolotl', kind:'genai' },
+          { text:'Métricas LLM: loss, perplexity', kind:'genai' },
+          { text:'ml-classification, ml-regression, ml-forecasting, ml-clustering', kind:'ml' },
+          { text:'Frameworks: sklearn, xgboost, lightgbm', kind:'ml' },
+          { text:'Hardware CPU-only para ML batch', kind:'ml' },
+          { text:'Métricas ML: accuracy, f1, rmse', kind:'ml' },
+          { text:'Publicação de artefatos (LLM + ML) no registry', kind:'ml' },
+          { text:'Tipo embeddings (RAG + features ML)', kind:'both' },
+          { text:'Frameworks: transformers, pytorch, tensorflow', kind:'both' },
+          { text:'Hiperparâmetros: epochs, batch, lr, optimizer', kind:'both' },
+          { text:'Hardware GPU: A100, H100, H200', kind:'both' },
+          { text:'KPIs: total runs, running, succeeded, spend, GPU·h', kind:'both' },
+          { text:'Iniciar, pausar, parar e remover jobs', kind:'both' },
+          { text:'Filtros por tipo, status e busca', kind:'both' },
+        ],
+      },
+      {
+        name: 'Dataset Service',
+        layer: 'Build Services',
+        icon: '📊',
+        impl: 'done',
+        genai: 4, ml: 4, both: 5,
+        features: [
+          { text:'Dataset externo via path (S3, GCS, local) — wizard 2 passos', kind:'both' },
+          { text:'Build Dataset interno — wizard tipo/fonte/transforms', kind:'both' },
+          { text:'Tag internal/external com badge visual', kind:'both' },
+          { text:'Source: Conversations, RAG Chunks (GenAI)', kind:'genai' },
+          { text:'Annotate com LLM, Anonymize PII', kind:'genai' },
+          { text:'JSONL para instruction-tuning LLM', kind:'genai' },
+          { text:'Source: External DB — features SQL', kind:'ml' },
+          { text:'Formatos tabular (CSV, Parquet) e timeseries', kind:'ml' },
+          { text:'Source: Logs (GenAI + ML)', kind:'both' },
+          { text:'Split train/val/test com slider', kind:'both' },
+          { text:'Filter, Deduplicate', kind:'both' },
+          { text:'Listagem única expansível com detalhe por linha', kind:'both' },
+          { text:'Build jobs: Run, View, status running/completed/failed', kind:'both' },
+        ],
+      },
+      // ── Playground básico ──
+      {
+        name: 'Playground Service',
+        layer: 'Test Services',
+        icon: '🎮',
+        impl: 'done',
+        genai: 6, ml: 3, both: 0,
+        features: [
+          { text:'Tab LLM — até 4 modelos simultâneos (system prompt compartilhado)', kind:'genai' },
+          { text:'Parâmetros LLM independentes: temperature, top-p, max_tokens', kind:'genai' },
+          { text:'Métricas por resposta: latência ms, tokens, custo USD', kind:'genai' },
+          { text:'Tab RAG — retrieval + grounded answer via LLM', kind:'genai' },
+          { text:'Estratégias RAG: hybrid, semantic, parent-child, graph, rerank', kind:'genai' },
+          { text:'Tab ML — inferência single com SHAP', kind:'ml' },
+          { text:'Tab ML — inferência batch CSV → CSV', kind:'ml' },
+          { text:'Seleção de artefatos treinados do Training Service', kind:'ml' },
+          { text:'Top-k e cross-encoder reranking', kind:'genai' },
+        ],
+      },
+    ],
+  },
+
+  // ════════════════════════════════════════════════════════════════
+  {
+    phase: 2,
+    title: 'Plataforma Completa',
+    subtitle: 'Governance, qualidade, observabilidade, documentos de conhecimento e conectividade de dados',
+    color: '#10b981',
+    cssClass: 'ph2',
+    icon: '⚡',
+    components: [
+      {
+        name: 'Documents Service',
+        layer: 'Build Services',
+        icon: '📚',
+        impl: 'done',
+        genai: 7, ml: 0, both: 1,
+        features: [
+          { text:'Grupos com estratégia de indexação configurável', kind:'genai' },
+          { text:'Estratégias: hybrid_search, semantic_chunking, parent_child, graph_rag', kind:'genai' },
+          { text:'Pipeline de indexação visual: Parsing→Chunking→Embedding→Indexing→Validation', kind:'genai' },
+          { text:'Versionamento de documentos com ativação de versão', kind:'genai' },
+          { text:'RAG interna criada automaticamente por grupo', kind:'genai' },
+          { text:'Upload com simulação de progresso por etapa', kind:'genai' },
+          { text:'KPIs: grupos, documentos, RAGs internas, versões totais', kind:'genai' },
+          { text:'Modelo de embedding configurável (OpenAI, BGE, Cohere)', kind:'both' },
+        ],
+      },
+      {
+        name: 'Knowledge Service (RAGs)',
+        layer: 'Catalog Services',
+        icon: '🔍',
+        impl: 'done',
+        genai: 4, ml: 0, both: 1,
+        features: [
+          { text:'RAGs internas geradas pelo Documents Service (read-only)', kind:'genai' },
+          { text:'RAGs externas registradas manualmente', kind:'genai' },
+          { text:'Stores: pgvector, Pinecone, Qdrant, Weaviate, Neo4j', kind:'genai' },
+          { text:'Configuração de endpoint e índice por ambiente', kind:'genai' },
+          { text:'Embeddings compartilhados com features ML', kind:'both' },
+        ],
+      },
+      {
+        name: 'Broker Service',
+        layer: 'Catalog Services',
+        icon: '📡',
+        impl: 'done',
+        genai: 2, ml: 3, both: 3,
+        features: [
+          { text:'Kafka — triggers de orquestrações GenAI', kind:'genai' },
+          { text:'RabbitMQ — filas de aprovação human-in-the-loop', kind:'genai' },
+          { text:'Google Pub/Sub — analytics pipeline ML', kind:'ml' },
+          { text:'Redis Streams — distribuição de batch scoring ML', kind:'ml' },
+          { text:'AWS SQS — eventos FIFO de billing e ML', kind:'ml' },
+          { text:'NATS — eventos internos de baixa latência', kind:'both' },
+          { text:'Configuração de conexão host/port/credentials por ambiente', kind:'both' },
+          { text:'CatalogManager com edit/delete por ambiente', kind:'both' },
+        ],
+      },
+      {
+        name: 'Suite Cases Service',
+        layer: 'Test Services',
+        icon: '🧪',
+        impl: 'done',
+        genai: 9, ml: 1, both: 3,
+        features: [
+          { text:'Targets: agent, orchestration, rag', kind:'genai' },
+          { text:'Tipo quality — LLM-judge: faithfulness, coherence, groundedness', kind:'genai' },
+          { text:'Tipo guardrails — PII, prompt injection, jailbreak, hallucination', kind:'genai' },
+          { text:'Métricas RAG: context_precision, context_recall', kind:'genai' },
+          { text:'Guardrails: no_hallucination, no_offtopic, blocked_terms', kind:'genai' },
+          { text:'Agendamento: on_deploy, daily, weekly', kind:'genai' },
+          { text:'Histórico de execuções por suite e por caso', kind:'genai' },
+          { text:'Enable/disable por caso de teste', kind:'genai' },
+          { text:'Métricas ML: exact_match, f1_score', kind:'ml' },
+          { text:'Tipo functional — comportamento esperado', kind:'both' },
+          { text:'Tipo performance — latência, throughput, concorrência', kind:'both' },
+          { text:'Métrica bias (LLM + classificadores ML)', kind:'both' },
+        ],
+      },
+      {
+        name: 'Evaluation Service',
+        layer: 'Use Services',
+        icon: '📐',
+        impl: 'done',
+        genai: 5, ml: 2, both: 5,
+        features: [
+          { text:'Suites com target agent, orchestration, rag', kind:'genai' },
+          { text:'Judge LLM-as-Judge — outro LLM avalia', kind:'genai' },
+          { text:'Métricas GenAI: faithfulness, coherence, groundedness', kind:'genai' },
+          { text:'Suite target model ML — benchmark classificador/regressor', kind:'ml' },
+          { text:'Métricas ML: exact_match, f1_score', kind:'ml' },
+          { text:'Judge heurístico: BLEU, ROUGE, F1', kind:'both' },
+          { text:'Judge human review', kind:'both' },
+          { text:'Métrica bias (GenAI + ML)', kind:'both' },
+          { text:'Histórico de runs com timeline de métricas', kind:'both' },
+          { text:'Agendamento: daily, on_deploy, weekly', kind:'both' },
+          { text:'KPIs: total, active, passing, failing', kind:'both' },
+          { text:'Tab Suites + Tab Run History com detalhes', kind:'both' },
+        ],
+      },
+      {
+        name: 'Guardrail Service',
+        layer: 'Governance Services',
+        icon: '🛡',
+        impl: 'done',
+        genai: 11, ml: 0, both: 1,
+        features: [
+          { text:'Prompt Injection detection + block', kind:'genai' },
+          { text:'Jailbreak detection + block', kind:'genai' },
+          { text:'PII Masking (CPF, e-mail, telefone, cartão)', kind:'genai' },
+          { text:'Toxicity detection com threshold configurável', kind:'genai' },
+          { text:'Hallucination detection (groundedness score)', kind:'genai' },
+          { text:'Blocked Terms com suporte a regex', kind:'genai' },
+          { text:'Off-topic detection', kind:'genai' },
+          { text:'Max Tokens enforcement', kind:'genai' },
+          { text:'Compliance policies customizáveis', kind:'genai' },
+          { text:'Secrets & Credentials detection', kind:'genai' },
+          { text:'Code Execution guard', kind:'genai' },
+          { text:'Bias detection (LLM + classificadores ML)', kind:'both' },
+          { text:'Tab Violations com pesquisa e filtros', kind:'genai' },
+          { text:'Tab Rules com enable/disable por regra', kind:'genai' },
+        ],
+      },
+      {
+        name: 'Watch Service',
+        layer: 'Governance Services',
+        icon: '📈',
+        impl: 'done',
+        genai: 5, ml: 1, both: 4,
+        features: [
+          { text:'Métricas em tempo real: requests/min, latência p50/p99, taxa de erro', kind:'genai' },
+          { text:'Custo de tokens LLM em 24h', kind:'genai' },
+          { text:'Traces com timeline por estágio (input/output expandível)', kind:'genai' },
+          { text:'Auto-refresh de traces a cada 5 segundos', kind:'genai' },
+          { text:'Logs estruturados com filtro info/warn/error', kind:'genai' },
+          { text:'Latência de inferência ML via Model Gateway', kind:'ml' },
+          { text:'Métricas K8s: réplicas, CPU, memória, saúde por ambiente', kind:'both' },
+          { text:'Gráficos históricos CPU / memória / pods (24h)', kind:'both' },
+          { text:'Taxa de erro e throughput por orquestração', kind:'both' },
+          { text:'Tempo médio por componente/estágio', kind:'both' },
+        ],
+      },
+      {
+        name: 'FinOps Service',
+        layer: 'Governance Services',
+        icon: '💰',
+        impl: 'done',
+        genai: 4, ml: 2, both: 3,
+        features: [
+          { text:'Custo por agente (LLM tokens in/out)', kind:'genai' },
+          { text:'Custo por orquestração e por fluxo', kind:'genai' },
+          { text:'Ranking de modelos LLM por gasto total', kind:'genai' },
+          { text:'Custo por chamada a APIs externas', kind:'genai' },
+          { text:'Custo por job de treinamento (GPU·hours)', kind:'ml' },
+          { text:'Breakdown de training por tipo e status', kind:'ml' },
+          { text:'Custo Kubernetes: CPU, memória, GPU, storage, rede', kind:'both' },
+          { text:'Filtro por período: 7d / 30d / 90d', kind:'both' },
+          { text:'Visão hierárquica: área → equipe → orquestração → agente', kind:'both' },
+        ],
+      },
+      {
+        name: 'Quota Service',
+        layer: 'Governance Services',
+        icon: '⚖️',
+        impl: 'done',
+        genai: 5, ml: 3, both: 4,
+        features: [
+          { text:'Métrica tokens — consumo de LLMs por agente/time', kind:'genai' },
+          { text:'Targets: agent, flow, rag, mcp, llm', kind:'genai' },
+          { text:'Quota por modelo LLM específico (ex: GPT-5)', kind:'genai' },
+          { text:'KPI quotas violadas com barra vermelha', kind:'genai' },
+          { text:'Execuções de agentes/orquestrações', kind:'genai' },
+          { text:'Métrica gpu_hours (treinamento ML)', kind:'ml' },
+          { text:'Métrica cpu_cores (batch scoring)', kind:'ml' },
+          { text:'Tab Exceeded — quotas ≥80% com drill-down', kind:'ml' },
+          { text:'Métrica requests, cost_usd, storage_gb', kind:'both' },
+          { text:'Rate limits: req/s, req/min, concurrent connections', kind:'both' },
+          { text:'Enable/disable por regra individualmente', kind:'both' },
+          { text:'Modal de detalhes ao clicar em quota excedida', kind:'both' },
+        ],
+      },
+      {
+        name: 'Alert Service',
+        layer: 'Governance Services',
+        icon: '🔔',
+        impl: 'done',
+        genai: 4, ml: 2, both: 5,
+        features: [
+          { text:'Categoria LLM: token surge, auth failures', kind:'genai' },
+          { text:'Métrica rag_freshness — RAGs desatualizadas', kind:'genai' },
+          { text:'Métrica human_task_backlog', kind:'genai' },
+          { text:'Modal de detalhe com regra + runbook link', kind:'genai' },
+          { text:'GPU saturation (treinamento ML)', kind:'ml' },
+          { text:'Custo de training acima do budget', kind:'ml' },
+          { text:'Categoria application: latency, error_rate', kind:'both' },
+          { text:'Categoria cost: hourly budget, per-flow anomaly', kind:'both' },
+          { text:'Categoria infrastructure: CPU, memory, disk, pods', kind:'both' },
+          { text:'Canais: email, slack, teams, pagerduty, webhook', kind:'both' },
+          { text:'Ciclo: firing → acknowledged → resolved → silenced', kind:'both' },
+        ],
+      },
+      {
+        name: 'Pipeline & Deploy',
+        layer: 'Core Layer',
+        icon: '🚢',
+        impl: 'done',
+        genai: 0, ml: 0, both: 0, infra: 8,
+        features: [
+          { text:'Estágios: Checkout → Build → Test → Push image → Deploy', kind:'infra' },
+          { text:'Rastreio por commit SHA de origem', kind:'infra' },
+          { text:'Triggers: push Git, manual, schedule, promoção', kind:'infra' },
+          { text:'Registry Docker com tag semântica', kind:'infra' },
+          { text:'Promoção sem rebuild (dev→staging→production)', kind:'infra' },
+          { text:'Rollback de deploy com um clique', kind:'infra' },
+          { text:'Gráficos históricos CPU/memória/pods (24h)', kind:'infra' },
+          { text:'Env vars configuradas por ambiente (envVars)', kind:'infra' },
+        ],
+      },
+    ],
+  },
+
+  // ════════════════════════════════════════════════════════════════
+  {
+    phase: 3,
+    title: 'Enterprise & Avançado',
+    subtitle: 'Gateways reais, conectores corporativos, Feature Store, RBAC, Model Registry e integração Git',
+    color: '#f59e0b',
+    cssClass: 'ph3',
+    icon: '🏢',
+    components: [
+      {
+        name: 'Agent Gateway (real)',
+        layer: 'Gateway Layer',
+        icon: '🔀',
+        impl: 'todo',
+        genai: 4, ml: 0, both: 0,
+        features: [
+          { text:'Endpoint unificado com load balancing real', kind:'genai' },
+          { text:'REST, gRPC, SSE, WebSocket com backend real', kind:'genai' },
+          { text:'Roteamento por versão e ambiente via service mesh', kind:'genai' },
+          { text:'Auth/AuthZ com JWT validation real', kind:'genai' },
+        ],
+      },
+      {
+        name: 'Orchestration Gateway (real)',
+        layer: 'Gateway Layer',
+        icon: '🔀',
+        impl: 'todo',
+        genai: 3, ml: 0, both: 0,
+        features: [
+          { text:'Triggers REST/Cron/Kafka/gRPC com backend real', kind:'genai' },
+          { text:'Rastreio completo de chamadas com OpenTelemetry', kind:'genai' },
+          { text:'Circuit breaker e retry automático', kind:'genai' },
+        ],
+      },
+      {
+        name: 'Knowledge Gateway (real)',
+        layer: 'Gateway Layer',
+        icon: '🔍',
+        impl: 'todo',
+        genai: 4, ml: 0, both: 1,
+        features: [
+          { text:'Roteamento para stores: pgvector, Pinecone, Qdrant, Weaviate, Neo4j', kind:'genai' },
+          { text:'Estratégias: hybrid, semantic, parent-child, graph', kind:'genai' },
+          { text:'Reranking cross-encoder em tempo real', kind:'genai' },
+          { text:'Registro de chamadas com latência e recall', kind:'genai' },
+          { text:'Embeddings compartilhados para features ML', kind:'both' },
+        ],
+      },
+      {
+        name: 'Model Gateway (real)',
+        layer: 'Gateway Layer',
+        icon: '🧠',
+        impl: 'todo',
+        genai: 4, ml: 2, both: 3,
+        features: [
+          { text:'Inferência LLM com fallback automático entre provedores', kind:'genai' },
+          { text:'Streaming SSE real com chunking', kind:'genai' },
+          { text:'Cache de respostas LLM (prompt caching)', kind:'genai' },
+          { text:'Registro de tokens/custo por chamada em tempo real', kind:'genai' },
+          { text:'Inferência ML real com sklearn/XGBoost serve', kind:'ml' },
+          { text:'Batching de inferências ML para eficiência', kind:'ml' },
+          { text:'Rate limiting real por usuário/time', kind:'both' },
+          { text:'Roteamento por versão semântica do modelo', kind:'both' },
+          { text:'Métricas de throughput por modelo', kind:'both' },
+        ],
+      },
+      {
+        name: 'MCP Server Gateway (real)',
+        layer: 'Gateway Layer',
+        icon: '🛠',
+        impl: 'todo',
+        genai: 3, ml: 0, both: 0,
+        features: [
+          { text:'Proxy real para MCP Servers com suporte stdio/HTTP', kind:'genai' },
+          { text:'Registro de chamadas a ferramentas nas execuções', kind:'genai' },
+          { text:'Health check e restart automático de servidores MCP', kind:'genai' },
+        ],
+      },
+      {
+        name: 'Connector Service',
+        layer: 'Catalog Services',
+        icon: '🏭',
+        impl: 'todo',
+        genai: 5, ml: 0, both: 0,
+        features: [
+          { text:'Conectores: SAP, Salesforce, ServiceNow, HubSpot, Oracle', kind:'genai' },
+          { text:'Operações multi-step: authenticate→discover→map→execute', kind:'genai' },
+          { text:'Paginação, retry backoff e normalização automáticos', kind:'genai' },
+          { text:'Catálogo de operações de alto nível por sistema', kind:'genai' },
+          { text:'Teste de conectividade na Console UI', kind:'genai' },
+        ],
+      },
+      {
+        name: 'Prompt Versions',
+        layer: 'Build Services',
+        icon: '✍️',
+        impl: 'todo',
+        genai: 5, ml: 0, both: 0,
+        features: [
+          { text:'Versionamento de prompts independente do grafo de fluxo', kind:'genai' },
+          { text:'Editor inline sem abrir o FlowBuilder', kind:'genai' },
+          { text:'Diff lado a lado entre versões', kind:'genai' },
+          { text:'Rollback de prompt com registro de autoria', kind:'genai' },
+          { text:'Aba Prompt Versions no detalhe de agente e orquestração', kind:'genai' },
+        ],
+      },
+      {
+        name: 'Feature Store',
+        layer: 'Catalog Services',
+        icon: '🗂',
+        impl: 'todo',
+        genai: 0, ml: 6, both: 2,
+        features: [
+          { text:'Feature groups com linhagem de origem e transformações', kind:'ml' },
+          { text:'Feature types: numérico, categórico, embedding, texto', kind:'ml' },
+          { text:'Modo offline (batch training) e online (inferência real-time)', kind:'ml' },
+          { text:'Versionamento de feature groups', kind:'ml' },
+          { text:'Integração com Training Service (seleção de features)', kind:'ml' },
+          { text:'Catálogo com busca e filtro por entidade', kind:'ml' },
+          { text:'Embeddings semânticos gerados pelo Documents Service', kind:'both' },
+          { text:'Linhagem: quais datasets e transformações geraram cada feature', kind:'both' },
+        ],
+      },
+      {
+        name: 'Model Registry',
+        layer: 'Build Services',
+        icon: '📦',
+        impl: 'todo',
+        genai: 3, ml: 4, both: 2,
+        features: [
+          { text:'Registro de artefatos treinados com versão semântica', kind:'both' },
+          { text:'Metadados: métricas, dataset, hiperparâmetros, autor', kind:'both' },
+          { text:'LLMs fine-tuned com lineage para dataset de origem', kind:'genai' },
+          { text:'Promoção de modelo entre ambientes (dev→staging→prod)', kind:'genai' },
+          { text:'Modelos ML com schema de entrada/saída documentado', kind:'ml' },
+          { text:'Serving endpoint gerado automaticamente no deploy', kind:'ml' },
+          { text:'Rollback para versão anterior do modelo', kind:'ml' },
+          { text:'Comparação de métricas entre versões', kind:'both' },
+          { text:'Integração com Model Gateway para roteamento por versão', kind:'both' },
+        ],
+      },
+      {
+        name: 'RBAC — Access Control',
+        layer: 'Security Layer',
+        icon: '🔑',
+        impl: 'todo',
+        genai: 0, ml: 0, both: 0, infra: 5,
+        features: [
+          { text:'Roles: Platform Admin, AI Engineer, ML Engineer, Team Lead, Viewer', kind:'infra' },
+          { text:'Permissões por recurso: create, read, update, deploy, delete', kind:'infra' },
+          { text:'Políticas de acesso por time e área', kind:'infra' },
+          { text:'Audit log de todas as ações por usuário', kind:'infra' },
+          { text:'Integração com identity providers (SSO, LDAP)', kind:'infra' },
+        ],
+      },
+      {
+        name: 'Repository & Versioning',
+        layer: 'Core Layer',
+        icon: '🗃',
+        impl: 'todo',
+        genai: 0, ml: 0, both: 0, infra: 5,
+        features: [
+          { text:'Conectar repositório Git externo (GitHub, GitLab, Bitbucket)', kind:'infra' },
+          { text:'Sync automático do grafo de fluxo com commit padronizado', kind:'infra' },
+          { text:'Webhook Git → disparar pipeline CI/CD', kind:'infra' },
+          { text:'Branching por ambiente: develop→dev, staging→staging, main→prod', kind:'infra' },
+          { text:'Histórico de commits navegável na tela de detalhe', kind:'infra' },
+        ],
+      },
+      {
+        name: 'Environment & Configuration',
+        layer: 'Core Layer',
+        icon: '⚙️',
+        impl: 'todo',
+        genai: 0, ml: 0, both: 0, infra: 7,
+        features: [
+          { text:'Vault de segredos (API keys, tokens, SSH keys)', kind:'infra' },
+          { text:'Configurações de runtime por aplicação e ambiente', kind:'infra' },
+          { text:'Injeção automática de envVars no deploy', kind:'infra' },
+          { text:'Feature flags por ambiente', kind:'infra' },
+          { text:'Gerenciamento multi-cloud: AWS, GCP, Azure, on-premises', kind:'infra' },
+          { text:'Detecção de drift entre config armazenada e cluster real', kind:'infra' },
+          { text:'Backup e retenção de dados por tipo e ambiente', kind:'infra' },
+        ],
+      },
+      {
+        name: 'CLI',
+        layer: 'Access Layer',
+        icon: '💻',
+        impl: 'todo',
+        genai: 2, ml: 1, both: 2,
+        features: [
+          { text:'Criar e fazer deploy de agentes e orquestrações', kind:'genai' },
+          { text:'Consultar execuções, logs e status de ambientes', kind:'genai' },
+          { text:'Gerenciar catálogos: LLMs, APIs, MCPs, RAGs', kind:'both' },
+          { text:'Gerenciar datasets e jobs de treinamento', kind:'ml' },
+          { text:'Gerenciar quotas e alertas via linha de comando', kind:'both' },
+        ],
+      },
+      {
+        name: 'SDK / API',
+        layer: 'Access Layer',
+        icon: '📡',
+        impl: 'todo',
+        genai: 2, ml: 1, both: 2,
+        features: [
+          { text:'API REST para criação/gerenciamento de agentes e orquestrações', kind:'genai' },
+          { text:'API para consulta de execuções e conversas', kind:'genai' },
+          { text:'API para gerenciamento de catálogos e governance', kind:'both' },
+          { text:'API para training jobs e datasets', kind:'ml' },
+          { text:'SDK tipado para as principais linguagens (Python, TypeScript)', kind:'both' },
+        ],
+      },
+    ],
+  },
+];
+
+// ══════════════════════════════════════════════════════════════════
+// CÁLCULO DE TOTAIS
+// ══════════════════════════════════════════════════════════════════
+const IMPL_LABEL = { done:'✅ Implementado', partial:'⚠️ Parcial', todo:'❌ Pendente' };
+const IMPL_CLASS = { done:'cs-done', partial:'cs-partial', todo:'cs-todo' };
+
+// features totais do projeto
+let grandTotal = 0;
+PHASES.forEach(p => p.components.forEach(c => { grandTotal += c.features.length; }));
+
+// acumulado por fase
+let cumFeats = 0;
+PHASES.forEach(p => {
+  let phaseFeats = 0, phaseImpl = 0;
+  p.components.forEach(c => {
+    phaseFeats += c.features.length;
+    if (c.impl === 'done') phaseImpl += c.features.length;
+    else if (c.impl === 'partial') phaseImpl += Math.floor(c.features.length * 0.5);
+  });
+  p._feats  = phaseFeats;
+  p._impl   = phaseImpl;
+  p._cumFeats = cumFeats + phaseFeats;
+  p._cumImpl  = cumFeats + phaseImpl;  // crude approximation: phases 1,2 are done; 3 is todo
+  cumFeats += phaseFeats;
+});
+
+// override: fase 1 e 2 = done, fase 3 = todo
+PHASES[0]._cumImpl = PHASES[0]._feats;
+PHASES[1]._cumImpl = PHASES[0]._feats + PHASES[1]._feats;
+PHASES[2]._cumImpl = PHASES[0]._feats + PHASES[1]._feats; // fase 3 não impl ainda
+
+// ── Global progress bar ──
+const seg1Pct = Math.round(PHASES[0]._feats / grandTotal * 100);
+const seg2Pct = Math.round(PHASES[1]._feats / grandTotal * 100);
+const seg3Pct = Math.round(PHASES[2]._feats / grandTotal * 100);
+const track = document.getElementById('globalBarTrack');
+track.innerHTML = `
+  <div class="global-bar-seg" style="width:${seg1Pct}%;background:#6366f1"></div>
+  <div class="global-bar-seg" style="width:${seg2Pct}%;background:#10b981"></div>
+  <div class="global-bar-seg" style="width:${seg3Pct}%;background:#f59e0b"></div>
+`;
+const legend = document.getElementById('globalBarLegend');
+const implPct = Math.round((PHASES[0]._feats + PHASES[1]._feats) / grandTotal * 100);
+legend.innerHTML = `
+  <div class="gbl-item"><div class="gbl-dot" style="background:#6366f1"></div>Fase 1 — ${seg1Pct}% das features (${PHASES[0]._feats} itens)</div>
+  <div class="gbl-item"><div class="gbl-dot" style="background:#10b981"></div>Fase 2 — ${seg2Pct}% das features (${PHASES[1]._feats} itens)</div>
+  <div class="gbl-item"><div class="gbl-dot" style="background:#f59e0b"></div>Fase 3 — ${seg3Pct}% das features (${PHASES[2]._feats} itens)</div>
+  <div class="gbl-item"><div class="gbl-dot" style="background:#22c55e"></div><strong>${implPct}% implementado</strong> (Fases 1 + 2 concluídas)</div>
+`;
+
+// ══════════════════════════════════════════════════════════════════
+// RENDER FASES
+// ══════════════════════════════════════════════════════════════════
+const timeline = document.getElementById('timeline');
+
+PHASES.forEach((phase, pi) => {
+  const totalComp  = phase.components.length;
+  const doneComp   = phase.components.filter(c => c.impl === 'done').length;
+  const partComp   = phase.components.filter(c => c.impl === 'partial').length;
+  const todoComp   = phase.components.filter(c => c.impl === 'todo').length;
+  const totalFeats = phase.components.reduce((s,c) => s+c.features.length, 0);
+  const cumPct     = Math.round(phase._cumImpl / grandTotal * 100);
+
+  // contagens domínio
+  const g = phase.components.reduce((s,c)=>s+(c.genai||0),0);
+  const m = phase.components.reduce((s,c)=>s+(c.ml||0),0);
+  const b = phase.components.reduce((s,c)=>s+(c.both||0),0);
+  const i = phase.components.reduce((s,c)=>s+(c.infra||0),0);
+
+  const card = document.createElement('div');
+  card.className = `phase-card ${phase.cssClass}`;
+
+  card.innerHTML = `
+    <div class="phase-header">
+      <div>
+        <div class="phase-badge" style="color:${phase.color};border-color:${phase.color}25;background:${phase.color}12">
+          ${phase.icon} Fase ${phase.phase}
+        </div>
+        <div class="phase-title">${phase.title}</div>
+        <div class="phase-desc">${phase.subtitle}</div>
+      </div>
+      <div class="phase-stats">
+        <div class="stat-pct">${Math.round(phase._feats/grandTotal*100)}%</div>
+        <div class="stat-label">do total de features</div>
+        <div class="stat-counts">
+          <div class="stat-count"><strong>${totalComp}</strong> comp.</div>
+          <div class="stat-count"><strong>${totalFeats}</strong> features</div>
+        </div>
+        <div class="stat-counts" style="margin-top:2px">
+          <div class="stat-count" style="color:#86efac"><strong>${doneComp}</strong> ✅</div>
+          ${todoComp>0?`<div class="stat-count" style="color:#fca5a5"><strong>${todoComp}</strong> ❌</div>`:''}
+        </div>
+      </div>
+    </div>
+    <div class="phase-body">
+      <div class="comp-list" id="comps-${pi}"></div>
+      <div class="phase-donut-wrap">
+        <canvas id="donut-${pi}" width="180" height="180"></canvas>
+        <ul class="donut-legend" id="dlegend-${pi}"></ul>
+        <div class="cum-bar-wrap">
+          <div class="cum-bar-label">Acumulado implementado: <strong style="color:${phase.color}">${cumPct}%</strong></div>
+          <div class="cum-bar-track">
+            <div class="cum-bar-fill" style="width:${cumPct}%;background:${phase.color}"></div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+
+  timeline.appendChild(card);
+
+  // ── Componentes ──
+  const compList = document.getElementById(`comps-${pi}`);
+  phase.components.forEach((c,ci) => {
+    const tot = (c.genai||0)+(c.ml||0)+(c.both||0)+(c.infra||0);
+    const item = document.createElement('div');
+    item.className = 'comp-item';
+    item.innerHTML = `
+      <div class="comp-header">
+        <span class="comp-icon">${c.icon}</span>
+        <span class="comp-name">${c.name}</span>
+        <span class="comp-layer">${c.layer}</span>
+        <span class="comp-status ${IMPL_CLASS[c.impl]}">${IMPL_LABEL[c.impl]}</span>
+        <span class="comp-arrow">▶</span>
+      </div>
+      <div class="comp-features">
+        <div class="feat-group">
+          <div class="feat-group-label" style="color:#475569">${tot} features</div>
+          <div class="feat-list">
+            ${c.features.map(f=>`<span class="feat-tag ${KIND_CLASS[f.kind]}">${f.text}</span>`).join('')}
+          </div>
+        </div>
+      </div>`;
+    item.querySelector('.comp-header').addEventListener('click', () => {
+      item.classList.toggle('open');
+    });
+    compList.appendChild(item);
+  });
+
+  // ── Donut ──
+  const ddata = [], dlbls = [], dbgc = [], dbdc = [];
+  if (g > 0) { ddata.push(g); dlbls.push(`GenAI (${g})`); dbgc.push(KIND_COLOR.genai.bg); dbdc.push(KIND_COLOR.genai.border); }
+  if (m > 0) { ddata.push(m); dlbls.push(`ML (${m})`);    dbgc.push(KIND_COLOR.ml.bg);    dbdc.push(KIND_COLOR.ml.border);    }
+  if (b > 0) { ddata.push(b); dlbls.push(`Ambos (${b})`); dbgc.push(KIND_COLOR.both.bg);  dbdc.push(KIND_COLOR.both.border);  }
+  if (i > 0) { ddata.push(i); dlbls.push(`Infra (${i})`); dbgc.push(KIND_COLOR.infra.bg); dbdc.push(KIND_COLOR.infra.border); }
+
+  const dtot = ddata.reduce((a,x)=>a+x,0);
+  new Chart(document.getElementById(`donut-${pi}`).getContext('2d'), {
+    type:'doughnut',
+    data:{ labels:dlbls, datasets:[{ data:ddata, backgroundColor:dbgc, borderColor:dbdc, borderWidth:2, hoverOffset:6 }] },
+    options:{ cutout:'58%', plugins:{ legend:{display:false},
+      tooltip:{ callbacks:{ label:ctx=>` ${ctx.label}: ${Math.round(ctx.raw/dtot*100)}%` }}},
+      animation:{duration:600} }
+  });
+  const dlegEl = document.getElementById(`dlegend-${pi}`);
+  dlbls.forEach((lbl,li)=>{
+    dlegEl.innerHTML += `<li>
+      <span class="dl-dot" style="background:${dbdc[li]}"></span>
+      <span class="dl-label">${lbl}</span>
+      <span class="dl-val">${Math.round(ddata[li]/dtot*100)}%</span>
+    </li>`;
+  });
+});
+</script>
+</body>
+</html>
