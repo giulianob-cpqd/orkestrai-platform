@@ -489,3 +489,421 @@ Repositório e versionamento de código das aplicações. Responsável por ser a
 - A plataforma deve garantir que todo deploy em produção seja rastreável a um commit imutável, assegurando reprodutibilidade e auditabilidade completa do ciclo de vida dos fluxos de IA
 - A plataforma deve permitir navegar pelo histórico de commits do repositório vinculado diretamente na tela de detalhe do agente ou orquestração, com link para diff no provedor Git
 - A plataforma deve versionar prompts independentemente do grafo de fluxo, armazenando cada versão com conteúdo, autor, timestamp, nota de alteração e referência ao commit Git quando alterado via editor de código
+
+---
+
+## Complemento — ML & Deep Learning em Completude
+
+As seções a seguir cobrem os componentes e features ausentes do arquivo de requisitos original para atender Machine Learning clássico e Deep Learning em sua completude. O diagnóstico de lacunas é baseado no mapeamento `MAPEAMENTO_GENAI_VS_ML.md`, que identificou que o pipeline completo de ML operacional (feature engineering → experiment tracking → model registry → serving dedicado → monitoramento de drift) ainda não possuía requisitos formalizados.
+
+---
+
+### A. Build Services — Complementos ML/DL
+
+#### A.1 Experiment Tracking Service
+
+Rastreia cada run de treinamento como um experimento reprodutível — capturando código, hiperparâmetros, métricas, artefatos e ambiente de execução em um único registro imutável. É o equivalente ao MLflow Tracking ou Weights & Biases para a plataforma: qualquer job executado pelo Training Service gera automaticamente um run no Experiment Tracking Service, permitindo que o Data Scientist compare runs, reproduza resultados e promova o melhor artefato para o Model Registry sem perda de rastreabilidade. Sem ele, experimentos ficam dispersos em notebooks e pastas locais, tornando inviável a governança de modelos em escala.
+
+- O serviço deve criar e gerenciar **projetos** de experimentação agrupando runs relacionados por objetivo (ex: "churn-prediction-q3", "bert-classification-v2")
+- O serviço deve registrar cada **run** com: ID único, projeto, status (running / completed / failed / killed), duração, autor, timestamp de início e fim
+- O serviço deve capturar e armazenar **hiperparâmetros** por run: todos os valores informados ao criar o job no Training Service (epochs, batch size, learning rate, optimizer, seed, arquitetura, etc.)
+- O serviço deve capturar e armazenar **métricas por epoch/step** com suporte a séries temporais para visualização de curvas de aprendizado (loss, val_loss, accuracy, f1, rmse, mae, auc, perplexity)
+- O serviço deve suportar registro de **métricas customizadas** definidas pelo usuário além das métricas padrão do Training Service
+- O serviço deve armazenar **artefatos** produzidos por cada run: pesos do modelo, checkpoints, gráficos de confusão, curvas ROC, relatórios SHAP e arquivos de configuração
+- O serviço deve registrar o **ambiente de execução** do run: versão de Python, versão de frameworks (sklearn, pytorch, etc.), tipo de hardware (CPU/GPU, quantidade), imagem Docker usada
+- O serviço deve registrar o **código-fonte** vinculado ao run: commit SHA, branch e repositório Git de origem
+- O serviço deve permitir **comparação lado a lado** de múltiplos runs dentro do mesmo projeto, com visualização de métricas em gráficos sobrepostos e tabela de hiperparâmetros
+- O serviço deve permitir **filtrar e ordenar** runs por métrica, status, autor e período
+- O serviço deve suportar **tags** por run para classificação livre (ex: `baseline`, `candidate`, `producao`)
+- O serviço deve permitir **promover um run** para o Model Registry diretamente da tela de detalhes do experimento, registrando a linhagem run → artefato → versão de modelo
+- O serviço deve expor KPIs agregados por projeto: total de runs, runs completados, melhor métrica principal e último run ativo
+- O serviço deve integrar com o Training Service, criando automaticamente um run ao iniciar um job de treinamento
+
+#### A.2 Feature Store Service
+
+Centraliza a engenharia, persistência, versionamento e servimento de features para modelos de ML e DL. É o serviço que elimina o "training-serving skew" — a diferença entre as features calculadas no treinamento e as disponíveis em produção — e viabiliza o reaproveitamento de features entre projetos diferentes. Sem um Feature Store, cada pipeline de ML recalcula as mesmas features de forma independente, criando duplicação, inconsistência e impossibilidade de rastreabilidade entre o modelo treinado e os dados que ele efetivamente consumiu. O Feature Store é o contrato entre quem gera features (Data Engineer, Feature Pipeline) e quem as consome (Training Service, Model Serving).
+
+- O serviço deve criar e gerenciar **Feature Groups**: coleções nomeadas de features relacionadas a uma entidade (ex: `customer_features`, `transaction_features`, `product_features`)
+- Cada Feature Group deve definir: nome, descrição, entidade principal (entity key), lista de features com tipo (int, float, string, boolean, array, embedding), owner, tags e status (active / deprecated)
+- O serviço deve suportar **Feature Pipelines**: definição de como cada Feature Group é calculado a partir de fontes de dados (External DB, Kafka, API, S3/GCS, Dataset) com agendamento (batch periódico, streaming contínuo ou on-demand)
+- O serviço deve persistir features em **offline store** (Parquet em S3/GCS ou ClickHouse) para uso em treinamento com queries por entidade e por ponto no tempo (point-in-time correct join)
+- O serviço deve persistir features em **online store** (Redis ou DynamoDB) para servimento de baixa latência em tempo de inferência (<10ms p99)
+- O serviço deve garantir consistência entre offline e online store, eliminando training-serving skew
+- O serviço deve versionar Feature Groups: cada alteração de schema cria uma nova versão, mantendo compatibilidade retroativa para modelos que dependem da versão anterior
+- O serviço deve registrar **linhagem de features**: quais datasets, queries e transformações geraram cada Feature Group, com rastreabilidade bidirecional (feature → origem, modelo → features usadas)
+- O serviço deve expor **catálogo de features** com busca por nome, entidade e tag para reaproveitamento entre projetos
+- O serviço deve disponibilizar features para seleção no Training Service (offline) e no Model Serving Service (online) via API tipada
+- O serviço deve registrar **estatísticas de features** por pipeline run: distribuição de valores, % de nulos, min/max/média/desvio para detecção de data drift
+- O serviço deve expor API de **point-in-time retrieval**: dado um conjunto de entidades e um timestamp, retorna o valor das features como estavam naquele momento — essencial para reprodutibilidade de treinamento
+- O serviço deve suportar tipos de features: **batch** (calculadas periodicamente), **streaming** (atualizadas em tempo real via Kafka) e **on-demand** (calculadas na hora da requisição a partir de features existentes)
+
+#### A.3 ML Pipeline Service
+
+Orquestra pipelines de dados e ML estruturados em DAGs — diferente do Orchestration Service (que coordena agentes e fluxos de negócio), o ML Pipeline Service foca em pipelines reprodutíveis de pré-processamento, treinamento, avaliação e validação de modelos. É o equivalente ao Kubeflow Pipelines ou Apache Airflow especializado para workloads de ML: cada etapa é um step isolado com inputs, outputs e dependências declaradas, executado em container próprio com rastreabilidade completa de artefatos entre steps. O resultado de um pipeline é sempre um artefato candidato a promoção no Model Registry.
+
+- O serviço deve criar e gerenciar **pipelines de ML** como DAGs de steps com dependências declaradas, inputs/outputs tipados e parâmetros configuráveis
+- O serviço deve suportar os seguintes tipos de step nativos:
+  - **Data Ingestion**: coleta de dados de External DB, S3/GCS, Kafka ou API do catálogo
+  - **Feature Engineering**: transformações tabulares (normalização, encoding, imputação, PCA, binning)
+  - **Data Validation**: validação de schema, distribuição de features e data quality com Great Expectations
+  - **Train**: invoca o Training Service com configuração de hiperparâmetros e registra o run no Experiment Tracking Service
+  - **Evaluate**: calcula métricas de avaliação (accuracy, F1, AUC-ROC, RMSE, MAE) sobre conjunto de teste
+  - **Compare**: compara métricas do run atual com o modelo campeão no Model Registry e define se o candidato deve ser promovido
+  - **Register**: publica o artefato no Model Registry com status `staging` ou `production`
+  - **Deploy**: aciona o deploy do modelo no ML Serving Service
+  - **Notify**: envia notificação (e-mail, Slack) ao completar ou falhar o pipeline
+- O serviço deve suportar **step customizado** via Script Task (Python/Shell) com imagem Docker configurável
+- O serviço deve versionar pipelines com histórico de runs, status e duração por step
+- O serviço deve suportar passagem de **artefatos entre steps** (datasets, modelos, relatórios) com armazenamento em object storage (S3/GCS) e referência por URI
+- O serviço deve suportar **triggers**: manual, agendamento (cron), push em repositório Git e conclusão de job no Training Service
+- O serviço deve exibir DAG visual do pipeline com status de cada step em tempo real durante a execução
+- O serviço deve registrar logs por step com nível (info/warn/error) e suporte a download
+- O serviço deve registrar **parâmetros e métricas** de cada run de pipeline, integrado ao Experiment Tracking Service
+- O serviço deve suportar **paralelismo de steps** independentes para otimizar tempo de execução do pipeline
+- O serviço deve integrar com a Feature Store para consumo de features em steps de treinamento e avaliação
+
+---
+
+### B. Catalog Services — Complementos ML/DL
+
+#### B.1 Model Registry Service
+
+Repositório central de todos os artefatos de modelos treinados — LLMs fine-tuned, modelos de ML clássico, redes neurais DL e modelos de embedding. É o contrato entre quem treina (Training Service, ML Pipeline) e quem serve (ML Serving, Model Gateway): um artefato só pode ser invocado em produção se foi registrado, versionado e promovido neste registry. Diferentemente do Model Service (que registra modelos de provedores externos para uso no editor visual), o Model Registry gerencia o ciclo de vida dos modelos produzidos internamente na plataforma — com linhagem completa de origem, métricas de avaliação, aprovação e status por ambiente.
+
+- O serviço deve registrar **versões de modelos** produzidas pelo Training Service e pelo ML Pipeline Service, com nome, versão semântica, tipo (llm, ml-classification, ml-regression, ml-forecasting, ml-clustering, dl-vision, dl-nlp, dl-multimodal, embedding), framework, autor e timestamp
+- Cada versão de modelo deve armazenar: URI do artefato (weights, pickle, ONNX, savedmodel), métricas de avaliação, hiperparâmetros, dataset de treinamento (referência ao Dataset Service), run do Experiment Tracking de origem e hardware usado
+- O serviço deve gerenciar **status por ambiente**: `none` → `staging` → `production` → `archived`, com histórico de promoções e aprovações
+- O serviço deve suportar **aprovação de promoção** para produção: requer aprovação explícita de um responsável (workflow de aprovação com e-mail e registro de quem aprovou, quando e com qual justificativa)
+- O serviço deve exibir **linhagem completa** do modelo: dataset → pipeline / training job → experimento → artefato → serving endpoint
+- O serviço deve suportar **comparação de versões**: lado a lado com métricas, hiperparâmetros e distribuição de features entre a versão candidata e o campeão atual em produção
+- O serviço deve suportar **modelo campeão / challenger**: marcar uma versão como campeão e uma como challenger para A/B testing ou shadow deployment no ML Serving
+- O serviço deve permitir **rollback** de versão de produção para a versão anterior com registro da operação
+- O serviço deve suportar tags e descrição livre por versão para facilitar busca no catálogo
+- O serviço deve disponibilizar modelos registrados para seleção no ML Serving Service, no Playground e no Model Gateway
+- O serviço deve registrar **dependências de runtime** por versão: versão de Python, pacotes instalados (requirements.txt), variáveis de ambiente necessárias para servimento correto
+- O serviço deve expor KPIs: total de modelos registrados, versões em produção, versões em staging e modelos arquivados
+
+#### B.2 Dataset Catalog Service
+
+Registro centralizado de todos os datasets disponíveis na plataforma — tanto os construídos pelo Dataset Service quanto os registrados externamente (S3, GCS, repositório Git, banco de dados). Complementa o Dataset Service (que constrói e versiona datasets) com uma camada de descoberta e governança: qualquer dataset, independentemente de onde está armazenado, pode ser catalogado aqui com schema, estatísticas, linhagem e permissões de acesso. É o ponto de partida para Data Scientists descobrirem dados disponíveis sem precisar ir a múltiplos sistemas.
+
+- O serviço deve registrar datasets com nome, descrição, modalidade (tabular, timeseries, text, text+image, audio, video, multimodal), formato (CSV, Parquet, Delta Lake, JSONL, TFRecord, HDF5, Arrow), localização (S3 URI, GCS URI, banco de dados, path local) e owner
+- O serviço deve armazenar **schema inferido ou declarado** por dataset: nomes de colunas, tipos e cardinalidade para datasets tabulares; estrutura de campos para JSONL; dimensões de tensores para TFRecord/HDF5
+- O serviço deve calcular e armazenar **estatísticas por dataset**: número de registros, tamanho em bytes, % de nulos por coluna, distribuição de classes (para classificação), range de datas (para séries temporais)
+- O serviço deve registrar **linhagem de datasets**: origem dos dados (fontes), transformações aplicadas (filtros, splits, anonimização) e datasets derivados
+- O serviço deve suportar **versionamento de datasets**: cada novo build ou upload cria uma nova versão com histórico de mudanças
+- O serviço deve suportar **splits declarados**: registro dos subconjuntos train/validation/test com proporção e número de amostras por split
+- O serviço deve expor datasets para seleção no Training Service, no ML Pipeline Service e no Feature Store Service
+- O serviço deve suportar **data cards**: documentação estruturada do dataset com descrição de uso pretendido, limitações conhecidas, vieses identificados e informações de licença
+- O serviço deve controlar **permissões de acesso** por dataset: público (toda a organização), restrito (times específicos) ou privado (apenas o owner)
+- O serviço deve registrar **lineage de uso**: quais jobs de treinamento e pipelines consumiram cada versão de dataset, com rastreabilidade bidirecional
+
+#### B.3 Broker Service (Catalog)
+
+Registro centralizado dos brokers de mensageria disponíveis na plataforma, consumidos por orquestrações (Message Consumer / Producer), pelo Feature Store (streaming features) e pelo ML Pipeline Service (triggers). Centraliza credenciais de conexão por ambiente de forma que nenhum serviço precise configurar acesso ao broker de forma individual.
+
+- O serviço deve registrar brokers de mensageria com tipo (Kafka, RabbitMQ, NATS, SQS, Pub/Sub, Redis Streams), nome, host/endpoint, credenciais por ambiente (dev / staging / production) e status de conectividade
+- O serviço deve suportar registro de **tópicos e filas** por broker, com nome, partições (Kafka) e tipo de payload esperado (JSON, Avro, Protobuf)
+- O serviço deve verificar conectividade do broker e expor status na Console UI (connected / degraded / disconnected)
+- O serviço deve disponibilizar brokers registrados para seleção nos nós Message Consumer e Message Producer do editor de orquestração e nas Feature Pipelines do Feature Store
+
+---
+
+### C. Build Services — ML Serving
+
+#### C.1 ML Serving Service
+
+Gerencia o deploy e o ciclo de vida de endpoints de inferência para modelos de ML e DL registrados no Model Registry. É o serviço que transforma um artefato versionado em um endpoint REST chamável com SLA definido, autoscaling e rollout controlado. Enquanto o Model Gateway expõe uma fachada unificada para chamadas de modelos (LLM, ML e Embedding), o ML Serving Service é a camada de gerenciamento dos deployments físicos dos modelos ML/DL — com suporte a estratégias de deploy seguro (canary, blue-green, shadow) e integração nativa com o Model Monitoring Service para detecção de degradação em produção.
+
+- O serviço deve criar e gerenciar **endpoints de inferência** para modelos registrados no Model Registry, com nome, modelo vinculado, versão, ambiente, instância (CPU/GPU, memória), número de réplicas e SLA alvo
+- O serviço deve suportar **frameworks de serving**: scikit-learn (pickle/joblib), XGBoost (`.ubj`), LightGBM, PyTorch (TorchServe), TensorFlow (TF Serving), ONNX Runtime e modelos customizados via contêiner Docker
+- O serviço deve suportar **estratégias de deploy**:
+  - **Recreate**: substitui a versão anterior diretamente (downtime aceito)
+  - **Rolling**: atualiza pods gradualmente com verificação de saúde entre batches
+  - **Canary**: envia uma porcentagem configurável de tráfego para a nova versão, com monitoramento automático antes de promover 100%
+  - **Blue-Green**: mantém duas versões ativas e alterna o tráfego instantaneamente
+  - **Shadow**: envia tráfego de produção para a nova versão em paralelo sem afetar respostas ao cliente (shadow mode para validação)
+- O serviço deve configurar **autoscaling** por endpoint: mínimo e máximo de réplicas, métrica de escala (CPU, requests/s, latência p99) e cool-down
+- O serviço deve expor **endpoint REST** para inferência single (JSON in → JSON out) com latência alvo <100ms p99 para modelos tabulares
+- O serviço deve suportar **inferência batch assíncrona**: aceita arquivo CSV/Parquet, processa em background e notifica ao concluir com URL do resultado
+- O serviço deve gerenciar status de ciclo de vida do endpoint: `creating` → `active` → `updating` → `degraded` → `stopped`
+- O serviço deve registrar métricas de runtime por endpoint: requests/s, latência p50/p95/p99, taxa de erro, uso de CPU/GPU e memória
+- O serviço deve integrar com o Model Registry para garantir que apenas versões aprovadas para o ambiente sejam servidas
+- O serviço deve suportar **A/B testing e canary automático**: divide tráfego entre versão campeão e challenger com roteamento por peso configurável, registrando métricas independentes por versão
+- O serviço deve suportar **pre-processing e post-processing hooks**: scripts Python executados antes e depois da inferência para feature transformation e formatação de resposta
+- O serviço deve expor o endpoint ativo para seleção no nó **Agent Task** do editor de orquestração como ferramenta ML e no Model Gateway
+
+---
+
+### D. Governance Services — Complementos ML/DL
+
+#### D.1 Model Monitoring Service
+
+Monitora modelos de ML e DL em produção para detecção de degradação de performance, drift de dados e anomalias de comportamento. É o serviço que fecha o ciclo MLOps: após o deploy, o modelo precisa ser observado continuamente para que degradações sejam detectadas antes de impactarem o negócio. Enquanto o Watch Service monitora a infraestrutura de runtime (latência, CPU, erros), o Model Monitoring Service monitora a *qualidade estatística* das predições — drift de features, drift de predições e, quando rótulos estão disponíveis, drift de performance real.
+
+- O serviço deve criar **monitores por endpoint de serving** com frequência de verificação (por batch, diária, semanal) e thresholds de alerta configuráveis
+- O serviço deve detectar **data drift** nas features de entrada: comparação da distribuição de features em produção versus a distribuição de referência do dataset de treinamento, com métricas por tipo de feature:
+  - Features numéricas: KL divergence, PSI (Population Stability Index), Wasserstein distance
+  - Features categóricas: chi-square test, Jensen-Shannon divergence
+  - Features de embedding: cosine similarity drift
+- O serviço deve detectar **prediction drift**: monitorar a distribuição das predições ao longo do tempo e alertar quando desviar do baseline registrado no treinamento
+- O serviço deve suportar **performance monitoring** quando rótulos reais (ground truth) estão disponíveis: calcular accuracy, F1, AUC-ROC (classificação) ou RMSE, MAE, MAPE (regressão/forecasting) por janela de tempo e comparar com o baseline do treinamento
+- O serviço deve suportar **concept drift detection**: monitorar a relação entre features e target ao longo do tempo para identificar mudanças na relação features → predição que indiquem necessidade de retraining
+- O serviço deve registrar **baseline de referência** no momento do deploy: distribuição de features de treinamento, distribuição de predições e métricas de avaliação do conjunto de teste
+- O serviço deve exibir **dashboards de monitoramento** por modelo: série temporal de drift scores, distribuição de features (atual vs referência), distribuição de predições (atual vs referência) e evolução de métricas de performance
+- O serviço deve suportar **alertas automáticos** integrados ao Alert Service: disparar alerta quando drift score ultrapassar threshold configurado ou quando performance cair abaixo do mínimo aceitável
+- O serviço deve suportar **feedback loop de rótulos**: interface para submissão de ground truth (rótulos reais) para amostras já preditas, viabilizando cálculo de performance real e geração de novos datasets de retraining
+- O serviço deve suportar **detecção de outliers** em inferência: identificar amostras de entrada com características fora da distribuição de treinamento (out-of-distribution detection) e registrá-las para revisão
+- O serviço deve registrar **explicações de predição** por amostra quando SHAP ou LIME estiver habilitado no serving, com armazenamento e consulta de importância de features por predição
+- O serviço deve disparar **retraining automático** ao atingir threshold de drift configurado: cria novo job no Training Service ou aciona novo run no ML Pipeline Service com flag de origem `auto-retrain`
+- O serviço deve integrar com o Model Registry para registrar eventos de degradação no histórico da versão em produção
+
+#### D.2 Bias & Fairness Service
+
+Avalia e monitora viés e equidade em modelos de ML e DL — crítico para modelos que tomam decisões sobre pessoas (crédito, contratação, triagem médica, judicialização). O serviço analisa se o modelo produz predições sistematicamente diferentes para grupos protegidos (gênero, raça, faixa etária, região) e registra métricas de fairness formais, tanto em avaliação offline (sobre dataset de teste) quanto em monitoramento contínuo em produção.
+
+- O serviço deve calcular **métricas de fairness por grupo protegido** (atributo sensível configurável) sobre datasets de avaliação:
+  - **Demographic Parity**: diferença na taxa de predição positiva entre grupos
+  - **Equalized Odds**: diferença em TPR e FPR entre grupos
+  - **Equal Opportunity**: diferença em TPR entre grupos
+  - **Predictive Parity**: diferença em precision entre grupos
+  - **Individual Fairness**: consistência de predição para indivíduos similares
+- O serviço deve suportar **análise interseccional**: combinação de múltiplos atributos sensíveis (ex: gênero + faixa etária)
+- O serviço deve integrar com o Experiment Tracking Service para registrar métricas de fairness nos runs de treinamento
+- O serviço deve integrar com o Model Registry para bloquear promoção de modelos que excedam thresholds de unfairness configurados pela organização
+- O serviço deve suportar **monitoramento contínuo de fairness** em produção: calcular métricas de fairness por janela de tempo sobre predições reais e alertar em caso de degradação
+- O serviço deve gerar **relatórios de fairness** exportáveis (PDF/HTML) com visualizações de distribuição por grupo e métricas detalhadas por atributo sensível
+
+#### D.3 Complementos ao Alert Service para ML/DL
+
+Os itens abaixo complementam os requisitos existentes do Alert Service (seção 4.4.3) com categorias e métricas específicas de ML/DL:
+
+- O serviço deve suportar categoria `ml_monitoring` com as seguintes métricas:
+  - `data_drift_score` — PSI / KL divergence de features de entrada
+  - `prediction_drift_score` — drift da distribuição de predições
+  - `model_accuracy` — accuracy / F1 / RMSE realizado (quando ground truth disponível)
+  - `ood_rate` — taxa de amostras out-of-distribution detectadas
+  - `retraining_needed` — flag booleano disparado pelo Model Monitoring Service
+- O serviço deve suportar categoria `ml_pipeline` com as seguintes métricas:
+  - `pipeline_failure` — falha em qualquer step do ML Pipeline
+  - `feature_pipeline_lag` — atraso no processamento de Feature Pipelines do Feature Store
+  - `training_job_failure` — falha de job no Training Service
+  - `data_quality_failure` — violação de regras de data quality no step de Data Validation
+- O serviço deve suportar escopo de regra `model` (um modelo específico do Model Registry) e `feature_group` (um Feature Group específico do Feature Store) além dos escopos já existentes
+
+#### D.4 Complementos ao FinOps Service para ML/DL
+
+Os itens abaixo complementam os requisitos existentes do FinOps Service (seção 4.4.1) com categorias de custo específicas de ML/DL:
+
+- O serviço deve calcular e discriminar custo por **endpoint de ML Serving**: horas de instância ativas, tipo de hardware (CPU/GPU), requests processados e custo por predição
+- O serviço deve calcular e discriminar custo por **Feature Pipeline**: custo de processamento de feature engineering em batch e streaming (compute, storage de features no offline/online store)
+- O serviço deve calcular e discriminar custo por **ML Pipeline run**: custo agregado de cada step (compute por duração, storage de artefatos intermediários)
+- O serviço deve expor **custo de armazenamento de artefatos** no Model Registry: tamanho total de pesos, checkpoints e artefatos por modelo e por versão
+- O serviço deve expor **custo de armazenamento de features**: offline store (S3/GCS) e online store (Redis/DynamoDB) por Feature Group
+
+---
+
+### E. Test Services — Complementos ML/DL
+
+#### E.1 Complementos ao Suite Cases Service para ML/DL
+
+Os itens abaixo complementam os requisitos existentes do Suite Cases Service (seção 4.5.1) para cobrir testes específicos de modelos de ML e DL:
+
+- O serviço deve suportar target `model` (modelo registrado no Model Registry) e target `feature_group` (Feature Group do Feature Store) além dos targets já existentes
+- O serviço deve suportar tipo de caso `ml_evaluation` com as seguintes métricas configuráveis:
+  - Classificação: `accuracy`, `precision`, `recall`, `f1_score`, `auc_roc`, `log_loss`, `confusion_matrix`
+  - Regressão: `rmse`, `mae`, `mape`, `r2_score`, `max_error`
+  - Forecasting: `mape`, `smape`, `wape`, `coverage_interval`
+  - Clustering: `silhouette_score`, `davies_bouldin`, `calinski_harabasz`
+  - DL — Visão: `top1_accuracy`, `top5_accuracy`, `mean_iou` (detecção/segmentação), `map` (object detection)
+  - DL — NLP: `bleu`, `rouge_l`, `bert_score`, `exact_match`
+  - Embedding: `mrr` (Mean Reciprocal Rank), `ndcg`, `recall_at_k`
+- O serviço deve suportar tipo de caso `ml_fairness` integrado ao Bias & Fairness Service: validar que métricas de fairness estão dentro de thresholds aceitáveis para um conjunto de avaliação com atributos sensíveis declarados
+- O serviço deve suportar tipo de caso `data_quality` integrado ao Feature Store: validar regras de qualidade de dados (schema, nulos, range, unicidade) sobre uma amostra do Feature Group antes de usá-lo em treinamento
+- O serviço deve suportar tipo de caso `model_robustness` para validação de comportamento sob perturbação de entrada:
+  - **Adversarial inputs**: inputs modificados levemente para testar estabilidade de predição
+  - **Missing features**: substituição de features por nulo para testar fallback
+  - **Distribution shift**: amostras sintetizadas de distribuições deslocadas para testar generalização
+- O serviço deve suportar configuração de **dataset de referência** por suite ML: selecionar o conjunto de teste a ser usado na avaliação (referência ao Dataset Catalog Service)
+- O serviço deve registrar **curva de performance histórica** por suite: evolução de métricas de avaliação ao longo de múltiplos runs, tornando visível a trajetória de qualidade do modelo
+
+#### E.2 Complementos ao Playground Service para ML/DL
+
+Os itens abaixo complementam os requisitos existentes do Playground Service (seção 4.5.2) para Deep Learning:
+
+- O modo **Machine Learning** deve ser expandido para suportar modelos de DL com inferência single e batch:
+  - **DL — Visão**: upload de imagem, seleção de modelo (classificação, detecção de objetos, segmentação), exibição de predição com bounding boxes / máscara e score de confiança por classe
+  - **DL — NLP**: input de texto livre ou upload de arquivo, seleção de modelo (classificação de texto, NER, summarization, translation), exibição de predição com highlighting de entidades ou span de saída
+  - **DL — Tabular / Estruturado**: input manual de features ou upload de CSV, exibição de predição com SHAP values e visualização de feature importance
+- O serviço deve suportar **comparação de versões de modelo** no Playground: testar o mesmo input na versão atual em produção e em versão candidata lado a lado, com métricas de latência e confiança por versão
+- O serviço deve suportar **stress test interativo** no Playground ML: executar N requisições concorrentes configuráveis e exibir distribuição de latência (p50/p95/p99) e throughput
+- O serviço deve exibir **perfil de inferência** para modelos DL quando disponível: tempo por camada, uso de memória de GPU e FLOPS estimados
+
+---
+
+### F. Access Layer — Complementos ML/DL
+
+#### F.1 Console UI — Navegação e Dashboard ML/DL
+
+Os itens abaixo complementam os requisitos de Console UI (seção 1.1) para cobrir os novos serviços ML/DL:
+
+- Na seção **Build**, o sistema deve incluir os itens:
+  - **ML Pipelines** — criação e monitoramento de pipelines de ML (ML Pipeline Service)
+  - **Experiments** — listagem e comparação de experimentos (Experiment Tracking Service)
+  - **Feature Store** — gerenciamento de Feature Groups e Feature Pipelines
+- Na seção **Catalog**, o sistema deve incluir o item **Model Registry** (separado do Model Service de provedores externos)
+- Na seção **Governance**, o sistema deve incluir o item **Model Monitoring** — dashboard de drift, performance e fairness de modelos em produção
+- O dashboard principal deve exibir métricas ML globais adicionais: modelos ativos em produção, endpoints de serving ativos, taxa média de drift detectado na última semana e jobs de retraining automático disparados no período
+
+#### F.2 CLI — Complementos ML/DL
+
+Os itens abaixo complementam os requisitos de CLI (seção 1.2):
+
+- O sistema deve oferecer comandos para **gerenciamento do Model Registry**: listar versões, promover versão (staging → production), fazer rollback e arquivar versão
+- O sistema deve oferecer comandos para **execução de ML Pipelines**: iniciar run, cancelar, listar runs e consultar status e logs por step
+- O sistema deve oferecer comandos para **gerenciamento de Feature Groups**: criar, atualizar e disparar Feature Pipeline manualmente
+- O sistema deve oferecer comandos para **consulta de experimentos**: listar runs por projeto, filtrar por métrica e baixar artefatos de um run específico
+- O sistema deve oferecer comandos para **deploy de modelo**: criar ou atualizar endpoint de serving com configuração de canary ou blue-green
+
+#### F.3 SDK / API — Complementos ML/DL
+
+Os itens abaixo complementam os requisitos de SDK/API (seção 1.3):
+
+- O sistema deve expor API programática para **Experiment Tracking**: criar projeto, registrar run, logar métricas/parâmetros/artefatos e consultar histórico de runs (compatível com o protocolo MLflow REST API para migração facilitada)
+- O sistema deve expor API para **Feature Store**: ler features por entidade em tempo real (online serving), submeter batch de features (offline ingestion) e consultar histórico de feature values por entidade e timestamp
+- O sistema deve expor API para **Model Registry**: listar versões, promover e fazer rollback de versões, baixar artefatos e consultar linhagem
+- O sistema deve expor API para **ML Serving**: invocar predição single, submeter job de batch inference e consultar status de endpoints
+- O sistema deve expor API para **Model Monitoring**: consultar drift scores, submeter ground truth (feedback loop) e consultar relatórios de fairness
+
+---
+
+### G. Gateway Layer — Complementos ML/DL
+
+#### G.1 Complementos ao Model Gateway para ML/DL
+
+Os itens abaixo complementam os requisitos existentes do Model Gateway (seção 2.4) para cobrir inferência ML e DL de forma completa:
+
+- O gateway deve rotear requisições de inferência ML para endpoints do **ML Serving Service** além dos provedores externos, com seleção por modelo e versão
+- O gateway deve suportar **inferência batch assíncrona** para modelos ML: aceitar arquivo de input, delegar ao ML Serving Service e retornar ID de job para polling de status
+- O gateway deve suportar **feature enrichment automático**: ao receber uma requisição de inferência com entity key declarada, consultar o Feature Store online e enriquecer o payload de entrada com as features registradas antes de encaminhar ao modelo
+- O gateway deve registrar **custo de inferência ML por predição**: compute time, tipo de hardware e versão do modelo servido
+- O gateway deve suportar **A/B routing**: ao estar em modo canary, rotear porcentagem configurável de requisições para a versão challenger do modelo com registro separado de métricas
+
+---
+
+### H. Core Layer — Complementos ML/DL
+
+#### H.1 Complementos à Data & Messaging Layer para ML/DL
+
+Os itens abaixo complementam os requisitos existentes de Data & Messaging (seção 6.1):
+
+- A plataforma deve prover **object storage** (S3 ou GCS) para armazenamento de artefatos de modelos (pesos, checkpoints, ONNX exports), datasets versionados, artefatos de pipelines ML e relatórios de avaliação
+- A plataforma deve prover **offline feature store** com suporte a queries point-in-time sobre Parquet/Delta Lake em object storage ou ClickHouse para uso em treinamento
+- A plataforma deve prover **online feature store** com suporte a leitura de baixa latência (<10ms p99) via Redis ou DynamoDB para uso em inferência
+- A plataforma deve suportar **streaming ingestion** via Kafka para atualização em tempo real de features no online store
+- A plataforma deve prover **artifact tracking store** (PostgreSQL + object storage) para o Experiment Tracking Service, indexando metadados de runs, métricas e referências URI de artefatos
+
+#### H.2 Complementos ao Pipeline & Deploy para ML/DL
+
+Os itens abaixo complementam os requisitos existentes de Pipeline & Deploy (seção 6.3):
+
+- A plataforma deve executar pipelines de deploy para **endpoints de ML Serving** com estágios: Build image → Push → Deploy canary (N%) → Monitor → Promote 100% ou Rollback
+- A plataforma deve suportar **rollout de modelos com gates automáticos**: a promoção de canary para 100% só ocorre se métricas de latência e drift estiverem dentro dos thresholds configurados durante a janela de observação
+- A plataforma deve suportar **deploy de ML Pipelines** como jobs Kubernetes com isolamento de namespace por ambiente e configuração de resource quotas por step
+
+---
+
+### I. Deep Learning — Tipos e Arquiteturas
+
+#### I.1 Complementos ao Training Service para Deep Learning
+
+Os itens abaixo complementam os requisitos existentes do Training Service (seção 4.1.5) para cobrir Deep Learning de forma completa:
+
+**Tipos de tarefa DL adicionais:**
+- O serviço deve suportar tipo `dl-image-classification` — treinamento de CNNs e ViTs para classificação de imagens
+- O serviço deve suportar tipo `dl-object-detection` — treinamento de modelos como YOLO, DETR para detecção de objetos
+- O serviço deve suportar tipo `dl-segmentation` — segmentação semântica e de instâncias (UNet, Mask R-CNN, SAM fine-tuning)
+- O serviço deve suportar tipo `dl-nlp-classification` — classificação de texto com BERT, RoBERTa, DeBERTa
+- O serviço deve suportar tipo `dl-ner` — Named Entity Recognition com modelos sequence-to-label
+- O serviço deve suportar tipo `dl-summarization` — sumarização extrativa e abstrativa (BART, T5, Pegasus)
+- O serviço deve suportar tipo `dl-translation` — tradução neural (mBART, NLLB, M2M)
+- O serviço deve suportar tipo `dl-tabular` — deep learning para dados tabulares (TabNet, FT-Transformer)
+- O serviço deve suportar tipo `dl-timeseries` — forecasting com redes neurais (LSTM, Temporal Fusion Transformer, PatchTST, TimesFM)
+- O serviço deve suportar tipo `dl-multimodal` — modelos que combinam imagem + texto (CLIP fine-tuning, LLaVA, PaliGemma)
+- O serviço deve suportar tipo `dl-audio` — classificação de áudio, ASR fine-tuning, speaker diarization (Whisper, wav2vec)
+
+**Frameworks DL adicionais:**
+- O serviço deve suportar frameworks adicionais: `timm` (PyTorch Image Models), `ultralytics` (YOLO), `detectron2`, `huggingface-trainer` para tasks DL de visão e NLP
+- O serviço deve suportar `torchvision`, `torchaudio` e `torchtext` como bibliotecas de dados para DL
+
+**Hiperparâmetros DL adicionais:**
+- O serviço deve suportar hiperparâmetros específicos de DL: arquitetura (`resnet50`, `vit-base-patch16`, `bert-base-uncased`, etc.), `pretrained_weights` (caminho ou nome do checkpoint de partida), `warmup_steps`, `weight_decay`, `dropout`, `grad_clip`, `mixed_precision` (fp16, bf16, fp32)
+- O serviço deve suportar hiperparâmetros de data augmentation para visão: `random_crop`, `random_flip`, `color_jitter`, `random_erasing`, `mixup`, `cutmix`
+- O serviço deve suportar configuração de `gradient_checkpointing` e `gradient_accumulation_steps` para treinamento de modelos grandes em hardware limitado
+
+**Métricas DL adicionais:**
+- O serviço deve registrar métricas específicas de DL por task: `top1_accuracy`, `top5_accuracy` (visão), `mean_iou`, `map@50`, `map@75` (detecção/segmentação), `cer`, `wer` (ASR), `bleu`, `rouge_l`, `bert_score` (NLP generativo), `mcd` (síntese de voz)
+
+**Hardware DL:**
+- O serviço deve suportar configuração de **multi-GPU training** com estratégias: `ddp` (DistributedDataParallel), `fsdp` (Fully Sharded Data Parallel), `deepspeed` (ZeRO stages 1/2/3)
+- O serviço deve suportar configuração de **mixed precision**: fp16, bf16 e fp32 por job
+- O serviço deve registrar **profiling de GPU** por job: utilização média de GPU%, memória de VRAM usada, throughput de amostras/segundo e tempo de iteração por step
+
+#### I.2 Complementos ao Model Service (Catalog) para DL
+
+Os itens abaixo complementam os requisitos existentes do Model Service (seção 4.3.1) para registrar modelos DL de provedores externos:
+
+- O serviço deve suportar tipo de modelo `dl-vision` para modelos de visão computacional (classificação, detecção, segmentação) de provedores como Google Cloud Vision, AWS Rekognition e Hugging Face Hub
+- O serviço deve suportar tipo de modelo `dl-audio` para modelos de áudio (ASR, TTS, classificação) de provedores como OpenAI Whisper API, Google Speech-to-Text, ElevenLabs
+- O serviço deve suportar tipo de modelo `dl-multimodal` para modelos que combinam texto e imagem (GPT-4o, Gemini Pro Vision, Claude 3 Vision, LLaVA self-hosted)
+- O serviço deve suportar configuração de **input format** por tipo de modelo: texto, imagem (base64/URL), áudio (base64/URL), multimodal, para que o Model Gateway encode corretamente os inputs antes de encaminhar ao provedor
+
+---
+
+### J. Avaliação / Evaluation Service — Complementos ML/DL
+
+Os itens abaixo complementam os requisitos implícitos do Evaluation Service (referenciado no mapeamento mas sem seção própria nos requisitos) para cobrir ML e DL:
+
+##### 4.5.3 Evaluation Service
+
+Serviço dedicado à avaliação sistemática e comparativa de modelos registrados no Model Registry — complementando os testes ad-hoc do Suite Cases Service com avaliações aprofundadas sobre datasets de referência e com comparação formal de versões. Enquanto o Suite Cases Service executa casos de teste funcionais e de qualidade para agentes e orquestrações, o Evaluation Service foca na avaliação de modelos isolados (LLM, ML, DL) com métricas padronizadas por tipo de tarefa, rastreando a evolução de qualidade ao longo de versões.
+
+- O serviço deve criar e gerenciar **evaluation suites** com target (`agent`, `orchestration`, `rag`, `model-llm`, `model-ml`, `model-dl`), dataset de avaliação (referência ao Dataset Catalog) e conjunto de métricas configuradas
+- O serviço deve suportar **judge LLM** (LLM-as-judge) para avaliação de modelos generativos: faithfulness, answer_relevancy, coherence, groundedness, toxicity, bias
+- O serviço deve suportar **judge heurístico** para métricas determinísticas: BLEU, ROUGE, BERTScore, exact_match, F1-score, accuracy, AUC-ROC, RMSE, MAE — calculados sobre o dataset de avaliação de forma reprodutível
+- O serviço deve suportar **judge humano**: interface para anotadores humanos avaliarem amostras de predição com formulário configurável, consenso entre anotadores e cálculo de Kappa de concordância
+- O serviço deve suportar **avaliação comparativa de versões**: executar o mesmo evaluation suite sobre duas versões de modelo (campeão vs challenger) e gerar relatório de comparação com significância estatística (t-test, bootstrap confidence intervals)
+- O serviço deve registrar histórico de evaluation runs por suite com timeline de evolução de métricas ao longo de versões
+- O serviço deve integrar com o Model Registry para registrar as métricas de avaliação na versão do modelo correspondente e usá-las como critério de promoção
+- O serviço deve integrar com o Bias & Fairness Service para incluir métricas de fairness nos relatórios de avaliação de modelos ML/DL
+
+---
+
+### K. Síntese das Lacunas Cobertas
+
+| Serviço / Feature | Domínio | Gap coberto |
+|---|---|---|
+| **Experiment Tracking Service** | 🟠 ML / 🔵 Ambos | Rastreamento de runs, hiperparâmetros, métricas e artefatos por projeto |
+| **Feature Store Service** | 🟠 ML / 🔵 Ambos | Feature Groups, Feature Pipelines, offline/online store, point-in-time retrieval |
+| **ML Pipeline Service** | 🟠 ML | DAG de steps de ML com Data Ingestion, Validation, Train, Evaluate, Register, Deploy |
+| **Model Registry Service** | 🟠 ML / 🔵 Ambos | Ciclo de vida de artefatos treinados, promoção por ambiente, linhagem, canary/blue-green |
+| **Dataset Catalog Service** | 🟠 ML / 🔵 Ambos | Descoberta, governança, schema e data cards para todos os datasets da plataforma |
+| **Broker Service** | 🔵 Ambos | Registro e gerenciamento de brokers de mensageria para orquestrações e feature pipelines |
+| **ML Serving Service** | 🟠 ML | Deploy de endpoints ML/DL, canary, blue-green, shadow, A/B, autoscaling |
+| **Model Monitoring Service** | 🟠 ML | Data drift, prediction drift, concept drift, performance monitoring, retraining automático |
+| **Bias & Fairness Service** | 🟠 ML / 🔵 Ambos | Métricas de fairness por grupo protegido, análise interseccional, bloqueio de promoção |
+| **Evaluation Service** | 🔵 Ambos | Evaluation suites formais, judge LLM/heurístico/humano, comparação estatística de versões |
+| **Tipos DL no Training Service** | 🟠 DL | dl-image-classification, dl-object-detection, dl-segmentation, dl-nlp, dl-timeseries, dl-multimodal, dl-audio |
+| **Arquiteturas DL** | 🟠 DL | ResNet, ViT, YOLO, DETR, BERT, T5, LSTM, TFT, Whisper, CLIP — hiperparâmetros, augmentation, multi-GPU, mixed precision |
+| **Modelos DL no Model Service** | 🟠 DL | Tipos dl-vision, dl-audio, dl-multimodal de provedores externos |
+| **Alert Service — ML/DL** | 🟠 ML | Categorias ml_monitoring e ml_pipeline com métricas de drift e qualidade de dados |
+| **FinOps — ML/DL** | 🟠 ML | Custo de ML Serving, Feature Pipelines, ML Pipeline runs e armazenamento de artefatos |
+| **Suite Cases — ML/DL** | 🟠 ML / 🔵 Ambos | Tipos ml_evaluation, ml_fairness, data_quality, model_robustness com métricas por task |
+| **Playground — DL** | 🟠 DL | Inferência DL visão/NLP, comparação de versões, stress test, perfil de GPU |
+| **Console UI — ML/DL** | 🟠 ML | Seções ML Pipelines, Experiments, Feature Store, Model Registry, Model Monitoring |
+| **CLI — ML/DL** | 🟠 ML | Comandos para Model Registry, ML Pipelines, Feature Store, Experiments, Serving |
+| **SDK/API — ML/DL** | 🟠 ML | APIs para Experiment Tracking, Feature Store, Model Registry, ML Serving, Model Monitoring |
+| **Model Gateway — ML/DL** | 🟠 ML | Feature enrichment automático, batch inference assíncrona, A/B routing, custo por predição |
+| **Core — Object Storage** | 🟠 ML | S3/GCS para artefatos de modelos, datasets e pipelines |
+| **Core — Feature Stores** | 🟠 ML | Offline store (Parquet/Delta/ClickHouse) e online store (Redis/DynamoDB) |
+| **Core — Deploy ML** | 🟠 ML | Rollout com gates automáticos de drift e latência para canary → 100% |
